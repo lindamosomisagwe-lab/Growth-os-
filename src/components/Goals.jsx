@@ -53,25 +53,27 @@ function ReflectiveNudges({ onAddGoal }) {
 }
 
 export default function Goals() {
-  const [goals, setGoals] = useState(() => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [goals, setGoals] = useState([]);
+
+  useEffect(() => {
+    setIsMounted(true);
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.goals) {
-          // Migration to ensure 3-tier structure exists
-          return parsed.goals.map(g => ({
+          setGoals(parsed.goals.map(g => ({
             ...g,
             sub: (g.sub || []).map(s => ({
               ...s,
               tasks: s.tasks || []
             }))
-          }));
+          })));
         }
       } catch (e) {}
     }
-    return [];
-  });
+  }, []);
 
   const [title, setTitle] = useState("");
   const [subInputs, setSubInputs] = useState({});
@@ -223,6 +225,10 @@ export default function Goals() {
     }));
     triggerToast("TASK REMOVED");
   };
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
