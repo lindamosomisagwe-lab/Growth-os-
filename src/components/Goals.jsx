@@ -86,7 +86,7 @@ export default function Goals() {
   const [previewGoal, setPreviewGoal] = useState(null);
   const [goalDraftingStage, setGoalDraftingStage] = useState('idle'); // idle | coaching | finalized
   const [chatHistory, setChatHistory] = useState([
-    { role: 'assistant', text: "What's on your mind? Dump your raw goal intent here and we'll structure it together." }
+    { role: 'assistant', text: "What's on your mind? Dump your raw thought here and we'll figure out a plan together." }
   ]);
 
   useEffect(() => {
@@ -135,29 +135,27 @@ export default function Goals() {
         if (histLength === 2) { // 1st assistant reply
           return [...prev, { 
             role: 'assistant', 
-            text: "To make sure this goal is 'Measurable,' let's think about the target. How will we definitively know when you've succeeded?",
-            hint: "Why Measure? Tracking progress provides tangible proof of your efforts and keeps you motivated."
+            text: "That sounds like a great direction. What does success look like for this? Let's paint a picture of the end result."
           }];
         } else if (histLength === 4) { // 2nd assistant reply
           return [...prev, {
             role: 'assistant',
-            text: "Perfect. Now, to make this 'Time-bound', by when would you like to achieve this?",
-            hint: "Why a Deadline? Deadlines prevent work from expanding indefinitely and create necessary urgency."
+            text: "Love that vision. When would you love to see this happen by? And what's the very first, smallest step you can take today?"
           }];
         } else {
           // Finalization
           setGoalDraftingStage('finalized');
           setPreviewGoal({
-            title: prev[1].text.split('\n')[0].substring(0, 40) + " (Structured)",
+            title: prev[1].text.split('\n')[0].substring(0, 40) + " (Plan)",
             sub: [
-              { title: "Define measurable metrics: " + prev[3].text.substring(0, 20), completed: false },
-              { title: "Timeline adherence: " + prev[5].text.substring(0, 20), completed: false },
-              { title: "Execute core implementation", completed: false }
+              { title: "Define the vision: " + prev[3].text.substring(0, 20), completed: false },
+              { title: "First Step: " + prev[5].text.substring(0, 20), completed: false },
+              { title: "Review progress along the timeline", completed: false }
             ]
           });
           return [...prev, {
             role: 'assistant',
-            text: "Excellent. I've synthesized your inputs into a SMART goal hierarchy. Please review the structure below."
+            text: "Awesome. I've mapped this out for you below. How does this plan feel?"
           }];
         }
       });
@@ -177,7 +175,7 @@ export default function Goals() {
     setDraftText("");
     setPreviewGoal(null);
     setGoalDraftingStage('idle');
-    setChatHistory([{ role: 'assistant', text: "What's on your mind? Dump your raw goal intent here and we'll structure it together." }]);
+    setChatHistory([{ role: 'assistant', text: "What's on your mind? Dump your raw thought here and we'll figure out a plan together." }]);
     triggerToast("STRUCTURED OBJECTIVE ADDED");
   };
 
