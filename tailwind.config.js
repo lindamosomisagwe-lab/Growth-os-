@@ -15,19 +15,34 @@ export default {
       none:    "none",
       DEFAULT: "none",
       focus:   "0 0 0 2px #000000", // Functional only — keyboard nav
+      brutal: '6px 6px 0px 0px #A28C81',
+      'brutal-sm': '3px 3px 0px 0px #A28C81',
+      'brutal-active': '1px 1px 0px 0px #A28C81',
+    },
+    borderWidth: {
+      '3': '3px',
     },
     fontFamily: {
-      sans: ["Inter", "system-ui", "sans-serif"],
+      sans: ["Nunito", "sans-serif"],
       mono: ["'IBM Plex Mono'", "monospace"],
     },
 
-    // ─── NEO-MINIMALIST PALETTE ───────────────────────────────────────────
+    // ─── BRUTALIST PAPER PALETTE ──────────────────────────────────────────
     // Monochrome core + 4 functional status tints (never fills, dots only).
     colors: {
       white:       "#FFFFFF",
       black:       "#000000",
       transparent: "transparent",
       current:     "currentColor",
+      
+      paper:       '#FAF8F5',
+      beige:       '#F4F1EA',
+      blush:       '#E8C5C8',
+      clay:        '#A28C81',
+      charcoal:    '#2F2E2C',
+      sunflower:   '#E8C5C8',
+      'tech-blue': '#A28C81',
+      'partner-blue': '#2F2E2C',
 
       neutral: {
         50:  "#FAFAFA",
