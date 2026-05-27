@@ -80,10 +80,14 @@ export default function Goals() {
   const [taskInputs, setTaskInputs] = useState({});
   const [toast, setToast] = useState({ show: false, message: "" });
   
-  // Drafting Board State
+  // Drafting Board (Goal Architect) State
   const [draftText, setDraftText] = useState("");
   const [isStructuring, setIsStructuring] = useState(false);
   const [previewGoal, setPreviewGoal] = useState(null);
+  const [goalDraftingStage, setGoalDraftingStage] = useState('idle'); // idle | coaching | finalized
+  const [chatHistory, setChatHistory] = useState([
+    { role: 'assistant', text: "What's on your mind? Dump your raw goal intent here and we'll structure it together." }
+  ]);
 
   useEffect(() => {
     const saved = localStorage.getItem("growth_os_v1");
@@ -110,23 +114,54 @@ export default function Goals() {
     triggerToast("OBJECTIVE CREATED // TARGET ACTIVE");
   };
 
-  const handleStructureGoal = () => {
-    if (!draftText.trim()) return;
-    setIsStructuring(true);
-    setPreviewGoal(null);
+  const handleSendMessage = () => {
+    if (!draftText.trim() || isStructuring) return;
     
-    // Simulate AI parsing delay
+    const userMsg = { role: 'user', text: draftText };
+    setChatHistory(prev => [...prev, userMsg]);
+    setDraftText("");
+    setIsStructuring(true);
+    
+    if (goalDraftingStage === 'idle') {
+      setGoalDraftingStage('coaching');
+    }
+
+    // Mock AI Logic based on chat length
     setTimeout(() => {
       setIsStructuring(false);
-      setPreviewGoal({
-        title: draftText.split('\n')[0].substring(0, 40) + (draftText.length > 40 ? "..." : ""),
-        sub: [
-          { title: "Define scope and initial requirements", completed: false },
-          { title: "Execute core implementation phases", completed: false },
-          { title: "Review and finalize deliverables", completed: false }
-        ]
+      setChatHistory(prev => {
+        const histLength = prev.length; // after adding user msg
+        
+        if (histLength === 2) { // 1st assistant reply
+          return [...prev, { 
+            role: 'assistant', 
+            text: "To make sure this goal is 'Measurable,' let's think about the target. How will we definitively know when you've succeeded?",
+            hint: "Why Measure? Tracking progress provides tangible proof of your efforts and keeps you motivated."
+          }];
+        } else if (histLength === 4) { // 2nd assistant reply
+          return [...prev, {
+            role: 'assistant',
+            text: "Perfect. Now, to make this 'Time-bound', by when would you like to achieve this?",
+            hint: "Why a Deadline? Deadlines prevent work from expanding indefinitely and create necessary urgency."
+          }];
+        } else {
+          // Finalization
+          setGoalDraftingStage('finalized');
+          setPreviewGoal({
+            title: prev[1].text.split('\n')[0].substring(0, 40) + " (Structured)",
+            sub: [
+              { title: "Define measurable metrics: " + prev[3].text.substring(0, 20), completed: false },
+              { title: "Timeline adherence: " + prev[5].text.substring(0, 20), completed: false },
+              { title: "Execute core implementation", completed: false }
+            ]
+          });
+          return [...prev, {
+            role: 'assistant',
+            text: "Excellent. I've synthesized your inputs into a SMART goal hierarchy. Please review the structure below."
+          }];
+        }
       });
-    }, 2000);
+    }, 1500);
   };
 
   const confirmPreview = () => {
@@ -137,8 +172,12 @@ export default function Goals() {
       completed: false,
       sub: previewGoal.sub.map((s, idx) => ({ id: Date.now() + idx, title: s.title, completed: false, tasks: [] }))
     }]);
+    
+    // Reset Chat State
     setDraftText("");
     setPreviewGoal(null);
+    setGoalDraftingStage('idle');
+    setChatHistory([{ role: 'assistant', text: "What's on your mind? Dump your raw goal intent here and we'll structure it together." }]);
     triggerToast("STRUCTURED OBJECTIVE ADDED");
   };
 
@@ -280,39 +319,68 @@ export default function Goals() {
 
       <ReflectiveNudges onAddGoal={addGoal} />
 
-      {/* Drafting Board */}
+      {/* Drafting Board (Goal Architect) */}
       <div style={{ marginBottom: "2rem", padding: "1.5rem", background: "var(--bg-surface)", border: "1px solid var(--border-color)" }}>
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-          Drafting Board
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span>🏗️</span> Goal Architect
         </h3>
-        <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-          Dump your unfiltered thoughts below. Our AI will extract a structured SMART goal hierarchy.
-        </p>
-        <textarea
-          value={draftText}
-          onChange={(e) => setDraftText(e.target.value)}
-          placeholder="I want to launch a new podcast about design by next month, including 3 episodes..."
-          style={{ width: "100%", height: "100px", resize: "vertical", marginBottom: "1rem" }}
-        />
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-          <button 
-            onClick={handleStructureGoal} 
-            className={`btn-primary ${isStructuring ? "loading-glow" : ""}`}
-            disabled={isStructuring || !draftText.trim()}
-          >
-            {isStructuring ? "Structuring..." : "Structure Goal"}
-          </button>
+        
+        {/* Chat UI */}
+        <div className="chat-container">
+          {chatHistory.map((msg, idx) => (
+            <div key={idx} className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "0.25rem", textTransform: "uppercase" }}>
+                {msg.role === 'user' ? 'You' : 'Architect'}
+              </div>
+              <div>{msg.text}</div>
+              {msg.hint && (
+                <div className="chat-hint-card">
+                  <strong>💡 HINT:</strong> {msg.hint}
+                </div>
+              )}
+            </div>
+          ))}
+          {isStructuring && (
+            <div className="chat-bubble chat-bubble-assistant">
+              <span className="loading-glow" style={{ display: "inline-block", width: "10px", height: "10px", background: "var(--text-primary)", borderRadius: "50%", border: "1px solid var(--text-primary)" }}></span>
+            </div>
+          )}
         </div>
 
+        {goalDraftingStage !== 'finalized' && (
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
+            <textarea
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={goalDraftingStage === 'idle' ? "I want to start a podcast..." : "Type your answer..."}
+              style={{ flex: 1, height: "60px", resize: "vertical" }}
+            />
+            <button 
+              onClick={handleSendMessage} 
+              className="btn-primary"
+              disabled={isStructuring || !draftText.trim()}
+              style={{ height: "60px", padding: "0 1.5rem", textTransform: "uppercase" }}
+            >
+              Send
+            </button>
+          </div>
+        )}
+
         {/* AI Preview Card */}
-        {previewGoal && (
+        {previewGoal && goalDraftingStage === 'finalized' && (
           <div style={{ marginTop: "1.5rem", padding: "1.5rem", border: "1px dashed var(--text-primary)", background: "var(--bg-page)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>[PREVIEW]</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>[FINALIZED STRUCTURE]</span>
                 <h4 style={{ margin: "0.5rem 0", fontSize: "1.2rem", fontWeight: "800", textTransform: "uppercase" }}>{previewGoal.title}</h4>
               </div>
-              <button onClick={confirmPreview} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}>Confirm & Add</button>
+              <button onClick={confirmPreview} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", textTransform: "uppercase" }}>Confirm & Add</button>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {previewGoal.sub.map((s, i) => (
