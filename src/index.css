@@ -2,17 +2,23 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap');
 
-/* 1. Global Reset to match Reference HTML */
+/* 1. Global Reset (Purple Theme) */
 :root {
-  --bg-page: #F4F1EA;          /* beige */
-  --bg-surface: #FAF8F5;       /* paper */
-  --bg-surface-elevated: #FAF8F5; 
-  --border-color: #A28C81;     /* clay */
-  --border-color-active: #A28C81;
-  --text-primary: #2F2E2C;     /* charcoal */
-  --text-secondary: #2F2E2C;
-  --text-body: #2F2E2C;
-  --accent: #E8C5C8;           /* blush */
+  --bg-page: #FAF8F5;          /* Lighter canvas for contrast */
+  --bg-surface: #FFFFFF;       /* Clean white cards */
+  --bg-surface-elevated: #F4F1EA; 
+  --bg-sidebar: #1a1033;       /* Deep purple sidebar */
+  
+  --border-color: #E5E5E5;     
+  --border-color-active: #7F77DD; /* Accent purple */
+  
+  --text-primary: #1a1033;     /* Sidebar color for headers */
+  --text-secondary: #7F77DD;   /* Accent purple for subtext */
+  --text-body: #2F2E2C;        /* Charcoal for readability */
+  
+  --accent: #7F77DD;           /* Primary gradient start */
+  --accent-secondary: #D4537E; /* Secondary gradient end */
+  
   --font-serif: 'Cormorant Garamond', serif;
   --font-sans: 'Nunito', sans-serif;
   --font-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;

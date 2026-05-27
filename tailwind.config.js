@@ -35,6 +35,13 @@ export default {
       transparent: "transparent",
       current:     "currentColor",
       
+      // Purple Theme Extensions
+      'sidebar-bg':    '#1a1033',
+      'gradient-start': '#7F77DD',
+      'gradient-end':   '#D4537E',
+      'accent-purple':  '#7F77DD',
+      
+      // Preserving legacy fallbacks
       paper:       '#FAF8F5',
       beige:       '#F4F1EA',
       blush:       '#E8C5C8',
