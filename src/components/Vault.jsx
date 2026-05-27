@@ -46,10 +46,10 @@ export default function Vault() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
           Time Vault Archive
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           SEALED PERSONAL CORRESPONDENCE // REVEAL ON DESIGNATED DATELINE
         </p>
       </header>
@@ -57,7 +57,7 @@ export default function Vault() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
         {/* Create Capsule */}
         <div className="stationery-card" style={{ height: "fit-content", padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1.2rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+          <h3 style={{ margin: "0 0 1.2rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
             Seal Time Capsule
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -66,17 +66,17 @@ export default function Vault() {
               placeholder="CAPSULE TITLE (E.G. ON FREELANCE LAUNCH)..."
               value={title}
               onChange={e => setTitle(e.target.value)}
-              style={{ width: "100%", textTransform: "uppercase", letterSpacing: "0.02em" }}
+              style={{ width: "100%", letterSpacing: "0.02em" }}
             />
             <textarea
               placeholder="ENTER PRIVATE CORRESPONDENCE, ADVICE OR MEMORIES..."
               value={message}
               onChange={e => setMessage(e.target.value)}
               rows={4}
-              style={{ width: "100%", textTransform: "uppercase", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}
+              style={{ width: "100%", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}
             />
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", textTransform: "uppercase" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", }}>
                 Reveal Dateline:
               </label>
               <input
@@ -86,7 +86,7 @@ export default function Vault() {
                 style={{ width: "100%" }}
               />
             </div>
-            <button onClick={addCapsule} className="btn-primary" style={{ marginTop: "0.5rem", width: "100%", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <button onClick={addCapsule} className="btn-primary" style={{ marginTop: "0.5rem", width: "100%", letterSpacing: "0.05em" }}>
               Seal Capsule ⏳
             </button>
           </div>
@@ -94,7 +94,7 @@ export default function Vault() {
 
         {/* Sealed Capsules list */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", overflowY: "auto", maxHeight: "450px", paddingRight: "0.5rem" }}>
-          <h3 style={{ margin: "0", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
+          <h3 style={{ margin: "0", fontSize: "0.85rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
             Sealed Correspondence Records
           </h3>
           {capsules.length === 0 ? (
@@ -108,7 +108,7 @@ export default function Vault() {
                 <div key={c.id} className="stationery-card" style={{ borderLeft: unlocked ? "4px solid #ffffff" : "4px solid var(--border-color)", padding: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                     <div>
-                      <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1rem", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", letterSpacing: "-0.01em" }}>
+                      <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1rem", fontWeight: "800", color: "#ffffff", letterSpacing: "-0.01em" }}>
                         {unlocked ? "🔓" : "🔒"} {c.title}
                       </h4>
                       <span style={{ fontSize: "0.75rem", color: "#888888", fontFamily: "var(--font-mono)" }}>

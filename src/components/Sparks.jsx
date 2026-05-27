@@ -59,10 +59,10 @@ export default function Sparks() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
           Cognitive Calibration Sparks
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           SELECT BASES FOR REAL-TIME TYPOGRAPHICAL AFFIRMATION ALIGNMENT
         </p>
       </header>
@@ -70,7 +70,7 @@ export default function Sparks() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", alignItems: "start" }}>
         {/* Choices panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.8rem", fontWeight: "800", textTransform: "uppercase", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
+          <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.8rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
             SELECT CURRENT COGNITIVE STATE:
           </p>
           {prompts.map((p, idx) => {
@@ -89,7 +89,6 @@ export default function Sparks() {
                   cursor: "pointer",
                   fontWeight: "700",
                   fontSize: "0.85rem",
-                  textTransform: "uppercase",
                   letterSpacing: "0.02em",
                   textAlign: "left",
                   transition: "all 0.15s ease",
@@ -117,7 +116,7 @@ export default function Sparks() {
           border: "1px solid #ffffff",
           padding: "2rem"
         }}>
-          <span style={{ fontSize: "1.2rem", color: "#888888", fontFamily: "var(--font-mono)", letterSpacing: "0.05em", textTransform: "uppercase", display: "block", marginBottom: "1.5rem" }}>
+          <span style={{ fontSize: "1.2rem", color: "#888888", fontFamily: "var(--font-mono)", letterSpacing: "0.05em", display: "block", marginBottom: "1.5rem" }}>
             [AFFIRMATION CALIBRATION]
           </span>
           <p style={{
@@ -126,7 +125,6 @@ export default function Sparks() {
             fontWeight: "800",
             margin: 0,
             color: "#000000",
-            textTransform: "uppercase",
             letterSpacing: "-0.02em",
             position: "relative",
             zIndex: 2

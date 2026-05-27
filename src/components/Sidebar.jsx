@@ -25,7 +25,7 @@ export default function Sidebar() {
     textDecoration: "none",
     fontWeight: isActive ? "700" : "500",
     fontSize: "0.9rem",
-    textTransform: "uppercase",
+    fontSize: "0.9rem",
     letterSpacing: "0.1em",
     transition: "all 0.15s ease-in-out",
     color: isActive ? "var(--bg-page)" : "var(--text-secondary)",
@@ -92,7 +92,7 @@ export default function Sidebar() {
         {/* Title */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0 0.5rem" }}>
           <Logo size={28} color="#ffffff" />
-          <span style={{ fontSize: "1.1rem", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#ffffff" }}>
+          <span style={{ fontSize: "1.1rem", fontWeight: "600", letterSpacing: "0.08em", color: "var(--text-primary)" }}>
             Growth OS
           </span>
         </div>
@@ -132,8 +132,8 @@ export default function Sidebar() {
         </nav>
 
         {/* Footer / Brand metadata */}
-        <div style={{ fontSize: "0.75rem", color: "#444444", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "1.2rem", letterSpacing: "0.05em", fontFamily: "var(--font-mono)" }}>
-          COMMAND CENTER V1.0
+        <div style={{ fontSize: "0.75rem", color: "var(--text-secondary)", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "1.2rem", letterSpacing: "0.05em", fontFamily: "var(--font-mono)" }}>
+          Command Center v1.0
         </div>
       </aside>
       

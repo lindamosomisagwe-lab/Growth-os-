@@ -55,10 +55,10 @@ export default function LifeChapters() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.04em" }}>
+        <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.04em" }}>
           📓 Life Timeline Chronicles
         </h1>
-        <p style={{ margin: 0, fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: 0, fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           ARCHIVE PERSONAL MILESTONES // HISTORICAL TIMELINE ENTRIES
         </p>
       </header>
@@ -66,10 +66,10 @@ export default function LifeChapters() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem", alignItems: "start" }}>
         {/* Log a New Chapter Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em" }}>Log a New Chapter</h3>
+          <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Log a New Chapter</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", textTransform: "uppercase" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", }}>
                 Chapter Title:
               </label>
               <input
@@ -77,12 +77,12 @@ export default function LifeChapters() {
                 placeholder="E.G. LAUNCHING FREELANCE STABLE..."
                 value={title}
                 onChange={e => setTitle(e.target.value)}
-                style={{ width: "100%", textTransform: "uppercase" }}
+                style={{ width: "100%", }}
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", textTransform: "uppercase" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", }}>
                 Date or Custom Phase:
               </label>
               <input
@@ -90,12 +90,12 @@ export default function LifeChapters() {
                 placeholder="E.G. SUMMER 2026, PHASE ONE"
                 value={date}
                 onChange={e => setDate(e.target.value)}
-                style={{ width: "100%", textTransform: "uppercase" }}
+                style={{ width: "100%", }}
               />
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", textTransform: "uppercase" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.4rem", }}>
                 Reflective Chronology Note:
               </label>
               <textarea
@@ -103,13 +103,13 @@ export default function LifeChapters() {
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 rows={4}
-                style={{ width: "100%", textTransform: "uppercase", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}
+                style={{ width: "100%", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}
               />
             </div>
 
             {/* Photo Uploader */}
             <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "1rem" }}>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", }}>
                 📷 Attach Chapter Image:
               </label>
               <input
@@ -151,7 +151,7 @@ export default function LifeChapters() {
               )}
             </div>
 
-            <button onClick={addChapter} className="btn-primary" style={{ marginTop: "0.5rem", width: "100%", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <button onClick={addChapter} className="btn-primary" style={{ marginTop: "0.5rem", width: "100%", letterSpacing: "0.05em" }}>
               Document Chapter 🖋️
             </button>
           </div>
@@ -159,7 +159,7 @@ export default function LifeChapters() {
 
         {/* Chapter Feed Grid */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", overflowY: "auto", maxHeight: "600px", paddingRight: "0.5rem" }}>
-          <h3 style={{ margin: "0", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
+          <h3 style={{ margin: "0", fontSize: "0.85rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
             Archive Chronicle Timeline
           </h3>
 
@@ -181,10 +181,10 @@ export default function LifeChapters() {
                 {/* Header */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px dashed var(--border-color)", paddingBottom: "0.75rem" }}>
                   <div>
-                    <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", letterSpacing: "-0.01em" }}>
+                    <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", fontWeight: "800", color: "#ffffff", letterSpacing: "-0.01em" }}>
                       📓 {c.title || "Untitled Chapter"}
                     </h4>
-                    <span style={{ fontSize: "0.75rem", color: "#888888", fontWeight: "700", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+                    <span style={{ fontSize: "0.75rem", color: "#888888", fontWeight: "700", fontFamily: "var(--font-mono)", }}>
                       📅 PHASE: {c.date}
                     </span>
                   </div>
@@ -197,7 +197,7 @@ export default function LifeChapters() {
                 </div>
 
                 {/* Content */}
-                <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: "1.6", whiteSpace: "pre-wrap", color: "#c5c5c5", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>
+                <p style={{ margin: 0, fontSize: "0.9rem", lineHeight: "1.6", whiteSpace: "pre-wrap", color: "#c5c5c5", fontFamily: "var(--font-mono)" }}>
                   {c.text}
                 </p>
 

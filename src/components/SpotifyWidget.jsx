@@ -18,7 +18,7 @@ export default function SpotifyWidget() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", alignItems: "start" }}>
         {/* Playlist Selection Panel */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
+          <p style={{ margin: "0 0 0.5rem 0", fontSize: "0.85rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
             Select Focus Mode:
           </p>
           {playlists.map(p => {
@@ -39,7 +39,6 @@ export default function SpotifyWidget() {
                   cursor: "pointer",
                   fontWeight: "700",
                   fontSize: "0.9rem",
-                  textTransform: "uppercase",
                   letterSpacing: "0.02em",
                   textAlign: "left",
                   transition: "all 0.15s ease-in-out"

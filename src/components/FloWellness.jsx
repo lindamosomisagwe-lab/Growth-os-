@@ -51,10 +51,10 @@ export default function FloWellness() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
           Wellness &amp; Biometrics
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           PHYSIOLOGICAL STATE METRICS // HYDRATION INDEX
         </p>
       </header>
@@ -62,12 +62,12 @@ export default function FloWellness() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
         {/* Flo Cycle Tracker Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             Cycle Tracker
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             <div>
-              <label style={{ display: "block", marginBottom: "0.75rem", fontWeight: "700", fontSize: "0.85rem", color: "#888888", letterSpacing: "0.02em", textTransform: "uppercase" }}>
+              <label style={{ display: "block", marginBottom: "0.75rem", fontWeight: "700", fontSize: "0.85rem", color: "#888888", letterSpacing: "0.02em", }}>
                 Current Cycle Day:
               </label>
               <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
@@ -122,12 +122,12 @@ export default function FloWellness() {
 
         {/* Daily Hydration & Nutrition Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             Hydration &amp; Fuel
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
             <div>
-              <label style={{ display: "block", marginBottom: "0.75rem", fontWeight: "700", fontSize: "0.85rem", color: "#888888", letterSpacing: "0.02em", textTransform: "uppercase" }}>
+              <label style={{ display: "block", marginBottom: "0.75rem", fontWeight: "700", fontSize: "0.85rem", color: "#888888", letterSpacing: "0.02em", }}>
                 Water Intake (Glasses / 8.0 Target):
               </label>
               <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
@@ -163,7 +163,7 @@ export default function FloWellness() {
 
             <hr style={{ margin: "0.5rem 0" }} />
 
-            <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", fontSize: "0.85rem", textTransform: "uppercase", fontWeight: "700", color: "#ffffff" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", fontSize: "0.85rem", fontWeight: "700", color: "#ffffff" }}>
               <input
                 type="checkbox"
                 checked={wellness.hydration}
@@ -173,7 +173,7 @@ export default function FloWellness() {
               Hydration target reached
             </label>
 
-            <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", fontSize: "0.85rem", textTransform: "uppercase", fontWeight: "700", color: "#ffffff" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", fontSize: "0.85rem", fontWeight: "700", color: "#ffffff" }}>
               <input
                 type="checkbox"
                 checked={wellness.nutrition}
@@ -188,7 +188,7 @@ export default function FloWellness() {
 
       {/* Wellness Notes Card */}
       <div className="stationery-card" style={{ marginTop: "1.5rem", padding: "2rem" }}>
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
           Daily Wellness Log
         </h3>
         <textarea
@@ -197,7 +197,7 @@ export default function FloWellness() {
           onChange={e => changeVal("notes", e.target.value)}
           onBlur={() => triggerToast("records archived")}
           rows={3}
-          style={{ width: "100%", padding: "0.8rem", boxSizing: "border-box", textTransform: "uppercase", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}
+          style={{ width: "100%", padding: "0.8rem", boxSizing: "border-box", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}
         />
       </div>
 

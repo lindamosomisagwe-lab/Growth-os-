@@ -66,10 +66,10 @@ export default function Dashboard() {
         paddingBottom: "1.5rem"
       }}>
         <div>
-          <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "2rem", fontWeight: "800", letterSpacing: "-0.04em", textTransform: "uppercase", color: "#ffffff" }}>
+          <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "2rem", fontWeight: "800", letterSpacing: "-0.04em", color: "#ffffff" }}>
             {getGreeting()}
           </h1>
-          <p style={{ margin: 0, fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
             "Step by step, day by day, I cultivate my growth."
           </p>
         </div>
@@ -85,7 +85,6 @@ export default function Dashboard() {
               textDecoration: "none", 
               fontWeight: "700", 
               fontSize: "0.85rem", 
-              textTransform: "uppercase",
               letterSpacing: "0.05em",
               boxShadow: "none", 
               display: "flex", 
@@ -108,7 +107,6 @@ export default function Dashboard() {
               textDecoration: "none", 
               fontWeight: "700", 
               fontSize: "0.85rem", 
-              textTransform: "uppercase",
               letterSpacing: "0.05em",
               boxShadow: "none", 
               display: "flex", 
@@ -149,7 +147,7 @@ export default function Dashboard() {
               STABLE
             </span>
           </div>
-          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Wheel of Life</h3>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#ffffff" }}>Wheel of Life</h3>
           <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", margin: "1rem 0" }}>
             <span style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#ffffff", letterSpacing: "-0.05em" }}>{averageRating}</span>
             <span style={{ fontSize: "0.85rem", color: "#888888", fontFamily: "var(--font-mono)" }}>/ 10.0 AVERAGE</span>
@@ -170,7 +168,6 @@ export default function Dashboard() {
               textDecoration: "none", 
               fontWeight: "700", 
               fontSize: "0.8rem", 
-              textTransform: "uppercase",
               letterSpacing: "0.05em",
               textAlign: "center" 
             }}
@@ -196,7 +193,7 @@ export default function Dashboard() {
               ACTIVE
             </span>
           </div>
-          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Goals &amp; Targets</h3>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#ffffff" }}>Goals &amp; Targets</h3>
           <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", margin: "1rem 0", color: "#ffffff", letterSpacing: "-0.05em" }}>
             {goalsProgress}%
           </div>
@@ -228,7 +225,6 @@ export default function Dashboard() {
               textDecoration: "none", 
               fontWeight: "700", 
               fontSize: "0.8rem", 
-              textTransform: "uppercase",
               letterSpacing: "0.05em",
               textAlign: "center" 
             }}
@@ -254,7 +250,7 @@ export default function Dashboard() {
               ONLINE
             </span>
           </div>
-          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Life Chapters</h3>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#ffffff" }}>Life Chapters</h3>
           <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", margin: "1rem 0", color: "#ffffff", letterSpacing: "-0.05em" }}>
             {totalMemories} <span style={{ fontSize: "0.85rem", fontWeight: "normal", color: "#888888", letterSpacing: "0.05em" }}>RECORDS</span>
           </div>
@@ -288,7 +284,6 @@ export default function Dashboard() {
               textDecoration: "none", 
               fontWeight: "700", 
               fontSize: "0.8rem", 
-              textTransform: "uppercase",
               letterSpacing: "0.05em",
               textAlign: "center" 
             }}
@@ -314,7 +309,7 @@ export default function Dashboard() {
               ACTIVE
             </span>
           </div>
-          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Flo &amp; Wellness</h3>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", letterSpacing: "-0.02em", color: "#ffffff" }}>Flo &amp; Wellness</h3>
           <div style={{ display: "flex", alignItems: "center", gap: "1rem", margin: "1.25rem 0" }}>
             <div style={{ 
               fontSize: "2rem", 
@@ -328,7 +323,7 @@ export default function Dashboard() {
               {todayMood || "—"}
             </div>
             <div>
-              <div style={{ fontWeight: "700", fontSize: "1rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>DAILY MOOD STATE</div>
+              <div style={{ fontWeight: "700", fontSize: "1rem", color: "#ffffff", letterSpacing: "-0.01em" }}>DAILY MOOD STATE</div>
               <div style={{ fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)" }}>
                 HYDRATION: {glasses} / 8.0 GLASSES LOGGED
               </div>
@@ -350,7 +345,6 @@ export default function Dashboard() {
                 textDecoration: "none", 
                 fontWeight: "700", 
                 fontSize: "0.75rem", 
-                textTransform: "uppercase",
                 letterSpacing: "0.05em",
                 textAlign: "center",
                 transition: "all 0.15s ease"
@@ -371,7 +365,6 @@ export default function Dashboard() {
                 textDecoration: "none", 
                 fontWeight: "700", 
                 fontSize: "0.75rem", 
-                textTransform: "uppercase",
                 letterSpacing: "0.05em",
                 textAlign: "center",
                 transition: "all 0.15s ease"

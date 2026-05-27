@@ -95,10 +95,10 @@ export default function WheelOfLife() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", color: "#ffffff" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", color: "#ffffff" }}>
           🎡 Life Radar Balance
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           HIGH-PERFORMANCE RADAR DIAGRAM // EIGHT ESSENTIAL MODULES
         </p>
       </header>
@@ -163,7 +163,7 @@ export default function WheelOfLife() {
             gap: "0.5rem"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "700", textTransform: "uppercase", color: "#ffffff", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", letterSpacing: "0.02em" }}>
+              <span style={{ fontWeight: "700", color: "#ffffff", display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.85rem", letterSpacing: "0.02em" }}>
                 <span style={{ color: "#ffffff" }}>▪</span>
                 {cat}
               </span>
@@ -204,7 +204,6 @@ export default function WheelOfLife() {
                 boxSizing: "border-box",
                 resize: "vertical",
                 fontSize: "0.8rem",
-                textTransform: "uppercase",
                 fontFamily: "var(--font-mono)",
                 borderRadius: "0px",
                 border: "1px solid var(--border-color)",

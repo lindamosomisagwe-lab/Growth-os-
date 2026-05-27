@@ -64,10 +64,10 @@ export default function Settings() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           System Settings Console
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           LOCAL STORAGE MAINTENANCE // BACKUP &amp; DISASTER RECOVERY
         </p>
       </header>
@@ -75,7 +75,7 @@ export default function Settings() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
         {/* Data & Backup Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
             📥 Database Backup
           </h3>
           <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.5rem 0", color: "#888888" }}>
@@ -83,7 +83,7 @@ export default function Settings() {
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <button onClick={exportData} className="btn-primary" style={{ width: "100%", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            <button onClick={exportData} className="btn-primary" style={{ width: "100%", letterSpacing: "0.05em" }}>
               📥 Export backup snapshot
             </button>
 
@@ -105,7 +105,7 @@ export default function Settings() {
 
             {/* Import Action */}
             <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "1rem" }}>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", textTransform: "uppercase" }}>
+              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", }}>
                 Restore Backup Snapshot:
               </label>
               <input
@@ -146,7 +146,7 @@ export default function Settings() {
 
         {/* Database Sandbox Integrity Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em" }}>
+          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
             🔒 Storage Sandbox Isolation
           </h3>
           <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.5rem 0", color: "#888888" }}>

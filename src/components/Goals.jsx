@@ -31,20 +31,20 @@ function ReflectiveNudges({ onAddGoal }) {
 
   return (
     <div style={{ marginBottom: "2rem" }}>
-      <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#888888", fontFamily: "var(--font-mono)" }}>
-        [💡 SYSTEM SUGGESTIONS]
+      <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", letterSpacing: "0.08em", color: "#888888", fontFamily: "var(--font-mono)" }}>
+        [💡 System Suggestions]
       </h3>
       {nudges.map(cat => (
         <div key={cat} className="stationery-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem", marginBottom: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <span style={{ border: "1px solid #ffffff", color: "#ffffff", padding: "2px 8px", fontSize: "0.7rem", fontWeight: "700", fontFamily: "var(--font-mono)" }}>
-              LOW RATINGS // {cat.toUpperCase()}
+              Low Ratings // {cat.toUpperCase()}
             </span>
             <p style={{ margin: "0.6rem 0 0 0", fontSize: "0.9rem", color: "#ffffff" }}>{suggestions[cat]}</p>
           </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={() => setDismissed(p => [...p, cat])} className="btn-secondary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", textTransform: "uppercase" }}>Dismiss</button>
-            <button onClick={() => { onAddGoal(suggestions[cat]); setDismissed(p => [...p, cat]); }} className="btn-primary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", textTransform: "uppercase" }}>Add</button>
+            <button onClick={() => setDismissed(p => [...p, cat])} className="btn-secondary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", }}>Dismiss</button>
+            <button onClick={() => { onAddGoal(suggestions[cat]); setDismissed(p => [...p, cat]); }} className="btn-primary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", }}>Add</button>
           </div>
         </div>
       ))}
@@ -112,7 +112,7 @@ export default function Goals() {
     if (!val.trim()) return;
     setGoals(prev => [...prev, { id: Date.now(), title: val.trim(), completed: false, sub: [] }]);
     if (typeof customTitle !== "string") setTitle("");
-    triggerToast("OBJECTIVE CREATED // TARGET ACTIVE");
+    triggerToast("Objective Created // Target Active");
   };
 
   const handleSkipCoaching = () => {
@@ -202,14 +202,14 @@ export default function Goals() {
     setGoals(prev => {
       const next = prev.map(g => (g.id === id ? { ...g, completed: !g.completed } : g));
       const target = next.find(g => g.id === id);
-      if (target) triggerToast(target.completed ? "OBJECTIVE COMPLETED" : "OBJECTIVE RE-OPENED");
+      if (target) triggerToast(target.completed ? "Objective Completed" : "Objective Re-opened");
       return next;
     });
   };
 
   const deleteGoal = id => {
     setGoals(prev => prev.filter(g => g.id !== id));
-    triggerToast("OBJECTIVE REMOVED // FILE PURGED");
+    triggerToast("Objective Removed // File Purged");
   };
 
   // Tier 2: Sub-goal Actions
@@ -221,7 +221,7 @@ export default function Goals() {
       sub: [...g.sub, { id: Date.now(), title: text.trim(), completed: false, tasks: [] }]
     } : g));
     setSubInputs(prev => ({ ...prev, [goalId]: "" }));
-    triggerToast("SUB-GOAL ADDED");
+    triggerToast("Sub-goal Added");
   };
 
   const toggleSub = (goalId, subId) => {
@@ -231,7 +231,7 @@ export default function Goals() {
         sub: g.sub.map(s => s.id === subId ? { ...s, completed: !s.completed } : s)
       } : g);
       const subGoal = next.find(g => g.id === goalId)?.sub.find(s => s.id === subId);
-      if (subGoal) triggerToast(subGoal.completed ? "SUB-GOAL COMPLETE" : "SUB-GOAL PENDING");
+      if (subGoal) triggerToast(subGoal.completed ? "Sub-goal Complete" : "Sub-goal Pending");
       return next;
     });
   };
@@ -241,7 +241,7 @@ export default function Goals() {
       ...g,
       sub: g.sub.filter(s => s.id !== subId)
     } : g));
-    triggerToast("SUB-GOAL REMOVED");
+    triggerToast("Sub-goal Removed");
   };
 
   // Tier 3: Daily Task Actions
@@ -268,7 +268,7 @@ export default function Goals() {
       return g;
     }));
     setTaskInputs(prev => ({ ...prev, [key]: "" }));
-    triggerToast("DAILY TASK ADDED // TICKER RUNNING");
+    triggerToast("Daily Task Added // Ticker Running");
   };
 
   const toggleTask = (goalId, subId, taskId) => {
@@ -306,7 +306,7 @@ export default function Goals() {
               return g2;
             });
           });
-          triggerToast("TASK LOGGED");
+          triggerToast("Task Logged");
         }, 200);
         return prev;
       }
@@ -329,7 +329,7 @@ export default function Goals() {
         }
         return g2;
       });
-      triggerToast("TASK RETURNED");
+      triggerToast("Task Returned");
       return next;
     });
   };
@@ -353,7 +353,7 @@ export default function Goals() {
       }
       return g;
     }));
-    triggerToast("TASK REMOVED");
+    triggerToast("Task Removed");
   };
 
   if (!isMounted) {
@@ -363,11 +363,11 @@ export default function Goals() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
           Objectives &amp; Task Hierarchies
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
-          TIER 1 (BIG GOAL) // TIER 2 (SUB-GOAL) // TIER 3 (DAILY TASK)
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
+          Tier 1 (Big Goal) // Tier 2 (Sub-Goal) // Tier 3 (Daily Task)
         </p>
       </header>
 
@@ -375,7 +375,7 @@ export default function Goals() {
 
       {/* Drafting Board (Goal Architect) */}
       <div style={{ marginBottom: "2rem", padding: "1.5rem", background: "var(--bg-surface)", border: "1px solid var(--border-color)" }}>
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
           Goal Architect
         </h3>
         
@@ -383,7 +383,7 @@ export default function Goals() {
         <div className="chat-container">
           {chatHistory.map((msg, idx) => (
             <div key={idx} className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "0.25rem", textTransform: "uppercase" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "0.25rem", }}>
                 {msg.role === 'user' ? 'You' : 'Architect'}
               </div>
               <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
@@ -414,7 +414,7 @@ export default function Goals() {
               onClick={handleSendMessage} 
               className="btn-primary"
               disabled={isStructuring || !draftText.trim()}
-              style={{ height: "60px", padding: "0 1.5rem", textTransform: "uppercase" }}
+              style={{ height: "60px", padding: "0 1.5rem", }}
             >
               Send
             </button>
@@ -422,7 +422,7 @@ export default function Goals() {
               onClick={handleSkipCoaching} 
               className="btn-secondary"
               disabled={isStructuring}
-              style={{ height: "60px", padding: "0 1.5rem", textTransform: "uppercase" }}
+              style={{ height: "60px", padding: "0 1.5rem", }}
             >
               Skip
             </button>
@@ -434,10 +434,10 @@ export default function Goals() {
           <div style={{ marginTop: "1.5rem", padding: "1.5rem", border: "1px dashed var(--text-primary)", background: "var(--bg-page)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>[FINALIZED STRUCTURE]</span>
-                <h4 style={{ margin: "0.5rem 0", fontSize: "1.2rem", fontWeight: "800", textTransform: "uppercase" }}>{previewGoal.title}</h4>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>[Finalized Structure]</span>
+                <h4 style={{ margin: "0.5rem 0", fontSize: "1.2rem", fontWeight: "800", }}>{previewGoal.title}</h4>
               </div>
-              <button onClick={confirmPreview} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", textTransform: "uppercase" }}>Confirm & Add</button>
+              <button onClick={confirmPreview} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", }}>Confirm & Add</button>
             </div>
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
               {previewGoal.sub.map((s, i) => (
@@ -454,13 +454,13 @@ export default function Goals() {
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem" }}>
         <input
           type="text"
-          placeholder="ENTER NEW CORE OBJECTIVE (TIER 1)..."
+          placeholder="Enter new core objective (Tier 1)..."
           value={title}
           onChange={e => setTitle(e.target.value)}
           onKeyDown={e => e.key === "Enter" && addGoal()}
-          style={{ flex: 1, padding: "0.8rem 1rem", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.02em" }}
+          style={{ flex: 1, padding: "0.8rem 1rem", fontSize: "0.9rem", letterSpacing: "0.02em" }}
         />
-        <button onClick={() => addGoal()} className="btn-secondary" style={{ padding: "0.8rem 1.6rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <button onClick={() => addGoal()} className="btn-secondary" style={{ padding: "0.8rem 1.6rem", fontSize: "0.85rem", letterSpacing: "0.05em" }}>
           Add Manually
         </button>
       </div>
@@ -468,7 +468,7 @@ export default function Goals() {
       <div style={{ overflowY: "auto", maxHeight: "550px", paddingRight: "0.5rem" }}>
         {goals.length === 0 ? (
           <p style={{ fontStyle: "italic", textAlign: "center", color: "#888888", padding: "3rem", border: "1px dashed var(--border-color)", fontSize: "0.9rem" }}>
-            NO ACTIVE GOALS DETECTED. INITIALIZE A TARGET STRATEGY AT THE TOP.
+            No active goals detected. Initialize a target strategy at the top.
           </p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
@@ -486,7 +486,6 @@ export default function Goals() {
                     <span style={{
                       fontSize: "1.1rem",
                       fontWeight: "800",
-                      textTransform: "uppercase",
                       letterSpacing: "-0.01em",
                       textDecoration: g.completed ? "line-through" : "none",
                       color: g.completed ? "#444444" : "#ffffff"
@@ -585,7 +584,7 @@ export default function Goals() {
                               <button
                                 onClick={() => addTask(g.id, s.id)}
                                 className="btn-primary"
-                                style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", textTransform: "uppercase" }}
+                                style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", }}
                               >
                                 + Task
                               </button>
@@ -609,7 +608,7 @@ export default function Goals() {
                     <button
                       onClick={() => addSub(g.id)}
                       className="btn-secondary"
-                      style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem", textTransform: "uppercase" }}
+                      style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem", }}
                     >
                       + Sub-Goal
                     </button>
@@ -624,7 +623,7 @@ export default function Goals() {
                   return (
                     <div style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
-                        <span>SMART PROGRESS</span>
+                        <span>Smart Progress</span>
                         <span>{progressPercent}% ({completedSub}/{totalSub})</span>
                       </div>
                       <div style={{ width: "100%", height: "4px", background: "var(--border-color)", borderRadius: "0px" }}>

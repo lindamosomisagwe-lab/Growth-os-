@@ -58,17 +58,17 @@ export default function MoodTracker() {
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>
           🧠 Cognitive State Logger
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
           CORRELATE EMOTIONAL SWINGS &amp; HYDRATION TRENDS DAILY
         </p>
       </header>
 
       {/* Selector */}
       <div className="stationery-card" style={{ marginBottom: "2rem", padding: "2rem" }}>
-        <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
+        <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
           Log today's cognitive baseline ({today}):
         </p>
         <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -98,7 +98,6 @@ export default function MoodTracker() {
                 <span style={{ 
                   fontSize: "0.75rem", 
                   fontWeight: "800", 
-                  textTransform: "uppercase", 
                   letterSpacing: "0.05em",
                   color: isSel ? "#000000" : "#ffffff"
                 }}>
@@ -109,7 +108,7 @@ export default function MoodTracker() {
           })}
         </div>
         {selectedMood && (
-          <p style={{ margin: "1rem 0 0 0", textAlign: "center", fontSize: "0.8rem", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.05em", color: "#888888" }}>
+          <p style={{ margin: "1rem 0 0 0", textAlign: "center", fontSize: "0.8rem", fontFamily: "var(--font-mono)", letterSpacing: "0.05em", color: "#888888" }}>
             State locked today as: <span style={{ color: "#ffffff", fontWeight: "700" }}>{selectedMood} {getEmojiLabel(selectedMood).toUpperCase()}</span>
           </p>
         )}
@@ -117,7 +116,7 @@ export default function MoodTracker() {
 
       {/* Past Log */}
       <div>
-        <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", textTransform: "uppercase", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>
           Archive History
         </h3>
         <div style={{ overflowY: "auto", maxHeight: "280px", paddingRight: "0.5rem" }}>
@@ -147,7 +146,7 @@ export default function MoodTracker() {
                     <span style={{ fontSize: "0.85rem", fontWeight: "700", fontFamily: "var(--font-mono)" }}>{date}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                       <span style={{ fontSize: "1.2rem" }}>{val}</span>
-                      <span style={{ fontSize: "0.75rem", color: "#888888", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em", fontFamily: "var(--font-mono)" }}>
+                      <span style={{ fontSize: "0.75rem", color: "#888888", fontWeight: "700", letterSpacing: "0.05em", fontFamily: "var(--font-mono)" }}>
                         {getEmojiLabel(val)}
                       </span>
                       <button
