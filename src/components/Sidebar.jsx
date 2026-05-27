@@ -91,7 +91,7 @@ export default function Sidebar() {
       >
         {/* Title */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0 0.5rem" }}>
-          <Logo size={28} color="#ffffff" />
+          <Logo size={28} color="var(--text-primary)" />
           <span style={{ fontSize: "1.1rem", fontWeight: "600", letterSpacing: "0.08em", color: "var(--text-primary)" }}>
             Growth OS
           </span>
