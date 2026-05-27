@@ -1,495 +1,416 @@
-/* ═══════════════════════════════════════════════════════════════
-   Growth OS — Neo-Minimalist Foundation
-   Swiss Design / International Typographic Style
-   
-   Layer structure:
-     1. Imports & Tailwind directives
-     2. Hard Reset
-     3. Typography System
-     4. Component Primitives  
-     5. Layout Utilities & Animations
-   ═══════════════════════════════════════════════════════════════ */
+/* src/index.css */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
-/* ── 1. Hard Reset ──────────────────────────────────────────── */
-@layer base {
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    border-color: #000000; /* All borders default to black */
-  }
-
-  html {
-    font-size: 16px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    scroll-behavior: smooth;
-  }
-
-  body {
-    font-family: "Inter", system-ui, sans-serif;
-    background-color: #FFFFFF;
-    color: #000000;
-    line-height: 1.5;
-    min-height: 100vh;
-  }
-
-  /* Stripped input defaults — all styling comes from component classes */
-  input,
-  textarea,
-  select,
-  button {
-    font-family: inherit;
-    font-size: inherit;
-    color: inherit;
-    background: transparent;
-    border: none;
-    border-radius: 0;
-    outline: none;
-    -webkit-appearance: none;
-       -moz-appearance: none;
-            appearance: none;
-  }
-
-  button { cursor: pointer; }
-  a { color: inherit; text-decoration: none; }
-
-  /* Make SVGs inherit color cleanly */
-  svg { display: block; }
-
-  /* Remove default list bullets */
-  ul, ol { list-style: none; }
+/* 1. Global Reset & Swiss Typography System */
+:root {
+  --bg-page: #000000;
+  --bg-surface: #0a0a0a;
+  --bg-surface-elevated: #161616;
+  --border-color: #222222;
+  --border-color-active: #ffffff;
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --text-body: #c5c5c5;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-/* ── 2. Typography System ───────────────────────────────────── */
-@layer base {
-  /* 
-    Typographic scale — rational, tight, Swiss.
-    Use semantic class names, never ad-hoc Tailwind font utilities.
-  */
+body {
+  margin: 0;
+  background-color: var(--bg-page) !important;
+  color: var(--text-body) !important;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-  /* Page-level identifier — uppercase, tracked, muted */
-  .label-caps {
-    font-size: 0.6875rem;
-    font-weight: 500;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #737373;
-    line-height: 1;
+/* Force dark mode compatibility across standard HTML tags */
+h1, h2, h3, h4, h5, h6, p, span, label, div, aside, main, section, li, ul, ol, a, input, textarea, select {
+  font-family: var(--font-sans);
+  color: inherit;
+}
+
+h1, h2, h3, h4 {
+  color: var(--text-primary) !important;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+/* 2. Stark Neo-Minimalist Cards (No shadows, pure sharp borders) */
+.stationery-card,
+.minimal-card {
+  background: var(--bg-surface) !important;
+  padding: 2rem;
+  border-radius: 0px !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+  color: var(--text-body) !important;
+  transition: border-color 0.2s ease;
+}
+
+.stationery-card:hover,
+.minimal-card:hover {
+  border-color: #333333 !important;
+}
+
+/* Handle legacy studio/stationery containers mapped dynamically */
+div[style*="background-color: rgb(250, 246, 243)"],
+div[style*="background: rgb(250, 246, 243)"],
+div[style*="background:#faf6f3" i],
+div[style*="background: #faf6f3" i],
+div[style*="background: rgb(255, 255, 255)"],
+div[style*="background:#ffffff" i],
+div[style*="background: #ffffff" i],
+div[style*="background: rgb(249, 245, 242)"],
+div[style*="background:#f9f5f2" i],
+div[style*="background: #f9f5f2" i],
+div[style*="background: rgb(250, 218, 221)"],
+div[style*="background:#fadadd" i],
+div[style*="background: #fadadd" i],
+div[style*="background: rgb(209, 228, 243)"],
+div[style*="background:#d1e4f3" i],
+div[style*="background: #d1e4f3" i],
+div[style*="background: rgb(212, 224, 209)"],
+div[style*="background:#d4e0d1" i],
+div[style*="background: #d4e0d1" i],
+div[style*="background-color: rgb(109, 42, 45)"],
+div[style*="background:#6d2a2d" i],
+div[style*="background: #6d2a2d" i] {
+  background-color: var(--bg-surface) !important;
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0px !important;
+  box-shadow: none !important;
+}
+
+/* 3. Inputs, Textareas, and Forms */
+textarea, input[type="text"], input[type="date"], select {
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 0px !important;
+  background: var(--bg-page) !important;
+  color: var(--text-primary) !important;
+  outline: none;
+  padding: 0.6rem 0.8rem !important;
+  transition: border-color 0.15s ease;
+}
+
+textarea::placeholder, input[type="text"]::placeholder {
+  color: var(--text-secondary) !important;
+  opacity: 0.7 !important;
+}
+
+textarea:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus {
+  border-color: var(--border-color-active) !important;
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0px !important;
+  background: var(--bg-page);
+  cursor: pointer;
+  display: inline-grid;
+  place-content: center;
+  transition: all 0.15s ease;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+input[type="checkbox"]:checked::before {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: var(--bg-page);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.text-muted, .secondary-text {
+  color: var(--text-secondary) !important;
+}
+
+/* 4. Navigation Drawer and Sidebar */
+aside {
+  background: var(--bg-surface) !important;
+  border-right: 1px solid var(--border-color) !important;
+  box-shadow: none !important;
+  border-radius: 0px !important;
+}
+
+aside span, aside div {
+  color: var(--text-primary) !important;
+}
+
+aside a {
+  border-radius: 0px !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--bg-page) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.02em;
+  transition: all 0.15s ease !important;
+}
+
+aside a.active,
+aside a.active * {
+  background: var(--text-primary) !important;
+  color: var(--bg-page) !important;
+  border-color: var(--text-primary) !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+}
+
+aside a:hover:not(.active) {
+  background: var(--bg-surface-elevated) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color-active) !important;
+  transform: none !important;
+}
+
+/* 5. Buttons, Actions & Interactive Overrides (Stark rigid style) */
+button,
+.btn-primary,
+a[style*="background-color: rgb(250, 218, 221)"],
+a[style*="background: rgb(250, 218, 221)"],
+a[style*="background:#fadadd" i],
+a[style*="background: #fadadd" i],
+a[style*="background-color: rgb(209, 228, 243)"],
+a[style*="background: rgb(209, 228, 243)"],
+a[style*="background:#d1e4f3" i],
+a[style*="background: #d1e4f3" i],
+a[style*="background-color: rgb(212, 224, 209)"],
+a[style*="background: rgb(212, 224, 209)"],
+a[style*="background:#d4e0d1" i],
+a[style*="background: #d4e0d1" i] {
+  background-color: var(--text-primary) !important;
+  background: var(--text-primary) !important;
+  color: var(--bg-page) !important;
+  border: 1px solid var(--text-primary) !important;
+  border-radius: 0px !important;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-sans);
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: none !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+button *,
+.btn-primary *,
+a[style*="background-color: rgb(250, 218, 221)"] *,
+a[style*="background-color: rgb(209, 228, 243)"] *,
+a[style*="background-color: rgb(212, 224, 209)"] * {
+  color: var(--bg-page) !important;
+}
+
+button:hover,
+.btn-primary:hover,
+a[style*="background-color: rgb(250, 218, 221)"]:hover,
+a[style*="background-color: rgb(209, 228, 243)"]:hover,
+a[style*="background-color: rgb(212, 224, 209)"]:hover {
+  transform: none !important;
+  background: var(--bg-page) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+button:hover *,
+.btn-primary:hover *,
+a[style*="background-color: rgb(250, 218, 221)"]:hover *,
+a[style*="background-color: rgb(209, 228, 243)"]:hover *,
+a[style*="background-color: rgb(212, 224, 209)"]:hover * {
+  color: var(--text-primary) !important;
+}
+
+/* Secondary Button style: stark border with hover inverting */
+button.btn-secondary,
+.btn-secondary {
+  background: var(--bg-page) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+button.btn-secondary:hover,
+.btn-secondary:hover {
+  background: var(--text-primary) !important;
+  color: var(--bg-page) !important;
+  border-color: var(--text-primary) !important;
+}
+
+button.btn-secondary:hover * {
+  color: var(--bg-page) !important;
+}
+
+/* 6. Rigid Form Sliders (Square, flat) */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: var(--border-color) !important;
+  border: none !important;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 0px !important;
+  background: var(--text-primary) !important;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -6px;
+  border: 1px solid var(--bg-page) !important;
+  transition: background-color 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  background: var(--text-secondary) !important;
+  transform: none;
+}
+
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: var(--border-color) !important;
+  border: none !important;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 16px;
+  width: 16px;
+  border-radius: 0px !important;
+  background: var(--text-primary) !important;
+  cursor: pointer;
+  border: 1px solid var(--bg-page) !important;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background: var(--text-secondary) !important;
+}
+
+/* 7. Scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 0px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* 8. Recharts SVG Typography Overrides */
+text, .recharts-text, .recharts-pie-label-text, .recharts-radar-label {
+  font-family: var(--font-sans) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  fill: var(--text-secondary) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* 9. Layout Splitters & Borders */
+hr {
+  border: none !important;
+  border-top: 1px solid var(--border-color) !important;
+  height: 1px;
+  margin: 1.5rem 0;
+}
+
+div[style*="borderLeft"], div[style*="border-left"] {
+  border-left: 2px solid var(--text-primary) !important;
+  border-radius: 0px !important;
+}
+
+div[style*="borderBottom"], div[style*="border-bottom"] {
+  border-bottom: 1px solid var(--border-color) !important;
+  border-radius: 0px !important;
+}
+
+/* 10. Toast Notification */
+.toast-notification {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  padding: 0.8rem 1.6rem;
+  border-radius: 0px !important;
+  border: 1px solid var(--text-primary) !important;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: toastFadeIn 0.3s ease-out, toastFadeOut 0.3s ease-in 2.2s forwards;
+}
+
+@keyframes toastFadeIn {
+  from { bottom: 0; opacity: 0; }
+  to { bottom: 2rem; opacity: 1; }
+}
+
+@keyframes toastFadeOut {
+  from { bottom: 2rem; opacity: 1; }
+  to { bottom: 0; opacity: 0; }
+}
+
+/* 11. Viewports & Spacers */
+@media (max-width: 767px) {
+  main {
+    padding: 5rem 1.25rem 2rem 1.25rem !important;
+    height: auto !important;
+    overflow-y: visible !important;
   }
-
-  /* Monospace tag — dates, IDs, counts */
-  .mono-tag {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 0.6875rem;
-    font-weight: 400;
-    letter-spacing: 0.06em;
-    color: #737373;
-  }
-
-  /* Big Goal title — primary headline */
-  .heading-xl {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.025em;
-    line-height: 1.15;
-    color: #000000;
-  }
-
-  /* Section / panel heading */
-  .heading-lg {
-    font-size: 1.125rem;
-    font-weight: 600;
-    letter-spacing: -0.015em;
-    line-height: 1.25;
-    color: #000000;
-  }
-
-  /* Card title */
-  .heading-md {
-    font-size: 1rem;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    line-height: 1.3;
-    color: #000000;
-  }
-
-  /* Sub-goal title */
-  .heading-sm {
-    font-size: 0.875rem;
-    font-weight: 500;
-    letter-spacing: -0.005em;
-    line-height: 1.4;
-    color: #000000;
-  }
-
-  /* Body copy */
-  .body-base {
-    font-size: 0.875rem;
-    font-weight: 400;
-    line-height: 1.6;
-    color: #404040;
-  }
-
-  /* Secondary / supporting text */
-  .body-sm {
-    font-size: 0.8125rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: #737373;
-  }
-
-  /* Completed / struck text */
-  .text-done {
-    text-decoration: line-through;
-    color: #A3A3A3;
+  .stationery-card,
+  .minimal-card {
+    padding: 1.25rem !important;
   }
 }
 
-
-/* ── 3. Component Primitives ────────────────────────────────── */
-@layer components {
-
-  /* ─── Cards ──────────────────────────────────────────────── */
-
-  /* Base card — the primary structural unit */
-  .card {
-    border: 1px solid #000000;
-    background-color: #FFFFFF;
-    padding: 1.5rem;
-    position: relative;
-    transition: background-color 120ms ease;
-  }
-
-  /* Interactive card — adds hover state */
-  .card-interactive {
-    cursor: pointer;
-  }
-  .card-interactive:hover {
-    background-color: #FAFAFA;
-  }
-
-  /* Inner divider within a card */
-  .card-section {
-    border-top: 1px solid #E5E5E5;
-    padding-top: 1rem;
-    margin-top: 1rem;
-  }
-
-  /* Compact card — Sub-goal rows */
-  .card-compact {
-    border: 1px solid #E5E5E5;
-    background-color: #FFFFFF;
-    padding: 0.875rem 1rem;
-    position: relative;
-    transition: border-color 100ms ease, background-color 100ms ease;
-  }
-  .card-compact:hover {
-    border-color: #000000;
-  }
-
-  /* ─── Buttons ────────────────────────────────────────────── */
-
-  /* Ghost — border only, inverts on hover */
-  .btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    border: 1px solid #000000;
-    padding: 0.4375rem 0.875rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    transition: background-color 100ms, color 100ms;
-    line-height: 1;
-  }
-  .btn-ghost:hover {
-    background-color: #000000;
-    color: #FFFFFF;
-  }
-  .btn-ghost:active {
-    background-color: #171717;
-  }
-
-  /* Solid — primary action */
-  .btn-solid {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    background-color: #000000;
-    color: #FFFFFF;
-    padding: 0.4375rem 0.875rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    transition: background-color 100ms;
-    line-height: 1;
-  }
-  .btn-solid:hover  { background-color: #262626; }
-  .btn-solid:active { background-color: #171717; }
-
-  /* Icon-only button — tight square */
-  .btn-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid #E5E5E5;
-    background: #FFFFFF;
-    transition: border-color 100ms, background-color 100ms;
-  }
-  .btn-icon:hover {
-    border-color: #000000;
-    background-color: #FAFAFA;
-  }
-
-  /* Muted text-only button */
-  .btn-text {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #737373;
-    transition: color 100ms;
-  }
-  .btn-text:hover { color: #000000; }
-
-  /* Danger variant — overdue/delete states */
-  .btn-danger {
-    border-color: #CC0000;
-    color: #CC0000;
-  }
-  .btn-danger:hover {
-    background-color: #CC0000;
-    color: #FFFFFF;
-  }
-
-  /* ─── Inputs ─────────────────────────────────────────────── */
-
-  /* Standard bordered input */
-  .input-field {
-    display: block;
-    width: 100%;
-    border: 1px solid #000000;
-    padding: 0.5625rem 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 400;
-    background-color: #FFFFFF;
-    color: #000000;
-    line-height: 1.5;
-    transition: box-shadow 100ms;
-  }
-  .input-field:focus {
-    box-shadow: 0 0 0 2px #000000;
-    outline: none;
-  }
-  .input-field::placeholder { color: #A3A3A3; }
-
-  /* Minimal inline input — for in-place editing */
-  .input-inline {
-    border: none;
-    border-bottom: 1px solid #D4D4D4;
-    padding: 0.125rem 0;
-    font-size: inherit;
-    font-weight: inherit;
-    background: transparent;
-    width: 100%;
-    transition: border-color 100ms;
-  }
-  .input-inline:focus {
-    border-bottom-color: #000000;
-    outline: none;
-  }
-
-  /* Select dropdown */
-  .select-field {
-    display: block;
-    width: 100%;
-    border: 1px solid #000000;
-    padding: 0.5625rem 2rem 0.5625rem 0.75rem;
-    font-size: 0.875rem;
-    background-color: #FFFFFF;
-    color: #000000;
-    /* Custom arrow */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    cursor: pointer;
-  }
-  .select-field:focus {
-    box-shadow: 0 0 0 2px #000000;
-    outline: none;
-  }
-
-  /* ─── Status Dots ────────────────────────────────────────── */
-  /* ONLY functional use of color in the entire system */
-  .status-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .status-dot--overdue  { background-color: #CC0000; }
-  .status-dot--active   { background-color: #525252; }
-  .status-dot--complete { background-color: #000000; }
-  .status-dot--paused   { background-color: #D4D4D4; }
-
-  /* ─── Checkbox ───────────────────────────────────────────── */
-  .checkbox {
-    width: 1.125rem;
-    height: 1.125rem;
-    border: 1px solid #000000;
-    background: #FFFFFF;
-    flex-shrink: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 100ms;
-  }
-  .checkbox--checked {
-    background-color: #000000;
-  }
-  .checkbox--checked::after {
-    content: '';
-    display: block;
-    width: 5px;
-    height: 9px;
-    border: 1.5px solid #FFFFFF;
-    border-top: none;
-    border-left: none;
-    transform: rotate(45deg) translate(-1px, -1px);
-  }
-
-  /* ─── Progress Bar ───────────────────────────────────────── */
-  .progress-track {
-    width: 100%;
-    height: 2px;
-    background-color: #E5E5E5;
-    position: relative;
-    overflow: hidden;
-  }
-  .progress-fill {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background-color: #000000;
-    transition: width 300ms ease;
-  }
-
-  /* ─── Tag / Badge ────────────────────────────────────────── */
-  .tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.1875rem 0.5rem;
-    border: 1px solid #D4D4D4;
-    font-size: 0.625rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #525252;
-    white-space: nowrap;
-  }
-  .tag--active { border-color: #000000; color: #000000; }
-
-  /* ─── Dividers ───────────────────────────────────────────── */
-  .divider       { border: none; border-top: 1px solid #E5E5E5; }
-  .divider--bold { border-top: 1px solid #000000; }
-}
-
-
-/* ── 4. Layout Utilities & Animations ──────────────────────── */
-@layer utilities {
-
-  /* Centered max-width container */
-  .page-wrap {
-    width: 100%;
-    max-width: 1280px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
-
-  /* ─── Deep Dive Panel ────────────────────────────────────── */
-  /* Full-page overlay that slides in from the right.          */
-  /* Applied to the panel wrapper via JS class toggling.       */
-  .deep-dive-enter {
-    animation: deepDiveIn 240ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-  }
-  .deep-dive-exit {
-    animation: deepDiveOut 200ms cubic-bezier(0.55, 0, 1, 0.45) forwards;
-  }
-
-  @keyframes deepDiveIn {
-    from { transform: translateX(100%); }
-    to   { transform: translateX(0);    }
-  }
-  @keyframes deepDiveOut {
-    from { transform: translateX(0);    }
-    to   { transform: translateX(100%); }
-  }
-
-  /* ─── Micro-animations ───────────────────────────────────── */
-  /* Subtle fade-up for new items entering a list */
-  .fade-up {
-    animation: fadeUp 180ms ease forwards;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0);   }
-  }
-
-  /* Collapse/expand for task rows */
-  .row-enter {
-    animation: rowEnter 150ms ease forwards;
-  }
-  @keyframes rowEnter {
-    from { opacity: 0; max-height: 0; }
-    to   { opacity: 1; max-height: 200px; }
-  }
-
-  /* ─── Scrollbar styling ──────────────────────────────────── */
-  ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb {
-    background: #D4D4D4;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #737373;
-  }
-
-  /* ─── Selection ──────────────────────────────────────────── */
-  ::selection {
-    background-color: #000000;
-    color: #FFFFFF;
-  }
-
-  /* ─── Focus-visible (keyboard nav only) ──────────────────── */
-  :focus-visible {
-    outline: 2px solid #000000;
-    outline-offset: 2px;
+@media (min-width: 768px) {
+  main {
+    padding-bottom: 4rem !important;
   }
 }

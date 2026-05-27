@@ -1,243 +1,389 @@
-// src/components/Dashboard.jsx
-// The primary view: goal grid + category filter + growth audit section.
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
-import React, { useState } from "react";
-import GoalCard from "./GoalCard";
+export default function Dashboard() {
+  const [state, setState] = useState({
+    wheelOfLife: null,
+    goals: [],
+    memories: [],
+    wellness: null,
+    moodTracker: {}
+  });
 
-const CATEGORIES = ["all", "career", "health", "fun", "learning", "other"];
+  useEffect(() => {
+    const saved = localStorage.getItem("growth_os_v1");
+    if (saved) {
+      try {
+        setState(JSON.parse(saved));
+      } catch (e) {
+        // Silent block
+      }
+    }
+  }, []);
 
-// ── Growth Audit inline ──────────────────────────────────────────
-function GrowthAudit({ audit, onAuditChange }) {
-  return (
-    <section aria-label="Growth Audit" style={{ borderTop: "1px solid #000", paddingTop: "3rem", marginTop: "4rem" }}>
-      <div className="flex items-baseline justify-between mb-6">
-        <h2 className="heading-lg">Growth Audit</h2>
-        <p className="body-sm">Self-assessed 0 – 100</p>
-      </div>
+  // 1. Wheel of Life balance averages
+  const ratings = state.wheelOfLife?.ratings || {};
+  const categories = Object.keys(ratings);
+  const averageRating = categories.length
+    ? (categories.reduce((sum, cat) => sum + (ratings[cat] || 0), 0) / categories.length).toFixed(1)
+    : "5.0";
 
-      <div className="flex flex-col gap-0" style={{ border: "1px solid #000" }}>
-        {Object.entries(audit).map(([key, val], i) => (
-          <div
-            key={key}
-            className="flex items-center gap-6"
-            style={{
-              padding:     "1.25rem 1.5rem",
-              borderTop:   i > 0 ? "1px solid #E5E5E5" : "none",
-            }}
-          >
-            {/* Label */}
-            <span
-              className="label-caps"
-              style={{ width: "80px", flexShrink: 0, letterSpacing: "0.14em" }}
-            >
-              {key.toUpperCase()}
-            </span>
+  // 2. Goals progress rates
+  const totalGoals = state.goals?.length || 0;
+  const completedGoals = state.goals?.filter(g => g.completed)?.length || 0;
+  const goalsProgress = totalGoals ? Math.round((completedGoals / totalGoals) * 100) : 0;
 
-            {/* Slider */}
-            <div className="flex-1 relative" style={{ height: "2px", background: "#E5E5E5" }}>
-              {/* Filled portion */}
-              <div
-                style={{
-                  position:        "absolute",
-                  left:            0,
-                  top:             0,
-                  height:          "100%",
-                  width:           `${val}%`,
-                  backgroundColor: "#000",
-                  transition:      "width 150ms ease",
-                  pointerEvents:   "none",
-                }}
-              />
-              {/* The actual range input — transparent, sits on top */}
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={val}
-                onChange={(e) => onAuditChange(key, e.target.value)}
-                aria-label={`${key} score: ${val}`}
-                style={{
-                  position:   "absolute",
-                  inset:      "-10px 0",
-                  width:      "100%",
-                  opacity:    0,
-                  cursor:     "pointer",
-                  margin:     0,
-                  padding:    0,
-                  height:     "24px",
-                }}
-              />
-            </div>
+  // 3. Life Chapters (Timeline/Journal) counts
+  const totalMemories = state.memories?.length || 0;
+  const latestMemory = state.memories?.[0];
 
-            {/* Value */}
-            <span
-              className="mono-tag"
-              style={{
-                width:     "36px",
-                textAlign: "right",
-                flexShrink: 0,
-                fontSize:  "0.875rem",
-                color:     "#000",
-                fontWeight: 500,
-              }}
-            >
-              {val}
-            </span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
+  // 4. Wellness parameters
+  const glasses = state.wellness?.waterGlasses || 0;
 
-// ── Empty state ──────────────────────────────────────────────────
-function EmptyState({ onAdd, filter }) {
-  const isFiltered = filter !== "all";
-  return (
-    <div
-      className="flex flex-col items-center justify-center py-24 text-center"
-      style={{ border: "1px solid #E5E5E5" }}
-    >
-      <p
-        className="label-caps mb-4"
-        style={{ letterSpacing: "0.18em", color: "#A3A3A3" }}
-      >
-        {isFiltered ? `No ${filter} goals` : "No goals yet"}
-      </p>
-      <div
-        style={{
-          width:           "32px",
-          borderTop:       "1px solid #D4D4D4",
-          marginBottom:    "1.5rem",
-        }}
-      />
-      <p className="body-sm mb-6">
-        {isFiltered
-          ? `You have no goals in the "${filter}" category.`
-          : "Start by setting your first big, measurable goal."}
-      </p>
-      {!isFiltered && (
-        <button className="btn-solid" onClick={onAdd}>
-          + Add First Goal
-        </button>
-      )}
-    </div>
-  );
-}
+  // 5. Mood status
+  const moodLogs = state.moodTracker || {};
+  const today = new Date().toISOString().split("T")[0];
+  const todayMood = moodLogs[today];
 
-// ── Dashboard ────────────────────────────────────────────────────
-export default function Dashboard({
-  goals,
-  audit,
-  onGoalClick,
-  onAddGoal,
-  onEditGoal,
-  onDeleteGoal,
-  onAuditChange,
-}) {
-  const [filter, setFilter] = useState("all");
-
-  const filtered =
-    filter === "all" ? goals : goals.filter((g) => g.category === filter);
-
-  const categoryCounts = CATEGORIES.reduce((acc, cat) => {
-    acc[cat] = cat === "all" ? goals.length : goals.filter((g) => g.category === cat).length;
-    return acc;
-  }, {});
+  const getGreeting = () => {
+    const hr = new Date().getHours();
+    if (hr >= 5 && hr < 12) return "MORNING COGNITION // LEVEL ACTIVE";
+    if (hr >= 12 && hr < 18) return "MIDDAY METRICS // CONSTANT PROGRESS";
+    return "NIGHT REFLECTION // ARCHIVE ACTIVE";
+  };
 
   return (
-    <div className="page-wrap py-10">
-      {/* ── Page header ── */}
-      <div className="flex items-start justify-between mb-8">
+    <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
+      {/* Greeting Header & Quick Actions */}
+      <header style={{ 
+        marginBottom: "3rem", 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center", 
+        flexWrap: "wrap", 
+        gap: "1.5rem",
+        borderBottom: "1px solid #222222",
+        paddingBottom: "1.5rem"
+      }}>
         <div>
-          <h1 className="heading-xl">Goals</h1>
-          <p className="body-sm mt-1">
-            {goals.length === 0
-              ? "No goals tracked yet"
-              : `${goals.length} big goal${goals.length !== 1 ? "s" : ""} tracked`}
+          <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "2rem", fontWeight: "800", letterSpacing: "-0.04em", textTransform: "uppercase", color: "#ffffff" }}>
+            {getGreeting()}
+          </h1>
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            "Step by step, day by day, I cultivate my growth."
           </p>
         </div>
-      </div>
-
-      {/* ── Category filter strip ── */}
-      <div
-        className="flex items-center gap-0 mb-8"
-        style={{ borderBottom: "1px solid #000", overflowX: "auto" }}
-        role="tablist"
-        aria-label="Filter by category"
-      >
-        {CATEGORIES.map((cat) => {
-          const count  = categoryCounts[cat];
-          const active = filter === cat;
-          return (
-            <button
-              key={cat}
-              role="tab"
-              aria-selected={active}
-              onClick={() => setFilter(cat)}
-              className="label-caps"
-              style={{
-                padding:         "0.625rem 1rem",
-                marginBottom:    "-1px",
-                color:           active ? "#000" : "#737373",
-                whiteSpace:      "nowrap",
-                background:      "none",
-                border:          "none",
-                borderBottom:    active ? "2px solid #000" : "2px solid transparent",
-                cursor:          "pointer",
-                letterSpacing:   "0.1em",
-                transition:      "color 100ms",
-              }}
-            >
-              {cat === "all" ? "All" : cat.charAt(0).toUpperCase() + cat.slice(1)}
-              {count > 0 && (
-                <span
-                  className="mono-tag ml-1.5"
-                  style={{ color: active ? "#000" : "#A3A3A3" }}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ── Goal grid ── */}
-      {filtered.length === 0 ? (
-        <EmptyState onAdd={onAddGoal} filter={filter} />
-      ) : (
-        /*
-          Newspaper grid: `gap: 1px` on a black-background container.
-          Each card has a white background, so the 1px gaps appear as
-          hairline black borders between cells. Zero individual card borders.
-        */
-        <div
-          style={{
-            display:               "grid",
-            gridTemplateColumns:   "repeat(auto-fill, minmax(300px, 1fr))",
-            gap:                   "1px",
-            backgroundColor:       "#000",
-            border:                "1px solid #000",
-          }}
-          role="list"
-          aria-label="Goal cards"
-        >
-          {filtered.map((goal) => (
-            <div key={goal.id} style={{ backgroundColor: "#fff" }} role="listitem">
-              <GoalCard
-                goal={goal}
-                onClick={() => onGoalClick(goal.id)}
-                onEdit={onEditGoal}
-                onDelete={onDeleteGoal}
-              />
-            </div>
-          ))}
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link 
+            to="/mood" 
+            style={{ 
+              background: "#ffffff", 
+              color: "#000000", 
+              padding: "0.6rem 1.2rem", 
+              borderRadius: "0px", 
+              border: "1px solid #ffffff", 
+              textDecoration: "none", 
+              fontWeight: "700", 
+              fontSize: "0.85rem", 
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              boxShadow: "none", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "0.5rem",
+              transition: "all 0.15s ease"
+            }}
+            className="btn-primary"
+          >
+            <span>[+]</span> Log Mood
+          </Link>
+          <Link 
+            to="/chapters" 
+            style={{ 
+              background: "#ffffff", 
+              color: "#000000", 
+              padding: "0.6rem 1.2rem", 
+              borderRadius: "0px", 
+              border: "1px solid #ffffff", 
+              textDecoration: "none", 
+              fontWeight: "700", 
+              fontSize: "0.85rem", 
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              boxShadow: "none", 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "0.5rem",
+              transition: "all 0.15s ease"
+            }}
+            className="btn-primary"
+          >
+            <span>[+]</span> New Note
+          </Link>
         </div>
-      )}
+      </header>
 
-      {/* ── Growth Audit ── */}
-      <GrowthAudit audit={audit} onAuditChange={onAuditChange} />
+      {/* Grid Card Layout - Clean, structured, highly visible and responsive */}
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", 
+        gap: "1.5rem", 
+        width: "100%",
+        boxSizing: "border-box"
+      }}>
+        
+        {/* Wheel of Life Card */}
+        <div className="stationery-card" style={{ display: "flex", flexDirection: "column", height: "100%", padding: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>[01 // LIFE WHEEL]</span>
+            <span style={{ 
+              background: "transparent", 
+              color: "#ffffff", 
+              padding: "0.2rem 0.6rem", 
+              borderRadius: "0px", 
+              fontSize: "0.75rem", 
+              fontWeight: "700", 
+              fontFamily: "var(--font-mono)",
+              border: "1px solid #222222" 
+            }}>
+              STABLE
+            </span>
+          </div>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Wheel of Life</h3>
+          <div style={{ display: "flex", alignItems: "baseline", gap: "0.5rem", margin: "1rem 0" }}>
+            <span style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", color: "#ffffff", letterSpacing: "-0.05em" }}>{averageRating}</span>
+            <span style={{ fontSize: "0.85rem", color: "#888888", fontFamily: "var(--font-mono)" }}>/ 10.0 AVERAGE</span>
+          </div>
+          <p style={{ margin: "0 0 2rem 0", fontSize: "0.9rem", lineHeight: "1.6", color: "#888888", flex: 1 }}>
+            Aggregate overview representing overall life balance metrics across eight core modules.
+          </p>
+          <Link 
+            to="/wheel" 
+            style={{ 
+              display: "block", 
+              marginTop: "auto", 
+              background: "#ffffff", 
+              color: "#000000", 
+              padding: "0.8rem 1.5rem", 
+              borderRadius: "0px", 
+              border: "1px solid #ffffff", 
+              textDecoration: "none", 
+              fontWeight: "700", 
+              fontSize: "0.8rem", 
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              textAlign: "center" 
+            }}
+          >
+            Open Balance Radar
+          </Link>
+        </div>
+
+        {/* Goals Progress Card */}
+        <div className="stationery-card" style={{ display: "flex", flexDirection: "column", height: "100%", padding: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>[02 // OBJECTIVES]</span>
+            <span style={{ 
+              background: "transparent", 
+              color: "#ffffff", 
+              padding: "0.2rem 0.6rem", 
+              borderRadius: "0px", 
+              fontSize: "0.75rem", 
+              fontWeight: "700", 
+              fontFamily: "var(--font-mono)",
+              border: "1px solid #222222" 
+            }}>
+              ACTIVE
+            </span>
+          </div>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Goals &amp; Targets</h3>
+          <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", margin: "1rem 0", color: "#ffffff", letterSpacing: "-0.05em" }}>
+            {goalsProgress}%
+          </div>
+          {/* Progress bar */}
+          <div style={{ 
+            background: "#111111", 
+            borderRadius: "0px", 
+            height: "6px", 
+            width: "100%", 
+            margin: "0.5rem 0 1.5rem 0", 
+            overflow: "hidden",
+            border: "1px solid #222222" 
+          }}>
+            <div style={{ background: "#ffffff", width: `${goalsProgress}%`, height: "100%", borderRadius: "0px" }}></div>
+          </div>
+          <p style={{ margin: "0 0 2rem 0", fontSize: "0.9rem", color: "#888888", flex: 1 }}>
+            Completed <strong style={{ color: "#ffffff" }}>{completedGoals}</strong> of <strong style={{ color: "#ffffff" }}>{totalGoals}</strong> logged target milestones.
+          </p>
+          <Link 
+            to="/goals" 
+            style={{ 
+              display: "block", 
+              marginTop: "auto", 
+              background: "#ffffff", 
+              color: "#000000", 
+              padding: "0.8rem 1.5rem", 
+              borderRadius: "0px", 
+              border: "1px solid #ffffff", 
+              textDecoration: "none", 
+              fontWeight: "700", 
+              fontSize: "0.8rem", 
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              textAlign: "center" 
+            }}
+          >
+            Configure Checklist
+          </Link>
+        </div>
+
+        {/* Life Chapters Timeline Summary Card */}
+        <div className="stationery-card" style={{ display: "flex", flexDirection: "column", height: "100%", padding: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>[03 // DATABASE ARCHIVE]</span>
+            <span style={{ 
+              background: "transparent", 
+              color: "#ffffff", 
+              padding: "0.2rem 0.6rem", 
+              borderRadius: "0px", 
+              fontSize: "0.75rem", 
+              fontWeight: "700", 
+              fontFamily: "var(--font-mono)",
+              border: "1px solid #222222" 
+            }}>
+              ONLINE
+            </span>
+          </div>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Life Chapters</h3>
+          <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", margin: "1rem 0", color: "#ffffff", letterSpacing: "-0.05em" }}>
+            {totalMemories} <span style={{ fontSize: "0.85rem", fontWeight: "normal", color: "#888888", letterSpacing: "0.05em" }}>RECORDS</span>
+          </div>
+          <div style={{ flex: 1, marginBottom: "1.5rem" }}>
+            {latestMemory ? (
+              <div style={{ 
+                background: "#050505", 
+                padding: "1rem", 
+                borderRadius: "0px", 
+                fontSize: "0.85rem", 
+                border: "1px solid #222222", 
+                color: "#c5c5c5",
+                fontFamily: "var(--font-mono)"
+              }}>
+                "{latestMemory.text.substring(0, 75)}{latestMemory.text.length > 75 ? "..." : ""}"
+              </div>
+            ) : (
+              <p style={{ margin: 0, fontSize: "0.9rem", color: "#888888" }}>Zero timeline records logged. System stands ready to archive.</p>
+            )}
+          </div>
+          <Link 
+            to="/chapters" 
+            style={{ 
+              display: "block", 
+              marginTop: "auto", 
+              background: "#ffffff", 
+              color: "#000000", 
+              padding: "0.8rem 1.5rem", 
+              borderRadius: "0px", 
+              border: "1px solid #ffffff", 
+              textDecoration: "none", 
+              fontWeight: "700", 
+              fontSize: "0.8rem", 
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              textAlign: "center" 
+            }}
+          >
+            Access Timeline Database
+          </Link>
+        </div>
+
+        {/* Flo & Hydration tracking Card */}
+        <div className="stationery-card" style={{ display: "flex", flexDirection: "column", height: "100%", padding: "2rem" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+            <span style={{ fontSize: "0.8rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", letterSpacing: "0.05em" }}>[04 // BIOMETRICS]</span>
+            <span style={{ 
+              background: "transparent", 
+              color: "#ffffff", 
+              padding: "0.2rem 0.6rem", 
+              borderRadius: "0px", 
+              fontSize: "0.75rem", 
+              fontWeight: "700", 
+              fontFamily: "var(--font-mono)",
+              border: "1px solid #222222" 
+            }}>
+              ACTIVE
+            </span>
+          </div>
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.4rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", color: "#ffffff" }}>Flo &amp; Wellness</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", margin: "1.25rem 0" }}>
+            <div style={{ 
+              fontSize: "2rem", 
+              display: "inline-grid", 
+              placeContent: "center", 
+              width: "64px", 
+              height: "64px", 
+              border: "1px solid #222222", 
+              background: "#050505" 
+            }}>
+              {todayMood || "—"}
+            </div>
+            <div>
+              <div style={{ fontWeight: "700", fontSize: "1rem", color: "#ffffff", textTransform: "uppercase", letterSpacing: "-0.01em" }}>DAILY MOOD STATE</div>
+              <div style={{ fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)" }}>
+                HYDRATION: {glasses} / 8.0 GLASSES LOGGED
+              </div>
+            </div>
+          </div>
+          <p style={{ margin: "0 0 2rem 0", fontSize: "0.9rem", lineHeight: "1.6", color: "#888888", flex: 1 }}>
+            Correlating biometrics, psychological state trackers, and hydration baseline levels.
+          </p>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto" }}>
+            <Link 
+              to="/wellness" 
+              style={{ 
+                flex: 1,
+                background: "transparent", 
+                color: "#ffffff", 
+                padding: "0.8rem 1rem", 
+                borderRadius: "0px", 
+                border: "1px solid #222222", 
+                textDecoration: "none", 
+                fontWeight: "700", 
+                fontSize: "0.75rem", 
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                textAlign: "center",
+                transition: "all 0.15s ease"
+              }}
+              className="btn-secondary"
+            >
+              Wellness Log
+            </Link>
+            <Link 
+              to="/mood" 
+              style={{ 
+                flex: 1,
+                background: "#ffffff", 
+                color: "#000000", 
+                padding: "0.8rem 1rem", 
+                borderRadius: "0px", 
+                border: "1px solid #ffffff", 
+                textDecoration: "none", 
+                fontWeight: "700", 
+                fontSize: "0.75rem", 
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                textAlign: "center",
+                transition: "all 0.15s ease"
+              }}
+              className="btn-primary"
+            >
+              Log State
+            </Link>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
