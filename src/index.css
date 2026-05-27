@@ -7,7 +7,7 @@
   --bg-page: #FDFBF7;
   --bg-surface: #F5F2ED;
   --bg-surface-elevated: #EAE4D9;
-  --border-color: #E6E2D8;
+  --border-color: #E5E5E5;
   --border-color-active: #4A0404;
   --text-primary: #4A0404;
   --text-secondary: rgba(45, 27, 27, 0.6);
@@ -28,8 +28,8 @@ body {
   background-color: var(--bg-page) !important;
   color: var(--text-body) !important;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.8;
   letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -39,13 +39,13 @@ body {
 h1, h2, h3, h4, h5, h6, p, span, label, div, aside, main, section, li, ul, ol, a, input, textarea, select {
   font-family: var(--font-sans);
   color: inherit;
-  font-weight: 400;
+  font-weight: 300;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-serif);
   color: var(--text-primary) !important;
-  font-weight: 400;
+  font-weight: 300;
   font-style: italic;
   letter-spacing: 0.02em;
 }
@@ -59,9 +59,9 @@ h1, h2, h3, h4 {
 .stationery-card,
 .minimal-card {
   background: var(--bg-surface) !important;
-  padding: 7.5rem;
+  padding: 11rem;
   border-radius: 0px !important;
-  border: 1px solid var(--border-color) !important;
+  border: 0.5px solid var(--border-color) !important;
   box-shadow: none !important;
   color: var(--text-body) !important;
   transition: background 0.4s ease !important;
@@ -97,7 +97,7 @@ div[style*="background:#6d2a2d" i],
 div[style*="background: #6d2a2d" i] {
   background-color: var(--bg-surface) !important;
   background: var(--bg-surface) !important;
-  border: 1px solid var(--border-color) !important;
+  border: 0.5px solid var(--border-color) !important;
   border-radius: 0px !important;
   box-shadow: none !important;
 }
@@ -106,7 +106,7 @@ div[style*="background: #6d2a2d" i] {
 textarea, input[type="text"], input[type="date"], select {
   font-family: var(--font-sans);
   font-size: 0.9rem;
-  border: 1px solid var(--border-color) !important;
+  border: 0.5px solid var(--border-color) !important;
   border-radius: 0px !important;
   background: var(--bg-page) !important;
   color: var(--text-primary) !important;
@@ -128,7 +128,7 @@ input[type="checkbox"] {
   appearance: none;
   width: 1rem;
   height: 1rem;
-  border: 1px solid var(--border-color);
+  border: 0.5px solid var(--border-color);
   border-radius: 0px !important;
   background: var(--bg-page);
   cursor: pointer;
@@ -157,7 +157,7 @@ input[type="checkbox"]:checked::before {
 /* 4. Navigation Drawer and Sidebar */
 aside {
   background: var(--bg-page) !important;
-  border-right: 1px solid var(--border-color) !important;
+  border-right: 0.5px solid var(--border-color) !important;
   box-shadow: none !important;
   border-radius: 0px !important;
 }
@@ -168,7 +168,7 @@ aside span, aside div {
 
 aside a {
   border-radius: 0px !important;
-  border: 1px solid var(--border-color) !important;
+  border: 0.5px solid var(--border-color) !important;
   background: var(--bg-page) !important;
   color: var(--text-secondary) !important;
   font-weight: 500 !important;
@@ -210,7 +210,7 @@ a[style*="background: #d4e0d1" i] {
   background-color: var(--text-primary) !important;
   background: var(--text-primary) !important;
   color: var(--bg-page) !important;
-  border: 1px solid var(--text-primary) !important;
+  border: 0.5px solid var(--text-primary) !important;
   border-radius: 0px !important;
   padding: 0.6rem 1.2rem;
   font-family: var(--font-sans);
@@ -258,7 +258,7 @@ button.btn-secondary,
 .btn-secondary {
   background: var(--bg-page) !important;
   color: var(--text-primary) !important;
-  border: 1px solid var(--border-color) !important;
+  border: 0.5px solid var(--border-color) !important;
 }
 
 button.btn-secondary:hover,
@@ -299,7 +299,7 @@ input[type="range"]::-webkit-slider-thumb {
   cursor: pointer;
   -webkit-appearance: none;
   margin-top: -6px;
-  border: 1px solid var(--bg-page) !important;
+  border: 0.5px solid var(--bg-page) !important;
   transition: background-color 0.15s ease;
 }
 
@@ -322,7 +322,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 0px !important;
   background: var(--text-primary) !important;
   cursor: pointer;
-  border: 1px solid var(--bg-page) !important;
+  border: 0.5px solid var(--bg-page) !important;
 }
 
 input[type="range"]::-moz-range-thumb:hover {
@@ -360,7 +360,7 @@ text, .recharts-text, .recharts-pie-label-text, .recharts-radar-label {
 /* 9. Layout Splitters & Borders */
 hr {
   border: none !important;
-  border-top: 1px solid var(--border-color) !important;
+  border-top: 0.5px solid var(--border-color) !important;
   height: 1px;
   margin: 1.5rem 0;
 }
@@ -371,7 +371,7 @@ div[style*="borderLeft"], div[style*="border-left"] {
 }
 
 div[style*="borderBottom"], div[style*="border-bottom"] {
-  border-bottom: 1px solid var(--border-color) !important;
+  border-bottom: 0.5px solid var(--border-color) !important;
   border-radius: 0px !important;
 }
 
@@ -385,7 +385,7 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   color: var(--text-primary) !important;
   padding: 0.8rem 1.6rem;
   border-radius: 0px !important;
-  border: 1px solid var(--text-primary) !important;
+  border: 0.5px solid var(--text-primary) !important;
   font-weight: 700;
   font-size: 0.85rem;
   
@@ -456,7 +456,7 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   max-width: 650px;
   margin: 0 auto;
   width: 100%;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   line-height: 1.7;
 }
 
@@ -519,3 +519,5 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
 .task-completed-bounce {
   animation: bounceScale 0.2s ease-out forwards;
 }
+
+main { padding: 4.5rem !important; }
