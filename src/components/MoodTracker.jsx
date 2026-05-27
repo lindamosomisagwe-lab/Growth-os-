@@ -5,7 +5,7 @@ const moods = [
   { emoji: "🙂", label: "Content", color: "#cccccc" },
   { emoji: "😐", label: "Neutral", color: "#888888" },
   { emoji: "🙁", label: "Sad", color: "#444444" },
-  { emoji: "😡", label: "Angry", color: "#222222" }
+  { emoji: "😡", label: "Angry", color: "var(--border-color)" }
 ];
 
 export default function MoodTracker() {
@@ -57,7 +57,7 @@ export default function MoodTracker() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em" }}>
           🧠 Cognitive State Logger
         </h2>
@@ -86,7 +86,7 @@ export default function MoodTracker() {
                   gap: "0.4rem",
                   padding: "0.8rem 0.5rem",
                   borderRadius: "0px",
-                  border: isSel ? "1px solid #ffffff" : "1px solid #222222",
+                  border: isSel ? "1px solid #ffffff" : "1px solid var(--border-color)",
                   background: isSel ? "#ffffff" : "transparent",
                   color: isSel ? "#000000" : "#ffffff",
                   cursor: "pointer",
@@ -122,7 +122,7 @@ export default function MoodTracker() {
         </h3>
         <div style={{ overflowY: "auto", maxHeight: "280px", paddingRight: "0.5rem" }}>
           {Object.keys(log).length === 0 ? (
-            <p style={{ fontStyle: "italic", textAlign: "center", color: "#888888", padding: "2rem", border: "1px dashed #222222", fontSize: "0.95rem" }}>
+            <p style={{ fontStyle: "italic", textAlign: "center", color: "#888888", padding: "2rem", border: "1px dashed var(--border-color)", fontSize: "0.95rem" }}>
               No recorded metrics in database.
             </p>
           ) : (
@@ -136,11 +136,11 @@ export default function MoodTracker() {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      background: "#0a0a0a",
+                      background: "var(--bg-surface)",
                       padding: "0.8rem 1.2rem",
                       borderRadius: "0px",
                       marginBottom: "0.5rem",
-                      border: "1px solid #222222",
+                      border: "1px solid var(--border-color)",
                       borderLeft: `4px solid ${getEmojiColor(val)}`
                     }}
                   >

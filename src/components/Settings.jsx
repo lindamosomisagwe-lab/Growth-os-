@@ -63,9 +63,9 @@ export default function Settings() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span>⚙️</span> System Settings Console
+          System Settings Console
         </h2>
         <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
           LOCAL STORAGE MAINTENANCE // BACKUP &amp; DISASTER RECOVERY
@@ -104,7 +104,7 @@ export default function Settings() {
             )}
 
             {/* Import Action */}
-            <div style={{ borderTop: "1px dashed #222222", paddingTop: "1rem" }}>
+            <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "1rem" }}>
               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", textTransform: "uppercase" }}>
                 Restore Backup Snapshot:
               </label>
@@ -118,7 +118,7 @@ export default function Settings() {
                   boxSizing: "border-box",
                   background: "#050505",
                   borderRadius: "0px",
-                  border: "1px solid #222222",
+                  border: "1px solid var(--border-color)",
                   color: "#ffffff",
                   fontSize: "0.8rem"
                 }}
@@ -152,7 +152,7 @@ export default function Settings() {
           <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.5rem 0", color: "#888888" }}>
             Your operational database is locked entirely inside local browser sandbox isolation. Transactions occur strictly offline, offering complete sovereign anonymity and trackless data privacy.
           </p>
-          <div style={{ background: "#050505", border: "1px dashed #222222", padding: "1rem", borderRadius: "0px", fontSize: "0.8rem", fontFamily: "var(--font-mono)", color: "#888888" }}>
+          <div style={{ background: "#050505", border: "1px dashed var(--border-color)", padding: "1rem", borderRadius: "0px", fontSize: "0.8rem", fontFamily: "var(--font-mono)", color: "#888888" }}>
             <strong style={{ color: "#ffffff" }}>Active DB Sandbox Schema:</strong>
             <pre style={{ margin: "0.5rem 0 0 0", overflowX: "auto", color: "#c5c5c5" }}>
               Key: growth_os_v1
@@ -162,7 +162,7 @@ export default function Settings() {
         </div>
       </div>
 
-      {toast.show && <div className="toast-notification"><span>⚡</span> {toast.message}</div>}
+      {toast.show && <div className="toast-notification">{toast.message}</div>}
     </div>
   );
 }

@@ -62,7 +62,7 @@ export default function Dashboard() {
         alignItems: "center", 
         flexWrap: "wrap", 
         gap: "1.5rem",
-        borderBottom: "1px solid #222222",
+        borderBottom: "1px solid var(--border-color)",
         paddingBottom: "1.5rem"
       }}>
         <div>
@@ -144,7 +144,7 @@ export default function Dashboard() {
               fontSize: "0.75rem", 
               fontWeight: "700", 
               fontFamily: "var(--font-mono)",
-              border: "1px solid #222222" 
+              border: "1px solid var(--border-color)" 
             }}>
               STABLE
             </span>
@@ -191,7 +191,7 @@ export default function Dashboard() {
               fontSize: "0.75rem", 
               fontWeight: "700", 
               fontFamily: "var(--font-mono)",
-              border: "1px solid #222222" 
+              border: "1px solid var(--border-color)" 
             }}>
               ACTIVE
             </span>
@@ -208,7 +208,7 @@ export default function Dashboard() {
             width: "100%", 
             margin: "0.5rem 0 1.5rem 0", 
             overflow: "hidden",
-            border: "1px solid #222222" 
+            border: "1px solid var(--border-color)" 
           }}>
             <div style={{ background: "#ffffff", width: `${goalsProgress}%`, height: "100%", borderRadius: "0px" }}></div>
           </div>
@@ -249,7 +249,7 @@ export default function Dashboard() {
               fontSize: "0.75rem", 
               fontWeight: "700", 
               fontFamily: "var(--font-mono)",
-              border: "1px solid #222222" 
+              border: "1px solid var(--border-color)" 
             }}>
               ONLINE
             </span>
@@ -265,7 +265,7 @@ export default function Dashboard() {
                 padding: "1rem", 
                 borderRadius: "0px", 
                 fontSize: "0.85rem", 
-                border: "1px solid #222222", 
+                border: "1px solid var(--border-color)", 
                 color: "#c5c5c5",
                 fontFamily: "var(--font-mono)"
               }}>
@@ -309,7 +309,7 @@ export default function Dashboard() {
               fontSize: "0.75rem", 
               fontWeight: "700", 
               fontFamily: "var(--font-mono)",
-              border: "1px solid #222222" 
+              border: "1px solid var(--border-color)" 
             }}>
               ACTIVE
             </span>
@@ -322,7 +322,7 @@ export default function Dashboard() {
               placeContent: "center", 
               width: "64px", 
               height: "64px", 
-              border: "1px solid #222222", 
+              border: "1px solid var(--border-color)", 
               background: "#050505" 
             }}>
               {todayMood || "—"}
@@ -346,7 +346,7 @@ export default function Dashboard() {
                 color: "#ffffff", 
                 padding: "0.8rem 1rem", 
                 borderRadius: "0px", 
-                border: "1px solid #222222", 
+                border: "1px solid var(--border-color)", 
                 textDecoration: "none", 
                 fontWeight: "700", 
                 fontSize: "0.75rem", 

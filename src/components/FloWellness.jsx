@@ -50,9 +50,9 @@ export default function FloWellness() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <span>🌸</span> Wellness &amp; Biometrics
+          Wellness &amp; Biometrics
         </h2>
         <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
           PHYSIOLOGICAL STATE METRICS // HYDRATION INDEX
@@ -63,7 +63,7 @@ export default function FloWellness() {
         {/* Flo Cycle Tracker Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
           <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span>▪</span> Cycle Tracker
+            Cycle Tracker
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             <div>
@@ -123,7 +123,7 @@ export default function FloWellness() {
         {/* Daily Hydration & Nutrition Card */}
         <div className="stationery-card" style={{ padding: "2rem" }}>
           <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.02em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span>▪</span> Hydration &amp; Fuel
+            Hydration &amp; Fuel
           </h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
             <div>
@@ -201,7 +201,7 @@ export default function FloWellness() {
         />
       </div>
 
-      {toast.show && <div className="toast-notification"><span>⚡</span> {toast.message}</div>}
+      {toast.show && <div className="toast-notification">{toast.message}</div>}
     </div>
   );
 }

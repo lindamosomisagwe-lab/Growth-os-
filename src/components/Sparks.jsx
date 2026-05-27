@@ -58,9 +58,9 @@ export default function Sparks() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <span>✨</span> Cognitive Calibration Sparks
+          Cognitive Calibration Sparks
         </h2>
         <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
           SELECT BASES FOR REAL-TIME TYPOGRAPHICAL AFFIRMATION ALIGNMENT
@@ -83,7 +83,7 @@ export default function Sparks() {
                 style={{
                   background: isAct ? "#ffffff" : "transparent",
                   color: isAct ? "#000000" : "#ffffff",
-                  border: isAct ? "1px solid #ffffff" : "1px solid #222222",
+                  border: isAct ? "1px solid #ffffff" : "1px solid var(--border-color)",
                   borderRadius: "0px",
                   padding: "1rem",
                   cursor: "pointer",

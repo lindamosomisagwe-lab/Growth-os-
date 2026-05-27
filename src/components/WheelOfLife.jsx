@@ -76,7 +76,7 @@ export default function WheelOfLife() {
       const { subject, rating } = payload[0].payload;
       return (
         <div style={{
-          background: "#0a0a0a",
+          background: "var(--bg-surface)",
           padding: "0.6rem 1rem",
           borderRadius: "0px",
           border: "1px solid #ffffff",
@@ -94,7 +94,7 @@ export default function WheelOfLife() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", color: "#ffffff" }}>
           🎡 Life Radar Balance
         </h2>
@@ -110,15 +110,15 @@ export default function WheelOfLife() {
         display: "flex", 
         justifyContent: "center", 
         alignItems: "center",
-        background: "#0a0a0a",
+        background: "var(--bg-surface)",
         borderRadius: "0px",
         padding: "1.5rem",
         boxSizing: "border-box",
-        border: "1px solid #222222"
+        border: "1px solid var(--border-color)"
       }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-            <PolarGrid stroke="#222222" strokeWidth={1} />
+            <PolarGrid stroke="var(--border-color)" strokeWidth={1} />
             <PolarAngleAxis 
               dataKey="subject" 
               tick={{ fill: "#888888", fontWeight: "700", fontSize: "0.75rem", fontFamily: "var(--font-mono)" }} 
@@ -154,10 +154,10 @@ export default function WheelOfLife() {
       }}>
         {categories.map((cat) => (
           <div key={cat} style={{
-            background: "#0a0a0a",
+            background: "var(--bg-surface)",
             padding: "1rem 1.2rem",
             borderRadius: "0px",
-            border: "1px solid #222222",
+            border: "1px solid var(--border-color)",
             display: "flex",
             flexDirection: "column",
             gap: "0.5rem"
@@ -207,7 +207,7 @@ export default function WheelOfLife() {
                 textTransform: "uppercase",
                 fontFamily: "var(--font-mono)",
                 borderRadius: "0px",
-                border: "1px solid #222222",
+                border: "1px solid var(--border-color)",
                 background: "#000000",
                 color: "#ffffff"
               }}
@@ -219,7 +219,7 @@ export default function WheelOfLife() {
       {/* Fade-in/out Toast alerts overlay */}
       {toast.show && (
         <div className="toast-notification">
-          <span>⚡</span> {toast.message}
+          {toast.message}
         </div>
       )}
     </div>

@@ -54,7 +54,7 @@ export default function LifeChapters() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.04em" }}>
           📓 Life Timeline Chronicles
         </h1>
@@ -108,7 +108,7 @@ export default function LifeChapters() {
             </div>
 
             {/* Photo Uploader */}
-            <div style={{ borderTop: "1px dashed #222222", paddingTop: "1rem" }}>
+            <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "1rem" }}>
               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", textTransform: "uppercase" }}>
                 📷 Attach Chapter Image:
               </label>
@@ -123,7 +123,7 @@ export default function LifeChapters() {
                   <img
                     src={photo}
                     alt="Preview"
-                    style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0px", border: "1px solid #222222" }}
+                    style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "0px", border: "1px solid var(--border-color)" }}
                   />
                   <button
                     onClick={() => setPhoto("")}
@@ -167,7 +167,7 @@ export default function LifeChapters() {
             <div style={{
               padding: "3rem",
               borderRadius: "0px",
-              border: "1px dashed #222222",
+              border: "1px dashed var(--border-color)",
               textAlign: "center",
               color: "#888888",
               fontStyle: "italic",
@@ -179,7 +179,7 @@ export default function LifeChapters() {
             chapters.map(c => (
               <div key={c.id} className="stationery-card" style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "relative", padding: "1.5rem" }}>
                 {/* Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px dashed #222222", paddingBottom: "0.75rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px dashed var(--border-color)", paddingBottom: "0.75rem" }}>
                   <div>
                     <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", letterSpacing: "-0.01em" }}>
                       📓 {c.title || "Untitled Chapter"}
@@ -207,7 +207,7 @@ export default function LifeChapters() {
                     <img
                       src={c.photo}
                       alt={c.title}
-                      style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", borderRadius: "0px", border: "1px solid #222222" }}
+                      style={{ maxWidth: "100%", maxHeight: "300px", objectFit: "cover", borderRadius: "0px", border: "1px solid var(--border-color)" }}
                     />
                   </div>
                 )}

@@ -26,11 +26,11 @@ export default function Sidebar() {
     fontWeight: isActive ? "700" : "500",
     fontSize: "0.9rem",
     textTransform: "uppercase",
-    letterSpacing: "0.05em",
+    letterSpacing: "0.1em",
     transition: "all 0.15s ease-in-out",
-    color: isActive ? "#000000" : "#888888",
-    background: isActive ? "#ffffff" : "transparent",
-    border: isActive ? "1px solid #ffffff" : "1px solid #222222",
+    color: isActive ? "var(--bg-page)" : "var(--text-secondary)",
+    background: isActive ? "var(--text-primary)" : "transparent",
+    border: isActive ? "1px solid var(--text-primary)" : "1px solid var(--border-color)",
     boxShadow: "none"
   });
 
@@ -73,8 +73,8 @@ export default function Sidebar() {
       <aside
         style={{
           width: "260px",
-          background: "#0a0a0a",
-          borderRight: "1px solid #222222",
+          background: "var(--bg-page)",
+          borderRight: "1px solid var(--border-color)",
           padding: "2.5rem 1.5rem",
           display: "flex",
           flexDirection: "column",
@@ -100,39 +100,39 @@ export default function Sidebar() {
         {/* Nav list */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "0.6rem", flex: 1 }}>
           <NavLink to="/" style={linkStyle} onClick={handleLinkClick} end>
-            <span>💻</span> Dashboard
+            Dashboard
           </NavLink>
           <NavLink to="/wheel" style={linkStyle} onClick={handleLinkClick}>
-            <span>📊</span> Wheel of Life
+            Wheel of Life
           </NavLink>
           <NavLink to="/goals" style={linkStyle} onClick={handleLinkClick}>
-            <span>🎯</span> Goals
+            Goals
           </NavLink>
           <NavLink to="/chapters" style={linkStyle} onClick={handleLinkClick}>
-            <span>📖</span> Life Chapters
+            Life Chapters
           </NavLink>
           <NavLink to="/wellness" style={linkStyle} onClick={handleLinkClick}>
-            <span>🔋</span> Flo / Wellness
+            Flo / Wellness
           </NavLink>
           <NavLink to="/mood" style={linkStyle} onClick={handleLinkClick}>
-            <span>🧠</span> Mood Log
+            Mood Log
           </NavLink>
           <NavLink to="/vault" style={linkStyle} onClick={handleLinkClick}>
-            <span>🔒</span> Time Vault
+            Time Vault
           </NavLink>
           <NavLink to="/sparks" style={linkStyle} onClick={handleLinkClick}>
-            <span>✨</span> Sparks AI
+            Sparks AI
           </NavLink>
           <NavLink to="/spotify" style={linkStyle} onClick={handleLinkClick}>
-            <span>🎵</span> Focus Music
+            Focus Music
           </NavLink>
           <NavLink to="/settings" style={linkStyle} onClick={handleLinkClick}>
-            <span>⚙️</span> Settings
+            Settings
           </NavLink>
         </nav>
 
         {/* Footer / Brand metadata */}
-        <div style={{ fontSize: "0.75rem", color: "#444444", textAlign: "center", borderTop: "1px solid #222222", paddingTop: "1.2rem", letterSpacing: "0.05em", fontFamily: "var(--font-mono)" }}>
+        <div style={{ fontSize: "0.75rem", color: "#444444", textAlign: "center", borderTop: "1px solid var(--border-color)", paddingTop: "1.2rem", letterSpacing: "0.05em", fontFamily: "var(--font-mono)" }}>
           COMMAND CENTER V1.0
         </div>
       </aside>

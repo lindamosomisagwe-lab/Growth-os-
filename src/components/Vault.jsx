@@ -45,9 +45,9 @@ export default function Vault() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <span>🔒</span> Time Vault Archive
+          Time Vault Archive
         </h2>
         <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
           SEALED PERSONAL CORRESPONDENCE // REVEAL ON DESIGNATED DATELINE
@@ -98,14 +98,14 @@ export default function Vault() {
             Sealed Correspondence Records
           </h3>
           {capsules.length === 0 ? (
-            <p style={{ fontStyle: "italic", color: "#888888", textAlign: "center", padding: "3rem", border: "1px dashed #222222", fontSize: "0.9rem" }}>
+            <p style={{ fontStyle: "italic", color: "#888888", textAlign: "center", padding: "3rem", border: "1px dashed var(--border-color)", fontSize: "0.9rem" }}>
               NO TIME CAPSULES SECURED IN STORAGE.
             </p>
           ) : (
             capsules.map(c => {
               const unlocked = isUnlocked(c.revealDate);
               return (
-                <div key={c.id} className="stationery-card" style={{ borderLeft: unlocked ? "4px solid #ffffff" : "4px solid #222222", padding: "1.5rem" }}>
+                <div key={c.id} className="stationery-card" style={{ borderLeft: unlocked ? "4px solid #ffffff" : "4px solid var(--border-color)", padding: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                     <div>
                       <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1rem", fontWeight: "800", textTransform: "uppercase", color: "#ffffff", letterSpacing: "-0.01em" }}>
@@ -132,7 +132,7 @@ export default function Vault() {
                       fontSize: "0.9rem",
                       lineHeight: "1.6",
                       whiteSpace: "pre-wrap",
-                      border: "1px dashed #222222",
+                      border: "1px dashed var(--border-color)",
                       color: "#c5c5c5"
                     }}>
                       {c.message}
@@ -147,7 +147,7 @@ export default function Vault() {
                       fontFamily: "var(--font-mono)",
                       textAlign: "center",
                       color: "#888888",
-                      border: "1px dashed #222222"
+                      border: "1px dashed var(--border-color)"
                     }}>
                       ⌛ ENCRYPTED SECURE UNTIL {new Date(c.revealDate).toLocaleDateString().toUpperCase()}
                     </div>

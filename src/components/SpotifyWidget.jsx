@@ -11,8 +11,8 @@ export default function SpotifyWidget() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.6rem", borderBottom: "1px solid #222222", paddingBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-        <span>🎵</span> Spotify Focus Playlists
+      <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.6rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "0.5rem", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        Spotify Focus Playlists
       </h2>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem", alignItems: "start" }}>
@@ -33,7 +33,7 @@ export default function SpotifyWidget() {
                   gap: "0.75rem",
                   padding: "1rem",
                   borderRadius: "0px",
-                  border: isAct ? "1px solid #ffffff" : "1px solid #222222",
+                  border: isAct ? "1px solid #ffffff" : "1px solid var(--border-color)",
                   background: isAct ? "#ffffff" : "transparent",
                   color: isAct ? "#000000" : "#ffffff",
                   cursor: "pointer",
@@ -56,7 +56,7 @@ export default function SpotifyWidget() {
         </div>
 
         {/* Embedded Iframe Player */}
-        <div className="stationery-card" style={{ padding: "1rem", borderRadius: "0px", border: "1px solid #222222", background: "#0a0a0a" }}>
+        <div className="stationery-card" style={{ padding: "1rem", borderRadius: "0px", border: "1px solid var(--border-color)", background: "var(--bg-surface)" }}>
           <iframe
             src={`https://open.spotify.com/embed/playlist/${activePlaylist.id}?utm_source=generator&theme=0`}
             width="100%"

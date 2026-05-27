@@ -362,9 +362,9 @@ export default function Goals() {
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid #222222", paddingBottom: "1rem" }}>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
         <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
-          <span>🎯</span> Objectives &amp; Task Hierarchies
+          Objectives &amp; Task Hierarchies
         </h2>
         <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", textTransform: "uppercase" }}>
           TIER 1 (BIG GOAL) // TIER 2 (SUB-GOAL) // TIER 3 (DAILY TASK)
@@ -376,7 +376,7 @@ export default function Goals() {
       {/* Drafting Board (Goal Architect) */}
       <div style={{ marginBottom: "2rem", padding: "1.5rem", background: "var(--bg-surface)", border: "1px solid var(--border-color)" }}>
         <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span>🏗️</span> Goal Architect
+          Goal Architect
         </h3>
         
         {/* Chat UI */}
@@ -467,13 +467,13 @@ export default function Goals() {
 
       <div style={{ overflowY: "auto", maxHeight: "550px", paddingRight: "0.5rem" }}>
         {goals.length === 0 ? (
-          <p style={{ fontStyle: "italic", textAlign: "center", color: "#888888", padding: "3rem", border: "1px dashed #222222", fontSize: "0.9rem" }}>
+          <p style={{ fontStyle: "italic", textAlign: "center", color: "#888888", padding: "3rem", border: "1px dashed var(--border-color)", fontSize: "0.9rem" }}>
             NO ACTIVE GOALS DETECTED. INITIALIZE A TARGET STRATEGY AT THE TOP.
           </p>
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {goals.map((g, gIdx) => (
-              <li key={g.id} style={{ background: "#0a0a0a", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid #222222" }}>
+              <li key={g.id} style={{ background: "var(--bg-surface)", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid var(--border-color)" }}>
                 {/* Tier 1 Big Goal Item */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", flex: 1 }}>
@@ -507,7 +507,7 @@ export default function Goals() {
                 </div>
 
                 {/* Tier 2 Sub-goals Container */}
-                <div style={{ paddingLeft: "1.2rem", borderLeft: "1px solid #222222", marginLeft: "0.6rem" }}>
+                <div style={{ paddingLeft: "1.2rem", borderLeft: "1px solid var(--border-color)", marginLeft: "0.6rem" }}>
                   <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                     {(g.sub || []).map(s => {
                       const taskKey = `${g.id}-${s.id}`;
@@ -639,7 +639,7 @@ export default function Goals() {
         )}
       </div>
 
-      {toast.show && <div className="toast-notification"><span>⚡</span> {toast.message}</div>}
+      {toast.show && <div className="toast-notification">{toast.message}</div>}
     </div>
   );
 }
