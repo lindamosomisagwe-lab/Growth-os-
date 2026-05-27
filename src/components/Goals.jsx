@@ -114,8 +114,29 @@ export default function Goals() {
     triggerToast("OBJECTIVE CREATED // TARGET ACTIVE");
   };
 
+  const handleSkipCoaching = () => {
+    setDraftText("");
+    setIsStructuring(false);
+    setGoalDraftingStage('finalized');
+    setPreviewGoal({
+      title: "Drafted Goal (Plan)",
+      sub: [
+        { title: "Define the vision", completed: false },
+        { title: "First Step", completed: false },
+        { title: "Review progress along the timeline", completed: false }
+      ]
+    });
+    setChatHistory(prev => [...prev, { role: 'assistant', text: "Got it. Jumping straight to the structure!" }]);
+  };
+
   const handleSendMessage = () => {
     if (!draftText.trim() || isStructuring) return;
+    
+    const lowerTxt = draftText.toLowerCase();
+    if (lowerTxt.includes("build it") || lowerTxt.includes("that's enough") || lowerTxt.includes("i'm done") || lowerTxt === "skip") {
+      handleSkipCoaching();
+      return;
+    }
     
     const userMsg = { role: 'user', text: draftText };
     setChatHistory(prev => [...prev, userMsg]);
@@ -132,31 +153,28 @@ export default function Goals() {
       setChatHistory(prev => {
         const histLength = prev.length; // after adding user msg
         
-        if (histLength === 2) { // 1st assistant reply
-          return [...prev, { 
-            role: 'assistant', 
-            text: "That sounds like a great direction. What does success look like for this? Let's paint a picture of the end result."
-          }];
-        } else if (histLength === 4) { // 2nd assistant reply
-          return [...prev, {
-            role: 'assistant',
-            text: "Love that vision. When would you love to see this happen by? And what's the very first, smallest step you can take today?"
-          }];
+        if (histLength === 2) { 
+          return [...prev, { role: 'assistant', text: "That sounds like a great direction. What does success look like for this? Let's paint a picture of the end result.\n\n(Question 1 of 5)" }];
+        } else if (histLength === 4) { 
+          return [...prev, { role: 'assistant', text: "Love that vision. When would you love to see this happen by?\n\n(Question 2 of 5)" }];
+        } else if (histLength === 6) { 
+          return [...prev, { role: 'assistant', text: "What's the very first, smallest step you can take today?\n\n(Question 3 of 5)" }];
+        } else if (histLength === 8) {
+          return [...prev, { role: 'assistant', text: "And how will we measure progress along the way?\n\n(Question 4 of 5)" }];
+        } else if (histLength === 10) {
+          return [...prev, { role: 'assistant', text: "Finally, why is this goal relevant to your long-term growth?\n\n(Question 5 of 5)" }];
         } else {
           // Finalization
           setGoalDraftingStage('finalized');
           setPreviewGoal({
             title: prev[1].text.split('\n')[0].substring(0, 40) + " (Plan)",
             sub: [
-              { title: "Define the vision: " + prev[3].text.substring(0, 20), completed: false },
-              { title: "First Step: " + prev[5].text.substring(0, 20), completed: false },
+              { title: "Define the vision", completed: false },
+              { title: "First Step", completed: false },
               { title: "Review progress along the timeline", completed: false }
             ]
           });
-          return [...prev, {
-            role: 'assistant',
-            text: "Awesome. I've mapped this out for you below. How does this plan feel?"
-          }];
+          return [...prev, { role: 'assistant', text: "Awesome. I've mapped this out for you below. How does this plan feel?" }];
         }
       });
     }, 1500);
@@ -330,12 +348,7 @@ export default function Goals() {
               <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "0.25rem", textTransform: "uppercase" }}>
                 {msg.role === 'user' ? 'You' : 'Architect'}
               </div>
-              <div>{msg.text}</div>
-              {msg.hint && (
-                <div className="chat-hint-card">
-                  <strong>💡 HINT:</strong> {msg.hint}
-                </div>
-              )}
+              <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
             </div>
           ))}
           {isStructuring && (
@@ -346,7 +359,7 @@ export default function Goals() {
         </div>
 
         {goalDraftingStage !== 'finalized' && (
-          <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", maxWidth: "650px", margin: "0 auto" }}>
             <textarea
               value={draftText}
               onChange={(e) => setDraftText(e.target.value)}
@@ -366,6 +379,14 @@ export default function Goals() {
               style={{ height: "60px", padding: "0 1.5rem", textTransform: "uppercase" }}
             >
               Send
+            </button>
+            <button 
+              onClick={handleSkipCoaching} 
+              className="btn-secondary"
+              disabled={isStructuring}
+              style={{ height: "60px", padding: "0 1.5rem", textTransform: "uppercase" }}
+            >
+              Skip
             </button>
           </div>
         )}
