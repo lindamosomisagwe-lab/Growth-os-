@@ -1,71 +1,644 @@
-import React, { useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import React, { useState, useEffect } from "react";
 
-export default function Goals() {
-  const [goals, setGoals] = useLocalStorage("lifemart-goals", []);
-  const [showAll, setShowAll] = useState(false);
+const suggestions = {
+  career: "Set one career boundary or quarterly plan this week.",
+  business: "Outline three simple business workflows today.",
+  fun: "Block out two hours for completely unproductive play.",
+  creativity: "Dedicate 15 minutes to sketching or pure journaling.",
+  health: "Complete a focused 20-minute movement routine.",
+  academics: "Extract notes from one informative publication.",
+  finance: "Audit weekly expenditure metrics for 10 minutes."
+};
 
-  const topGoals = goals.slice(0, 3);
-  const remainingGoals = goals.slice(3);
+function ReflectiveNudges({ onAddGoal }) {
+  const [nudges, setNudges] = useState([]);
+  const [dismissed, setDismissed] = useState([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("growth_os_v1");
+    if (saved) {
+      try {
+        const ratings = JSON.parse(saved).wheelOfLife?.ratings || {};
+        const lowCategories = Object.keys(ratings).filter(
+          cat => ratings[cat] <= 4 && !dismissed.includes(cat) && suggestions[cat]
+        );
+        setNudges(lowCategories);
+      } catch (e) {}
+    }
+  }, [dismissed]);
+
+  if (nudges.length === 0) return null;
 
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", paddingBottom: "10rem" }}>
-      <div style={{ textAlign: "center", marginBottom: "8rem" }}>
-        <h1 style={{ fontSize: "3rem", fontStyle: "italic" }}>The Archive</h1>
-        <p style={{ letterSpacing: "0.1em", fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "1rem" }}>
-          Intentions and Architecture
+    <div style={{ marginBottom: "2rem" }}>
+      <h3 style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", fontWeight: "800", letterSpacing: "0.08em", color: "#888888", fontFamily: "var(--font-mono)" }}>
+        [💡 System Suggestions]
+      </h3>
+      {nudges.map(cat => (
+        <div key={cat} className="stationery-card" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1.2rem", marginBottom: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
+          <div>
+            <span style={{ border: "1px solid #ffffff", color: "#ffffff", padding: "2px 8px", fontSize: "0.7rem", fontWeight: "700", fontFamily: "var(--font-mono)" }}>
+              Low Ratings // {cat.toUpperCase()}
+            </span>
+            <p style={{ margin: "0.6rem 0 0 0", fontSize: "0.9rem", color: "#ffffff" }}>{suggestions[cat]}</p>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={() => setDismissed(p => [...p, cat])} className="btn-secondary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", }}>Dismiss</button>
+            <button onClick={() => { onAddGoal(suggestions[cat]); setDismissed(p => [...p, cat]); }} className="btn-primary" style={{ padding: "0.4rem 0.8rem", fontSize: "0.75rem", }}>Add</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function Goals() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [goals, setGoals] = useState([]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const saved = localStorage.getItem("growth_os_v1");
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.goals) {
+          setGoals(parsed.goals.map(g => ({
+            ...g,
+            sub: (g.sub || []).map(s => ({
+              ...s,
+              tasks: s.tasks || []
+            }))
+          })));
+        }
+      } catch (e) {}
+    }
+  }, []);
+
+  const [title, setTitle] = useState("");
+  const [subInputs, setSubInputs] = useState({});
+  const [taskInputs, setTaskInputs] = useState({});
+  const [toast, setToast] = useState({ show: false, message: "" });
+  const [bouncingTasks, setBouncingTasks] = useState(new Set());
+  
+  // Drafting Board (Goal Architect) State
+  const [draftText, setDraftText] = useState("");
+  const [isStructuring, setIsStructuring] = useState(false);
+  const [previewGoal, setPreviewGoal] = useState(null);
+  const [goalDraftingStage, setGoalDraftingStage] = useState('idle'); // idle | coaching | finalized
+  const [chatHistory, setChatHistory] = useState([
+    { role: 'assistant', text: "What's on your mind? Dump your raw thought here and we'll figure out a plan together." }
+  ]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("growth_os_v1");
+    const parsed = saved ? JSON.parse(saved) : {};
+    parsed.goals = goals;
+    localStorage.setItem("growth_os_v1", JSON.stringify(parsed));
+  }, [goals]);
+
+  useEffect(() => {
+    if (toast.show) {
+      const timer = setTimeout(() => setToast({ show: false, message: "" }), 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.show]);
+
+  const triggerToast = msg => setToast({ show: true, message: msg });
+
+  // Tier 1: Big Goal Actions
+  const addGoal = (customTitle) => {
+    const val = typeof customTitle === "string" ? customTitle : title;
+    if (!val.trim()) return;
+    setGoals(prev => [...prev, { id: Date.now(), title: val.trim(), completed: false, sub: [] }]);
+    if (typeof customTitle !== "string") setTitle("");
+    triggerToast("Objective Created // Target Active");
+  };
+
+  const handleSkipCoaching = () => {
+    setDraftText("");
+    setIsStructuring(false);
+    setGoalDraftingStage('finalized');
+    setPreviewGoal({
+      title: "Drafted Goal (Plan)",
+      sub: [
+        { title: "Define the vision", completed: false },
+        { title: "First Step", completed: false },
+        { title: "Review progress along the timeline", completed: false }
+      ]
+    });
+    setChatHistory(prev => [...prev, { role: 'assistant', text: "Got it. Jumping straight to the structure!" }]);
+  };
+
+  const handleSendMessage = () => {
+    if (!draftText.trim() || isStructuring) return;
+    
+    const lowerTxt = draftText.toLowerCase();
+    if (lowerTxt.includes("build it") || lowerTxt.includes("that's enough") || lowerTxt.includes("i'm done") || lowerTxt === "skip") {
+      handleSkipCoaching();
+      return;
+    }
+    
+    const userMsg = { role: 'user', text: draftText };
+    setChatHistory(prev => [...prev, userMsg]);
+    setDraftText("");
+    setIsStructuring(true);
+    
+    if (goalDraftingStage === 'idle') {
+      setGoalDraftingStage('coaching');
+    }
+
+    // Mock AI Logic based on chat length
+    setTimeout(() => {
+      setIsStructuring(false);
+      setChatHistory(prev => {
+        const histLength = prev.length; // after adding user msg
+        
+        if (histLength === 2) { 
+          return [...prev, { role: 'assistant', text: "That sounds like a great direction. What does success look like for this? Let's paint a picture of the end result.\n\n(Question 1 of 5)" }];
+        } else if (histLength === 4) { 
+          return [...prev, { role: 'assistant', text: "Love that vision. When would you love to see this happen by?\n\n(Question 2 of 5)" }];
+        } else if (histLength === 6) { 
+          return [...prev, { role: 'assistant', text: "What's the very first, smallest step you can take today?\n\n(Question 3 of 5)" }];
+        } else if (histLength === 8) {
+          return [...prev, { role: 'assistant', text: "And how will we measure progress along the way?\n\n(Question 4 of 5)" }];
+        } else if (histLength === 10) {
+          return [...prev, { role: 'assistant', text: "Finally, why is this goal relevant to your long-term growth?\n\n(Question 5 of 5)" }];
+        } else {
+          // Finalization
+          setGoalDraftingStage('finalized');
+          setPreviewGoal({
+            title: prev[1].text.split('\n')[0].substring(0, 40) + " (Plan)",
+            sub: [
+              { title: "Define the vision", completed: false },
+              { title: "First Step", completed: false },
+              { title: "Review progress along the timeline", completed: false }
+            ]
+          });
+          return [...prev, { role: 'assistant', text: "Awesome. I've mapped this out for you below. How does this plan feel?" }];
+        }
+      });
+    }, 1500);
+  };
+
+  const confirmPreview = () => {
+    if (!previewGoal) return;
+    setGoals(prev => [...prev, {
+      id: Date.now(),
+      title: previewGoal.title,
+      completed: false,
+      sub: previewGoal.sub.map((s, idx) => ({ id: Date.now() + idx, title: s.title, completed: false, tasks: [] }))
+    }]);
+    
+    // Reset Chat State
+    setDraftText("");
+    setPreviewGoal(null);
+    setGoalDraftingStage('idle');
+    setChatHistory([{ role: 'assistant', text: "What's on your mind? Dump your raw thought here and we'll figure out a plan together." }]);
+    triggerToast("STRUCTURED OBJECTIVE ADDED");
+  };
+
+  const toggleGoal = id => {
+    setGoals(prev => {
+      const next = prev.map(g => (g.id === id ? { ...g, completed: !g.completed } : g));
+      const target = next.find(g => g.id === id);
+      if (target) triggerToast(target.completed ? "Objective Completed" : "Objective Re-opened");
+      return next;
+    });
+  };
+
+  const deleteGoal = id => {
+    setGoals(prev => prev.filter(g => g.id !== id));
+    triggerToast("Objective Removed // File Purged");
+  };
+
+  // Tier 2: Sub-goal Actions
+  const addSub = (goalId) => {
+    const text = subInputs[goalId] || "";
+    if (!text.trim()) return;
+    setGoals(prev => prev.map(g => g.id === goalId ? {
+      ...g,
+      sub: [...g.sub, { id: Date.now(), title: text.trim(), completed: false, tasks: [] }]
+    } : g));
+    setSubInputs(prev => ({ ...prev, [goalId]: "" }));
+    triggerToast("Sub-goal Added");
+  };
+
+  const toggleSub = (goalId, subId) => {
+    setGoals(prev => {
+      const next = prev.map(g => g.id === goalId ? {
+        ...g,
+        sub: g.sub.map(s => s.id === subId ? { ...s, completed: !s.completed } : s)
+      } : g);
+      const subGoal = next.find(g => g.id === goalId)?.sub.find(s => s.id === subId);
+      if (subGoal) triggerToast(subGoal.completed ? "Sub-goal Complete" : "Sub-goal Pending");
+      return next;
+    });
+  };
+
+  const deleteSub = (goalId, subId) => {
+    setGoals(prev => prev.map(g => g.id === goalId ? {
+      ...g,
+      sub: g.sub.filter(s => s.id !== subId)
+    } : g));
+    triggerToast("Sub-goal Removed");
+  };
+
+  // Tier 3: Daily Task Actions
+  const addTask = (goalId, subId) => {
+    const key = `${goalId}-${subId}`;
+    const text = taskInputs[key] || "";
+    if (!text.trim()) return;
+    setGoals(prev => prev.map(g => {
+      if (g.id === goalId) {
+        return {
+          ...g,
+          sub: g.sub.map(s => {
+            if (s.id === subId) {
+              const prevTasks = s.tasks || [];
+              return {
+                ...s,
+                tasks: [...prevTasks, { id: Date.now(), title: text.trim(), completed: false }]
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return g;
+    }));
+    setTaskInputs(prev => ({ ...prev, [key]: "" }));
+    triggerToast("Daily Task Added // Ticker Running");
+  };
+
+  const toggleTask = (goalId, subId, taskId) => {
+    setGoals(prev => {
+      const g = prev.find(g => g.id === goalId);
+      const s = g?.sub.find(s => s.id === subId);
+      const t = s?.tasks?.find(t => t.id === taskId);
+      
+      if (t && !t.completed) {
+        // Trigger bounce animation first
+        setBouncingTasks(p => new Set(p).add(taskId));
+        setTimeout(() => {
+          setBouncingTasks(p => {
+            const nextSet = new Set(p);
+            nextSet.delete(taskId);
+            return nextSet;
+          });
+          // Complete task after bounce (200ms)
+          setGoals(prev2 => {
+            return prev2.map(g2 => {
+              if (g2.id === goalId) {
+                return {
+                  ...g2,
+                  sub: g2.sub.map(s2 => {
+                    if (s2.id === subId) {
+                      return {
+                        ...s2,
+                        tasks: s2.tasks.map(t2 => t2.id === taskId ? { ...t2, completed: true } : t2)
+                      };
+                    }
+                    return s2;
+                  })
+                };
+              }
+              return g2;
+            });
+          });
+          triggerToast("Task Logged");
+        }, 200);
+        return prev;
+      }
+
+      // Un-complete task immediately
+      const next = prev.map(g2 => {
+        if (g2.id === goalId) {
+          return {
+            ...g2,
+            sub: g2.sub.map(s2 => {
+              if (s2.id === subId) {
+                return {
+                  ...s2,
+                  tasks: s2.tasks.map(t2 => t2.id === taskId ? { ...t2, completed: false } : t2)
+                };
+              }
+              return s2;
+            })
+          };
+        }
+        return g2;
+      });
+      triggerToast("Task Returned");
+      return next;
+    });
+  };
+
+  const deleteTask = (goalId, subId, taskId) => {
+    setGoals(prev => prev.map(g => {
+      if (g.id === goalId) {
+        return {
+          ...g,
+          sub: g.sub.map(s => {
+            if (s.id === subId) {
+              const prevTasks = s.tasks || [];
+              return {
+                ...s,
+                tasks: prevTasks.filter(t => t.id !== taskId)
+              };
+            }
+            return s;
+          })
+        };
+      }
+      return g;
+    }));
+    triggerToast("Task Removed");
+  };
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return (
+    <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.6rem" }}>
+          Objectives &amp; Task Hierarchies
+        </h2>
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
+          Tier 1 (Big Goal) // Tier 2 (Sub-Goal) // Tier 3 (Daily Task)
         </p>
-      </div>
+      </header>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "10rem" }}>
-        {topGoals.map(goal => (
-          <article key={goal.id} style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-            <h2 style={{ fontSize: "2.5rem", fontStyle: "italic", borderBottom: "0.5px solid var(--border-color)", paddingBottom: "2rem" }}>
-              {goal.title}
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", paddingLeft: "2rem" }}>
-              {goal.subGoals && goal.subGoals.map(sub => (
-                <div key={sub.id} style={{ display: "flex", alignItems: "flex-start", gap: "1.5rem" }}>
-                  <span style={{ fontSize: "0.75rem", letterSpacing: "0.1em", color: "var(--text-secondary)", marginTop: "0.3rem" }}>—</span>
-                  <div style={{ fontSize: "1rem", fontWeight: "300", lineHeight: "1.6", letterSpacing: "0.02em" }}>
-                    {sub.title}
-                  </div>
-                </div>
-              ))}
+      <ReflectiveNudges onAddGoal={addGoal} />
+
+      {/* Drafting Board (Goal Architect) */}
+      <div style={{ marginBottom: "2rem", padding: "1.5rem", background: "var(--bg-surface)", border: "1px solid var(--border-color)" }}>
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "0.05em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          Goal Architect
+        </h3>
+        
+        {/* Chat UI */}
+        <div className="chat-container">
+          {chatHistory.map((msg, idx) => (
+            <div key={idx} className={`chat-bubble ${msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}`}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "0.25rem", }}>
+                {msg.role === 'user' ? 'You' : 'Architect'}
+              </div>
+              <div style={{ whiteSpace: "pre-wrap" }}>{msg.text}</div>
             </div>
-          </article>
-        ))}
-      </div>
-
-      {remainingGoals.length > 0 && (
-        <div style={{ textAlign: "center", marginTop: "8rem" }}>
-          <button 
-            onClick={() => setShowAll(!showAll)}
-            style={{ 
-              background: "transparent", 
-              border: "none", 
-              borderBottom: "0.5px solid var(--text-primary)",
-              color: "var(--text-primary)",
-              padding: "0 0 0.2rem 0",
-              letterSpacing: "0.1em",
-              fontSize: "0.8rem",
-              cursor: "pointer"
-            }}
-          >
-            {showAll ? "Hide Library" : "View Library"}
-          </button>
-          
-          {showAll && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "4rem", marginTop: "4rem", textAlign: "left" }}>
-              {remainingGoals.map(goal => (
-                <article key={goal.id} style={{ opacity: 0.7 }}>
-                  <h3 style={{ fontSize: "1.5rem", fontStyle: "italic", marginBottom: "1rem" }}>{goal.title}</h3>
-                </article>
-              ))}
+          ))}
+          {isStructuring && (
+            <div className="chat-bubble chat-bubble-assistant">
+              <span className="loading-glow" style={{ display: "inline-block", width: "10px", height: "10px", background: "var(--text-primary)", borderRadius: "50%", border: "1px solid var(--text-primary)" }}></span>
             </div>
           )}
         </div>
-      )}
+
+        {goalDraftingStage !== 'finalized' && (
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start", maxWidth: "650px", margin: "0 auto" }}>
+            <textarea
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder={goalDraftingStage === 'idle' ? "I want to start a podcast..." : "Type your answer..."}
+              style={{ flex: 1, height: "60px", resize: "vertical" }}
+            />
+            <button 
+              onClick={handleSendMessage} 
+              className="btn-primary"
+              disabled={isStructuring || !draftText.trim()}
+              style={{ height: "60px", padding: "0 1.5rem", }}
+            >
+              Send
+            </button>
+            <button 
+              onClick={handleSkipCoaching} 
+              className="btn-secondary"
+              disabled={isStructuring}
+              style={{ height: "60px", padding: "0 1.5rem", }}
+            >
+              Skip
+            </button>
+          </div>
+        )}
+
+        {/* AI Preview Card */}
+        {previewGoal && goalDraftingStage === 'finalized' && (
+          <div style={{ marginTop: "1.5rem", padding: "1.5rem", border: "1px dashed var(--text-primary)", background: "var(--bg-page)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>[Finalized Structure]</span>
+                <h4 style={{ margin: "0.5rem 0", fontSize: "1.2rem", fontWeight: "800", }}>{previewGoal.title}</h4>
+              </div>
+              <button onClick={confirmPreview} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem", }}>Confirm & Add</button>
+            </div>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {previewGoal.sub.map((s, i) => (
+                <li key={i} style={{ fontSize: "0.9rem", color: "var(--text-secondary)", padding: "0.25rem 0" }}>
+                  - {s.title}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {/* Main Big Goal Input */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem" }}>
+        <input
+          type="text"
+          placeholder="Enter new core objective (Tier 1)..."
+          value={title}
+          onChange={e => setTitle(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && addGoal()}
+          style={{ flex: 1, padding: "0.8rem 1rem", fontSize: "0.9rem", letterSpacing: "0.02em" }}
+        />
+        <button onClick={() => addGoal()} className="btn-secondary" style={{ padding: "0.8rem 1.6rem", fontSize: "0.85rem", letterSpacing: "0.05em" }}>
+          Add Manually
+        </button>
+      </div>
+
+      <div style={{ overflowY: "auto", maxHeight: "550px", paddingRight: "0.5rem" }}>
+        {goals.length === 0 ? (
+          <p style={{ fontStyle: "italic", textAlign: "center", color: "#888888", padding: "3rem", border: "1px dashed var(--border-color)", fontSize: "0.9rem" }}>
+            No active goals detected. Initialize a target strategy at the top.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {goals.map((g, gIdx) => (
+              <li key={g.id} style={{ background: "var(--bg-surface)", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid var(--border-color)" }}>
+                {/* Tier 1 Big Goal Item */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", flex: 1 }}>
+                    <input
+                      type="checkbox"
+                      checked={g.completed}
+                      onChange={() => toggleGoal(g.id)}
+                      style={{ width: "1.2rem", height: "1.2rem", cursor: "pointer" }}
+                    />
+                    <span style={{
+                      fontSize: "1.1rem",
+                      fontWeight: "800",
+                      letterSpacing: "-0.01em",
+                      textDecoration: g.completed ? "line-through" : "none",
+                      color: g.completed ? "#444444" : "#ffffff"
+                    }}>
+                      <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.85rem", color: "#888888", marginRight: "0.5rem" }}>
+                        [{String(gIdx + 1).padStart(2, '0')}]
+                      </span>
+                      {g.title}
+                    </span>
+                  </label>
+                  <button
+                    onClick={() => deleteGoal(g.id)}
+                    style={{ background: "none", border: "none", color: "#444444", cursor: "pointer", fontSize: "1.1rem" }}
+                    title="Remove Objective"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Tier 2 Sub-goals Container */}
+                <div style={{ paddingLeft: "1.2rem", borderLeft: "1px solid var(--border-color)", marginLeft: "0.6rem" }}>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                    {(g.sub || []).map(s => {
+                      const taskKey = `${g.id}-${s.id}`;
+                      return (
+                        <li key={s.id} style={{ marginBottom: "1rem", borderBottom: "1px dashed #111111", paddingBottom: "1rem" }}>
+                          {/* Tier 2 Item */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                            <label style={{ display: "flex", alignItems: "center", gap: "0.6rem", cursor: "pointer", flex: 1 }}>
+                              <input
+                                type="checkbox"
+                                checked={s.completed}
+                                onChange={() => toggleSub(g.id, s.id)}
+                                style={{ width: "1rem", height: "1rem", cursor: "pointer" }}
+                              />
+                              <span style={{
+                                fontWeight: "600",
+                                fontSize: "0.95rem",
+                                textDecoration: s.completed ? "line-through" : "none",
+                                color: s.completed ? "#444444" : "#ffffff"
+                              }}>
+                                {s.title}
+                              </span>
+                            </label>
+                            <button
+                              onClick={() => deleteSub(g.id, s.id)}
+                              style={{ background: "none", border: "none", color: "#444444", cursor: "pointer", fontSize: "0.9rem" }}
+                              title="Remove Sub-goal"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          {/* Tier 3 Daily Tasks Container */}
+                          <div style={{ paddingLeft: "1.2rem", borderLeft: "1px dashed #333333", marginLeft: "0.5rem", marginTop: "0.5rem" }}>
+                            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                              {(s.tasks || []).map(t => (
+                                <li key={t.id} className={bouncingTasks.has(t.id) ? 'task-completed-bounce' : ''} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.25rem 0" }}>
+                                  <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", flex: 1 }}>
+                                    <input
+                                      type="checkbox"
+                                      checked={t.completed}
+                                      onChange={() => toggleTask(g.id, s.id, t.id)}
+                                      style={{ width: "0.85rem", height: "0.85rem", cursor: "pointer" }}
+                                    />
+                                    <span style={{
+                                      fontFamily: "var(--font-mono)",
+                                      fontSize: "0.8rem",
+                                      textDecoration: t.completed ? "line-through" : "none",
+                                      color: t.completed ? "#444444" : "#888888"
+                                    }}>
+                                      {t.title}
+                                    </span>
+                                  </label>
+                                  <button
+                                    onClick={() => deleteTask(g.id, s.id, t.id)}
+                                    style={{ background: "none", border: "none", color: "#333333", cursor: "pointer", fontSize: "0.8rem" }}
+                                    title="Remove Daily Task"
+                                  >
+                                    ✕
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+
+                            {/* Add Tier 3 Task Input */}
+                            <div style={{ display: "flex", gap: "0.3rem", marginTop: "0.5rem" }}>
+                              <input
+                                type="text"
+                                placeholder="Add daily action..."
+                                value={taskInputs[taskKey] || ""}
+                                onChange={e => setTaskInputs(p => ({ ...p, [taskKey]: e.target.value }))}
+                                onKeyDown={e => e.key === "Enter" && addTask(g.id, s.id)}
+                                style={{ flex: 1, padding: "0.3rem 0.5rem !important", fontSize: "0.8rem", background: "#050505" }}
+                              />
+                              <button
+                                onClick={() => addTask(g.id, s.id)}
+                                className="btn-primary"
+                                style={{ padding: "0.3rem 0.6rem", fontSize: "0.75rem", }}
+                              >
+                                + Task
+                              </button>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {/* Add Tier 2 Sub-goal Input */}
+                  <div style={{ display: "flex", gap: "0.4rem", marginTop: "0.5rem" }}>
+                    <input
+                      type="text"
+                      placeholder="Add strategic sub-goal (Tier 2)..."
+                      value={subInputs[g.id] || ""}
+                      onChange={e => setSubInputs(p => ({ ...p, [g.id]: e.target.value }))}
+                      onKeyDown={e => e.key === "Enter" && addSub(g.id)}
+                      style={{ flex: 1, padding: "0.4rem 0.6rem !important", fontSize: "0.85rem" }}
+                    />
+                    <button
+                      onClick={() => addSub(g.id)}
+                      className="btn-secondary"
+                      style={{ padding: "0.4rem 0.8rem", fontSize: "0.8rem", }}
+                    >
+                      + Sub-Goal
+                    </button>
+                  </div>
+                </div>
+
+                {/* SMART Goal Progress Bar */}
+                {(() => {
+                  const totalSub = g.sub?.length || 0;
+                  const completedSub = g.sub?.filter(s => s.completed).length || 0;
+                  const progressPercent = totalSub > 0 ? Math.round((completedSub / totalSub) * 100) : 0;
+                  return (
+                    <div style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
+                        <span>Smart Progress</span>
+                        <span>{progressPercent}% ({completedSub}/{totalSub})</span>
+                      </div>
+                      <div style={{ width: "100%", height: "4px", background: "var(--border-color)", borderRadius: "0px" }}>
+                        <div style={{ width: `${progressPercent}%`, height: "100%", background: "var(--text-primary)", transition: "width 0.3s ease" }}></div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {toast.show && <div className="toast-notification">{toast.message}</div>}
     </div>
   );
 }

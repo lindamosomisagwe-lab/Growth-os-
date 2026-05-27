@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import FloatingNav from "./components/FloatingNav";
+import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import WheelOfLife from "./components/WheelOfLife";
 import Goals from "./components/Goals";
@@ -19,9 +19,9 @@ export default function App() {
   return (
     <Router>
       {showSplash && <Splash onComplete={() => setShowSplash(false)} />}
-      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: "var(--bg-page)" }}>
-        
-        <main style={{ flex: 1, padding: "8rem 20%", height: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
+      <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-page)" }}>
+        <Sidebar />
+        <main style={{ flex: 1, padding: "3rem", height: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
           <div className="page-wrap">
             <Routes>
               <Route path="/" element={<Dashboard />} />
@@ -38,7 +38,6 @@ export default function App() {
           </div>
         </main>
       </div>
-      <FloatingNav />
     </Router>
   );
 }
