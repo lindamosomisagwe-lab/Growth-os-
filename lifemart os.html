@@ -24,22 +24,28 @@
             theme: {
                 extend: {
                     colors: {
-                        'paper': '#FAF8F5',         // Cozy card paper background
-                        'beige': '#F4F1EA',         // Layout background
-                        'blush': '#E8C5C8',         // Muted Blush toggles and buttons
-                        'clay': '#A28C81',          // Clay Taupe accents, borders and charts
+                        'paper': '#FFFFFF',         // Cozy card paper background
+                        'beige': '#FAF8F5',         // Layout background
+                        'blush': '#D4537E',         // Muted Blush toggles and buttons
+                        'clay': '#7F77DD',          // Clay Taupe accents, borders and charts
                         'charcoal': '#2F2E2C',      // Typography and high-contrast structural text
 
+                        // Purple Theme Extensions
+                        'sidebar-bg': '#1a1033',
+                        'gradient-start': '#7F77DD',
+                        'gradient-end': '#D4537E',
+                        'accent-purple': '#7F77DD',
+
                         // Legacy utility aliases for zero-break compatibility
-                        'sunflower': '#E8C5C8',
-                        'tech-blue': '#A28C81',
-                        'partner-blue': '#2F2E2C'
+                        'sunflower': '#D4537E',
+                        'tech-blue': '#7F77DD',
+                        'partner-blue': '#1a1033'
                     },
                     fontFamily: { 'nunito': ['Nunito', 'sans-serif'] },
                     boxShadow: {
-                        'brutal': '6px 6px 0px 0px #A28C81',
-                        'brutal-sm': '3px 3px 0px 0px #A28C81',
-                        'brutal-active': '1px 1px 0px 0px #A28C81',
+                        'brutal': '6px 6px 0px 0px #7F77DD',
+                        'brutal-sm': '3px 3px 0px 0px #7F77DD',
+                        'brutal-active': '1px 1px 0px 0px #7F77DD',
                     },
                     borderWidth: { '3': '3px' }
                 }
@@ -50,7 +56,7 @@
     <style>
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: #F4F1EA;
+            background-color: #FAF8F5;
             color: #2F2E2C;
             margin: 0;
             overflow-x: hidden;
@@ -62,7 +68,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-image: radial-gradient(rgba(162, 140, 129, 0.15) 1.5px, transparent 1.5px);
+            background-image: radial-gradient(rgba(127, 119, 221, 0.15) 1.5px, transparent 1.5px);
             background-size: 24px 24px;
             z-index: -1;
             pointer-events: none;
@@ -75,12 +81,12 @@
 
         .brutal-btn:active {
             transform: translate(3px, 3px);
-            box-shadow: 1px 1px 0px 0px #A28C81;
+            box-shadow: 1px 1px 0px 0px #7F77DD;
         }
 
         .notebook-textarea {
             background-color: transparent;
-            background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(162, 140, 129, 0.2) 32px);
+            background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(127, 119, 221, 0.2) 32px);
             line-height: 32px;
             padding-top: 6px;
             border: none;
@@ -107,61 +113,61 @@
             height: 20px;
             width: 20px;
             border-radius: 50%;
-            background: #E8C5C8;
+            background: #D4537E;
             cursor: pointer;
-            border: 3px solid #A28C81;
+            border: 3px solid #7F77DD;
             margin-top: -8px;
-            box-shadow: 2px 2px 0px 0px #A28C81;
+            box-shadow: 2px 2px 0px 0px #7F77DD;
         }
 
         input[type=range].partner-slider::-webkit-slider-thumb {
-            background: #FAF8F5;
-            border-color: #2F2E2C;
-            box-shadow: 2px 2px 0px 0px #2F2E2C;
+            background: #FFFFFF;
+            border-color: #1a1033;
+            box-shadow: 2px 2px 0px 0px #1a1033;
         }
 
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 6px;
             cursor: pointer;
-            background: rgba(162, 140, 129, 0.1);
+            background: rgba(127, 119, 221, 0.1);
             border-radius: 3px;
-            border: 1px solid #A28C81;
+            border: 1px solid #7F77DD;
         }
 
         .monoline-checkbox {
             width: 24px;
             height: 24px;
-            border: 3px solid #A28C81;
+            border: 3px solid #7F77DD;
             border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            background: #FAF8F5;
+            background: #FFFFFF;
             transition: all 0.1s ease-in-out;
-            box-shadow: 2px 2px 0px 0px #A28C81;
+            box-shadow: 2px 2px 0px 0px #7F77DD;
         }
 
         .monoline-checkbox.checked {
-            background: #E8C5C8;
-            box-shadow: 1px 1px 0px 0px #A28C81;
+            background: #D4537E;
+            box-shadow: 1px 1px 0px 0px #7F77DD;
             transform: translate(1px, 1px);
         }
 
         .monoline-checkbox.checked::after {
             content: "X";
-            color: #2F2E2C;
+            color: #FFFFFF;
             font-weight: 900;
             font-size: 16px;
             line-height: 1;
         }
 
         .polaroid {
-            background: #FAF8F5;
+            background: #FFFFFF;
             padding: 12px 12px 40px 12px;
-            border: 3px solid #A28C81;
-            box-shadow: 6px 6px 0px 0px #A28C81;
+            border: 3px solid #7F77DD;
+            box-shadow: 6px 6px 0px 0px #7F77DD;
             transform: rotate(calc(-3deg + 6deg * var(--rand)));
             transition: transform 0.2s;
             cursor: pointer;
@@ -176,7 +182,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
-            border: 3px solid #A28C81;
+            border: 3px solid #7F77DD;
         }
 
         @keyframes flyAirplane {
