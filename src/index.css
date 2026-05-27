@@ -44,13 +44,15 @@ h1, h2, h3, h4 {
   letter-spacing: -0.03em;
 }
 
-/* 2. Stark Neo-Minimalist Cards (No shadows, pure sharp borders) */
+/* 2. Stark Neo-Minimalist Cards (Glass UI Upgrade) */
 .stationery-card,
 .minimal-card {
-  background: var(--bg-surface) !important;
+  background: rgba(253, 251, 247, 0.03) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   padding: 2rem;
   border-radius: 0px !important;
-  border: 1px solid var(--border-color) !important;
+  border: 1px solid rgba(253, 251, 247, 0.08) !important;
   box-shadow: none !important;
   color: var(--text-body) !important;
   transition: all 0.3s ease-out !important;
@@ -146,8 +148,10 @@ input[type="checkbox"]:checked::before {
 
 /* 4. Navigation Drawer and Sidebar */
 aside {
-  background: var(--bg-surface) !important;
-  border-right: 1px solid var(--border-color) !important;
+  background: rgba(253, 251, 247, 0.02) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-right: 1px solid rgba(253, 251, 247, 0.08) !important;
   box-shadow: none !important;
   border-radius: 0px !important;
 }
@@ -516,4 +520,14 @@ body::before {
 
 .task-completed-bounce {
   animation: bounceScale 0.2s ease-out forwards;
+}
+
+/* Twinkle Animation for Parallax Stars */
+@keyframes twinkle {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.8; }
+}
+
+.star-twinkle {
+  animation: twinkle 4s ease-in-out infinite;
 }

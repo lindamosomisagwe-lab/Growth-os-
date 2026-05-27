@@ -12,6 +12,7 @@ import Sparks from "./components/Sparks";
 import SpotifyWidget from "./components/SpotifyWidget";
 import Settings from "./components/Settings";
 import Splash from "./components/Splash";
+import Starfield from "./components/Starfield";
 
 export default function App() {
   const [showSplash, setShowSplash] = React.useState(true);
@@ -19,9 +20,10 @@ export default function App() {
   return (
     <Router>
       {showSplash && <Splash onComplete={() => setShowSplash(false)} />}
-      <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-page)" }}>
+      <Starfield />
+      <div style={{ display: "flex", minHeight: "100vh", background: "transparent" }}>
         <Sidebar />
-        <main style={{ flex: 1, padding: "3rem", height: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
+        <main style={{ flex: 1, padding: "3rem", height: "100vh", overflowY: "auto", boxSizing: "border-box", position: "relative", zIndex: 10 }}>
           <div className="page-wrap">
             <Routes>
               <Route path="/" element={<Dashboard />} />
