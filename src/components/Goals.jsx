@@ -79,6 +79,7 @@ export default function Goals() {
   const [subInputs, setSubInputs] = useState({});
   const [taskInputs, setTaskInputs] = useState({});
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [bouncingTasks, setBouncingTasks] = useState(new Set());
   
   // Drafting Board (Goal Architect) State
   const [draftText, setDraftText] = useState("");
@@ -272,26 +273,63 @@ export default function Goals() {
 
   const toggleTask = (goalId, subId, taskId) => {
     setGoals(prev => {
-      const next = prev.map(g => {
-        if (g.id === goalId) {
-          return {
-            ...g,
-            sub: g.sub.map(s => {
-              if (s.id === subId) {
-                const prevTasks = s.tasks || [];
+      const g = prev.find(g => g.id === goalId);
+      const s = g?.sub.find(s => s.id === subId);
+      const t = s?.tasks?.find(t => t.id === taskId);
+      
+      if (t && !t.completed) {
+        // Trigger bounce animation first
+        setBouncingTasks(p => new Set(p).add(taskId));
+        setTimeout(() => {
+          setBouncingTasks(p => {
+            const nextSet = new Set(p);
+            nextSet.delete(taskId);
+            return nextSet;
+          });
+          // Complete task after bounce (200ms)
+          setGoals(prev2 => {
+            return prev2.map(g2 => {
+              if (g2.id === goalId) {
                 return {
-                  ...s,
-                  tasks: prevTasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
+                  ...g2,
+                  sub: g2.sub.map(s2 => {
+                    if (s2.id === subId) {
+                      return {
+                        ...s2,
+                        tasks: s2.tasks.map(t2 => t2.id === taskId ? { ...t2, completed: true } : t2)
+                      };
+                    }
+                    return s2;
+                  })
                 };
               }
-              return s;
+              return g2;
+            });
+          });
+          triggerToast("TASK LOGGED");
+        }, 200);
+        return prev;
+      }
+
+      // Un-complete task immediately
+      const next = prev.map(g2 => {
+        if (g2.id === goalId) {
+          return {
+            ...g2,
+            sub: g2.sub.map(s2 => {
+              if (s2.id === subId) {
+                return {
+                  ...s2,
+                  tasks: s2.tasks.map(t2 => t2.id === taskId ? { ...t2, completed: false } : t2)
+                };
+              }
+              return s2;
             })
           };
         }
-        return g;
+        return g2;
       });
-      const t = next.find(g => g.id === goalId)?.sub.find(s => s.id === subId)?.tasks?.find(t => t.id === taskId);
-      if (t) triggerToast(t.completed ? "TASK LOGGED" : "TASK RETURNED");
+      triggerToast("TASK RETURNED");
       return next;
     });
   };
@@ -506,7 +544,7 @@ export default function Goals() {
                           <div style={{ paddingLeft: "1.2rem", borderLeft: "1px dashed #333333", marginLeft: "0.5rem", marginTop: "0.5rem" }}>
                             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                               {(s.tasks || []).map(t => (
-                                <li key={t.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.25rem 0" }}>
+                                <li key={t.id} className={bouncingTasks.has(t.id) ? 'task-completed-bounce' : ''} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.25rem 0" }}>
                                   <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer", flex: 1 }}>
                                     <input
                                       type="checkbox"

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
+import Logo from "./Logo";
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -89,8 +90,8 @@ export default function Sidebar() {
         }}
       >
         {/* Title */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0 0.5rem" }}>
-          <span style={{ fontSize: "1.3rem" }}>⚡</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0 0.5rem" }}>
+          <Logo size={28} color="#ffffff" />
           <span style={{ fontSize: "1.1rem", fontWeight: "800", letterSpacing: "0.08em", textTransform: "uppercase", color: "#ffffff" }}>
             Growth OS
           </span>

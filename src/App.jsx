@@ -11,10 +11,14 @@ import Vault from "./components/Vault";
 import Sparks from "./components/Sparks";
 import SpotifyWidget from "./components/SpotifyWidget";
 import Settings from "./components/Settings";
+import Splash from "./components/Splash";
 
 export default function App() {
+  const [showSplash, setShowSplash] = React.useState(true);
+
   return (
     <Router>
+      {showSplash && <Splash onComplete={() => setShowSplash(false)} />}
       <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-page)" }}>
         <Sidebar />
         <main style={{ flex: 1, padding: "3rem", height: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
