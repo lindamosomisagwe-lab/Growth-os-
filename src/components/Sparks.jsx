@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 const affirmations = [
   "YOU ARE CULTIVATING A LIFE OF DEEP PURPOSE. TRUST THE TIMING.",
@@ -22,12 +22,39 @@ const prompts = [
 export default function Sparks() {
   const [spark, setSpark] = useState(affirmations[0]);
   const [activePrompt, setActivePrompt] = useState("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const streamIntervalRef = useRef(null);
 
   const triggerSpark = index => {
-    const randomIdx = Math.floor(Math.random() * affirmations.length);
-    setSpark(affirmations[randomIdx]);
+    if (isStreaming) return;
+    
+    if (streamIntervalRef.current) {
+      clearInterval(streamIntervalRef.current);
+    }
+    
     setActivePrompt(prompts[index]);
+    setIsStreaming(true);
+    setSpark("");
+    
+    const randomIdx = Math.floor(Math.random() * affirmations.length);
+    const targetText = affirmations[randomIdx];
+    let currentIndex = 0;
+    
+    streamIntervalRef.current = setInterval(() => {
+      currentIndex++;
+      setSpark(targetText.substring(0, currentIndex));
+      if (currentIndex >= targetText.length) {
+        clearInterval(streamIntervalRef.current);
+        setIsStreaming(false);
+      }
+    }, 40);
   };
+  
+  useEffect(() => {
+    return () => {
+      if (streamIntervalRef.current) clearInterval(streamIntervalRef.current);
+    };
+  }, []);
 
   return (
     <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
@@ -52,6 +79,7 @@ export default function Sparks() {
               <button
                 key={p}
                 onClick={() => triggerSpark(idx)}
+                className={isAct && isStreaming ? "loading-glow" : ""}
                 style={{
                   background: isAct ? "#ffffff" : "transparent",
                   color: isAct ? "#000000" : "#ffffff",

@@ -79,6 +79,11 @@ export default function Goals() {
   const [subInputs, setSubInputs] = useState({});
   const [taskInputs, setTaskInputs] = useState({});
   const [toast, setToast] = useState({ show: false, message: "" });
+  
+  // Drafting Board State
+  const [draftText, setDraftText] = useState("");
+  const [isStructuring, setIsStructuring] = useState(false);
+  const [previewGoal, setPreviewGoal] = useState(null);
 
   useEffect(() => {
     const saved = localStorage.getItem("growth_os_v1");
@@ -103,6 +108,38 @@ export default function Goals() {
     setGoals(prev => [...prev, { id: Date.now(), title: val.trim(), completed: false, sub: [] }]);
     if (typeof customTitle !== "string") setTitle("");
     triggerToast("OBJECTIVE CREATED // TARGET ACTIVE");
+  };
+
+  const handleStructureGoal = () => {
+    if (!draftText.trim()) return;
+    setIsStructuring(true);
+    setPreviewGoal(null);
+    
+    // Simulate AI parsing delay
+    setTimeout(() => {
+      setIsStructuring(false);
+      setPreviewGoal({
+        title: draftText.split('\n')[0].substring(0, 40) + (draftText.length > 40 ? "..." : ""),
+        sub: [
+          { title: "Define scope and initial requirements", completed: false },
+          { title: "Execute core implementation phases", completed: false },
+          { title: "Review and finalize deliverables", completed: false }
+        ]
+      });
+    }, 2000);
+  };
+
+  const confirmPreview = () => {
+    if (!previewGoal) return;
+    setGoals(prev => [...prev, {
+      id: Date.now(),
+      title: previewGoal.title,
+      completed: false,
+      sub: previewGoal.sub.map((s, idx) => ({ id: Date.now() + idx, title: s.title, completed: false, tasks: [] }))
+    }]);
+    setDraftText("");
+    setPreviewGoal(null);
+    triggerToast("STRUCTURED OBJECTIVE ADDED");
   };
 
   const toggleGoal = id => {
@@ -243,6 +280,51 @@ export default function Goals() {
 
       <ReflectiveNudges onAddGoal={addGoal} />
 
+      {/* Drafting Board */}
+      <div style={{ marginBottom: "2rem", padding: "1.5rem", background: "var(--bg-surface)", border: "1px solid var(--border-color)" }}>
+        <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Drafting Board
+        </h3>
+        <p style={{ margin: "0 0 1rem 0", fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+          Dump your unfiltered thoughts below. Our AI will extract a structured SMART goal hierarchy.
+        </p>
+        <textarea
+          value={draftText}
+          onChange={(e) => setDraftText(e.target.value)}
+          placeholder="I want to launch a new podcast about design by next month, including 3 episodes..."
+          style={{ width: "100%", height: "100px", resize: "vertical", marginBottom: "1rem" }}
+        />
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <button 
+            onClick={handleStructureGoal} 
+            className={`btn-primary ${isStructuring ? "loading-glow" : ""}`}
+            disabled={isStructuring || !draftText.trim()}
+          >
+            {isStructuring ? "Structuring..." : "Structure Goal"}
+          </button>
+        </div>
+
+        {/* AI Preview Card */}
+        {previewGoal && (
+          <div style={{ marginTop: "1.5rem", padding: "1.5rem", border: "1px dashed var(--text-primary)", background: "var(--bg-page)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1rem" }}>
+              <div>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>[PREVIEW]</span>
+                <h4 style={{ margin: "0.5rem 0", fontSize: "1.2rem", fontWeight: "800", textTransform: "uppercase" }}>{previewGoal.title}</h4>
+              </div>
+              <button onClick={confirmPreview} className="btn-primary" style={{ padding: "0.5rem 1rem", fontSize: "0.8rem" }}>Confirm & Add</button>
+            </div>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {previewGoal.sub.map((s, i) => (
+                <li key={i} style={{ fontSize: "0.9rem", color: "var(--text-secondary)", padding: "0.25rem 0" }}>
+                  - {s.title}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       {/* Main Big Goal Input */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2rem" }}>
         <input
@@ -253,8 +335,8 @@ export default function Goals() {
           onKeyDown={e => e.key === "Enter" && addGoal()}
           style={{ flex: 1, padding: "0.8rem 1rem", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.02em" }}
         />
-        <button onClick={addGoal} className="btn-primary" style={{ padding: "0.8rem 1.6rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-          Create Objective
+        <button onClick={() => addGoal()} className="btn-secondary" style={{ padding: "0.8rem 1.6rem", fontSize: "0.85rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Add Manually
         </button>
       </div>
 
@@ -408,6 +490,24 @@ export default function Goals() {
                     </button>
                   </div>
                 </div>
+
+                {/* SMART Goal Progress Bar */}
+                {(() => {
+                  const totalSub = g.sub?.length || 0;
+                  const completedSub = g.sub?.filter(s => s.completed).length || 0;
+                  const progressPercent = totalSub > 0 ? Math.round((completedSub / totalSub) * 100) : 0;
+                  return (
+                    <div style={{ marginTop: "1.5rem", borderTop: "1px solid var(--border-color)", paddingTop: "1rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
+                        <span>SMART PROGRESS</span>
+                        <span>{progressPercent}% ({completedSub}/{totalSub})</span>
+                      </div>
+                      <div style={{ width: "100%", height: "4px", background: "var(--border-color)", borderRadius: "0px" }}>
+                        <div style={{ width: `${progressPercent}%`, height: "100%", background: "var(--text-primary)", transition: "width 0.3s ease" }}></div>
+                      </div>
+                    </div>
+                  );
+                })()}
               </li>
             ))}
           </ul>
