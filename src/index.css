@@ -1,6 +1,6 @@
 /* src/index.css */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap');
 
 /* 1. Global Reset (Purple Theme) */
 :root {
@@ -19,8 +19,8 @@
   --accent: #7F77DD;           /* Primary gradient start */
   --accent-secondary: #D4537E; /* Secondary gradient end */
   
-  --font-serif: 'Cormorant Garamond', serif;
-  --font-sans: 'Nunito', sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Cormorant Garamond', Georgia, serif;   /* Cormorant used everywhere */
   --font-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
@@ -36,9 +36,11 @@ body {
   color: var(--text-body) !important;
   margin: 0;
   overflow-x: hidden;
-  font-size: 0.85rem;
-  line-height: 1.8;
-  letter-spacing: -0.01em;
+  font-size: 1rem;          /* Cormorant reads best slightly larger */
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -58,15 +60,15 @@ body {
 h1, h2, h3, h4, h5, h6, p, span, label, div, aside, main, section, li, ul, ol, a, input, textarea, select {
   font-family: var(--font-sans);
   color: inherit;
-  font-weight: 300;
 }
 
 h1, h2, h3, h4 {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   color: var(--text-primary) !important;
-  font-weight: 300;
+  font-weight: 600;
   font-style: italic;
   letter-spacing: 0.02em;
+  line-height: 1.2;
 }
 
 .tracking-wide {
