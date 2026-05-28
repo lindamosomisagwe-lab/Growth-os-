@@ -18,6 +18,8 @@
   
   --accent: #7F77DD;           /* Primary gradient start */
   --accent-secondary: #D4537E; /* Secondary gradient end */
+
+  --radius: 0px;               /* #6: Single border-radius token */
   
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Cormorant Garamond', Georgia, serif;   /* Cormorant used everywhere */
@@ -38,19 +40,31 @@ body {
   overflow-x: hidden;
   font-size: 1rem;          /* Cormorant reads best slightly larger */
   font-weight: 400;
-  font-style: italic;
+  font-style: normal;       /* #3: italic prose is opt-in per element, not global */
   line-height: 1.85;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Added Reference Dot Grid */
+/* #3: Prose / narrative elements get the elegant italic — UI chrome stays upright */
+p, blockquote, .prose {
+  font-style: italic;
+}
+
+/* #3: UI chrome must stay upright regardless of cascade */
+button, label, input, select, textarea,
+[class*="mono"], [style*="font-mono"],
+nav, aside, .tag, .badge, .btn-primary, .btn-secondary {
+  font-style: normal !important;
+}
+
+/* #7: Changed from warm-beige to accent-purple so dots are visible on dark shell bg */
 .dot-grid {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background-image: radial-gradient(rgba(162, 140, 129, 0.15) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgba(127, 119, 221, 0.12) 1.5px, transparent 1.5px);
   background-size: 24px 24px;
   z-index: -1;
   pointer-events: none;
@@ -77,20 +91,36 @@ h1, h2, h3, h4 {
 }
 
 /* 2. Stark Neo-Minimalist Cards (Matte Luxury) */
+/* #4: fadeInUp entrance — cards arrive with purpose, not a hard pop */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 .stationery-card,
 .minimal-card {
   background: var(--bg-surface) !important;
   padding: 2rem;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important; /* #6: uses token */
   border: 0.5px solid var(--border-color) !important;
   box-shadow: none !important;
   color: var(--text-body) !important;
-  transition: background 0.4s ease !important;
+  transition: background 0.4s ease, border-color 0.2s ease !important;
+  animation: fadeInUp 0.35s ease-out both;
 }
+
+/* Stagger cards by DOM order (up to 6) */
+.stationery-card:nth-child(1), .minimal-card:nth-child(1) { animation-delay: 0.05s; }
+.stationery-card:nth-child(2), .minimal-card:nth-child(2) { animation-delay: 0.10s; }
+.stationery-card:nth-child(3), .minimal-card:nth-child(3) { animation-delay: 0.15s; }
+.stationery-card:nth-child(4), .minimal-card:nth-child(4) { animation-delay: 0.20s; }
+.stationery-card:nth-child(5), .minimal-card:nth-child(5) { animation-delay: 0.25s; }
+.stationery-card:nth-child(6), .minimal-card:nth-child(6) { animation-delay: 0.30s; }
 
 .stationery-card:hover,
 .minimal-card:hover {
   background: var(--bg-surface-elevated) !important;
+  border-color: var(--border-color-active) !important;
 }
 
 /* Handle legacy studio/stationery containers mapped dynamically */
@@ -119,7 +149,7 @@ div[style*="background: #6d2a2d" i] {
   background-color: var(--bg-surface) !important;
   background: var(--bg-surface) !important;
   border: 0.5px solid var(--border-color) !important;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   box-shadow: none !important;
 }
 
@@ -128,7 +158,7 @@ textarea, input[type="text"], input[type="date"], select {
   font-family: var(--font-sans);
   font-size: 0.9rem;
   border: 0.5px solid var(--border-color) !important;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   background: var(--bg-page) !important;
   color: var(--text-primary) !important;
   outline: none;
@@ -145,12 +175,30 @@ textarea:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus
   border-color: var(--border-color-active) !important;
 }
 
+/* #2: Keyboard focus ring */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
+}
+textarea:focus-visible,
+input[type="text"]:focus-visible,
+input[type="date"]:focus-visible,
+select:focus-visible {
+  outline: none !important;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 4px rgba(127, 119, 221, 0.15) !important;
+}
+
 input[type="checkbox"] {
   appearance: none;
   width: 1rem;
   height: 1rem;
   border: 0.5px solid var(--border-color);
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   background: var(--bg-page);
   cursor: pointer;
   display: inline-grid;
@@ -176,11 +224,12 @@ input[type="checkbox"]:checked::before {
 }
 
 /* 4. Navigation Drawer and Sidebar */
+/* #5: Fixed background override */
 aside {
-  background: var(--bg-page) !important;
+  background: var(--bg-sidebar) !important;
   border-right: 0.5px solid var(--border-color) !important;
   box-shadow: none !important;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
 }
 
 aside span, aside div {
@@ -188,7 +237,7 @@ aside span, aside div {
 }
 
 aside a {
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   border: 0.5px solid var(--border-color) !important;
   background: var(--bg-page) !important;
   color: var(--text-secondary) !important;
@@ -232,7 +281,7 @@ a[style*="background: #d4e0d1" i] {
   background: var(--text-primary) !important;
   color: var(--bg-page) !important;
   border: 0.5px solid var(--text-primary) !important;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   padding: 0.6rem 1.2rem;
   font-family: var(--font-sans);
   font-weight: 700 !important;
@@ -315,7 +364,7 @@ input[type="range"]::-webkit-slider-runnable-track {
 input[type="range"]::-webkit-slider-thumb {
   height: 16px;
   width: 16px;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   background: var(--text-primary) !important;
   cursor: pointer;
   -webkit-appearance: none;
@@ -340,7 +389,7 @@ input[type="range"]::-moz-range-track {
 input[type="range"]::-moz-range-thumb {
   height: 16px;
   width: 16px;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   background: var(--text-primary) !important;
   cursor: pointer;
   border: 0.5px solid var(--bg-page) !important;
@@ -362,7 +411,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -388,12 +437,12 @@ hr {
 
 div[style*="borderLeft"], div[style*="border-left"] {
   border-left: 2px solid var(--text-primary) !important;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
 }
 
 div[style*="borderBottom"], div[style*="border-bottom"] {
   border-bottom: 0.5px solid var(--border-color) !important;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
 }
 
 /* 10. Toast Notification */
@@ -405,7 +454,7 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   background: var(--bg-surface) !important;
   color: var(--text-primary) !important;
   padding: 0.8rem 1.6rem;
-  border-radius: 0px !important;
+  border-radius: var(--radius) !important;
   border: 0.5px solid var(--text-primary) !important;
   font-weight: 700;
   font-size: 0.85rem;
@@ -541,4 +590,23 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   animation: bounceScale 0.2s ease-out forwards;
 }
 
-main { padding: 4.5rem !important; }
+/* #8: Accessibility — disable all motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .stationery-card,
+  .minimal-card {
+    animation: none !important;
+  }
+
+  .splash-container {
+    transition: none !important;
+  }
+}
