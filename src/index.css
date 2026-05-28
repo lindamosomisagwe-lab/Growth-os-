@@ -80,7 +80,7 @@ h1, h2, h3, h4 {
 .stationery-card,
 .minimal-card {
   background: var(--bg-surface) !important;
-  padding: 11rem;
+  padding: 2rem;
   border-radius: 0px !important;
   border: 0.5px solid var(--border-color) !important;
   box-shadow: none !important;

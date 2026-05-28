@@ -20,8 +20,12 @@ const prompts = [
 ];
 
 export default function Sparks() {
-  const [spark, setSpark] = useState(affirmations[0]);
-  const [activePrompt, setActivePrompt] = useState("");
+  const [spark, setSpark] = useState(() => {
+    return localStorage.getItem("sparks_last_affirmation") || affirmations[0];
+  });
+  const [activePrompt, setActivePrompt] = useState(() => {
+    return localStorage.getItem("sparks_last_prompt") || "";
+  });
   const [isStreaming, setIsStreaming] = useState(false);
   const streamIntervalRef = useRef(null);
 
@@ -42,10 +46,14 @@ export default function Sparks() {
     
     streamIntervalRef.current = setInterval(() => {
       currentIndex++;
-      setSpark(targetText.substring(0, currentIndex));
+      const current = targetText.substring(0, currentIndex);
+      setSpark(current);
       if (currentIndex >= targetText.length) {
         clearInterval(streamIntervalRef.current);
         setIsStreaming(false);
+        // Persist completed affirmation + prompt
+        localStorage.setItem("sparks_last_affirmation", targetText);
+        localStorage.setItem("sparks_last_prompt", prompts[index]);
       }
     }, 40);
   };
