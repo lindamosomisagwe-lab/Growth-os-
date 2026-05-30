@@ -4,8 +4,6 @@ export default function Settings() {
   const [importStatus, setImportStatus] = useState("");
   const [exportStatus, setExportStatus] = useState("");
   const [toast, setToast] = useState({ show: false, message: "" });
-  const [claudeKey, setClaudeKey] = useState(() => localStorage.getItem("claude_api_key") || "");
-  const [claudeSaved, setClaudeSaved] = useState(false);
 
   useEffect(() => {
     if (toast.show) {
@@ -14,24 +12,24 @@ export default function Settings() {
     }
   }, [toast.show]);
 
-  const triggerToast = msg => setToast({ show: true, message: msg.toUpperCase() });
+  const triggerToast = msg => setToast({ show: true, message: msg });
 
   const exportData = () => {
     const saved = localStorage.getItem("growth_os_v1");
     if (!saved) {
-      triggerToast("database empty");
+      triggerToast("There's no data to save yet.");
       return;
     }
     const blob = new Blob([saved], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `growth_os_backup_${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `my_story_backup_${new Date().toISOString().split("T")[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     
-    triggerToast("backup downloaded");
-    setExportStatus("✅ BACKUP FILE DOWNLOADED SUCCESSFULLY.");
+    triggerToast("Backup downloaded.");
+    setExportStatus("✅ Your backup file has been downloaded.");
     setTimeout(() => setExportStatus(""), 4000);
   };
 
@@ -40,7 +38,7 @@ export default function Settings() {
     if (!file) return;
 
     const confirmImport = window.confirm(
-      "⚠️ WARNING: Importing this backup file will completely overwrite all current timeline chapters, objective checklists, and radar balance metrics in your database.\n\nAre you sure you want to proceed?"
+      "Wait! Restoring from a backup will overwrite everything currently here. Are you sure you want to continue?"
     );
     if (!confirmImport) {
       e.target.value = "";
@@ -52,143 +50,70 @@ export default function Settings() {
       try {
         const parsed = JSON.parse(ev.target.result);
         localStorage.setItem("growth_os_v1", JSON.stringify(parsed));
-        triggerToast("database restored");
-        setImportStatus("✅ RESTORATION SUCCESSFUL! REBOOTING SYSTEM...");
+        triggerToast("Welcome back.");
+        setImportStatus("✅ Data restored! Refreshing page...");
         setTimeout(() => window.location.reload(), 1500);
       } catch (err) {
-        triggerToast("restoration failed");
-        setImportStatus("❌ INVALID FILE FORMAT. TRANSACTION ABORTED.");
+        triggerToast("Hmm, that file didn't work.");
+        setImportStatus("❌ We couldn't read that file.");
       }
     };
     reader.readAsText(file);
   };
 
-  const saveClaudeKey = () => {
-    localStorage.setItem("claude_api_key", claudeKey);
-    setClaudeSaved(true);
-    setTimeout(() => setClaudeSaved(false), 2500);
-  };
-
   return (
-    <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>
-          System Settings Console
-        </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
-          LOCAL STORAGE MAINTENANCE // BACKUP & DISASTER RECOVERY
-        </p>
+    <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)", maxWidth: "800px", margin: "0 auto", paddingBottom: "4rem" }}>
+      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <h2 style={{ margin: "0", fontSize: "2rem", fontWeight: "400", letterSpacing: "-0.02em" }}>Settings</h2>
+          <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.95rem", color: "var(--text-secondary)", fontStyle: "italic" }}>
+            Under the hood.
+          </p>
+        </div>
       </header>
 
-      {/* Claude API Key Card */}
-      <div className="stationery-card" style={{ padding: "2rem", marginBottom: "1.5rem" }}>
-        <h3 style={{ margin: "0 0 0.75rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Sparks AI — Claude API Key</h3>
-        <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.25rem 0", color: "var(--text-secondary)", fontStyle: "italic" }}>
-          Paste your Claude API key here to enable personalized affirmations in Sparks AI. The key is stored only in your browser's localStorage.
-        </p>
-        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-          <input
-            type="password"
-            placeholder="sk-ant-…"
-            value={claudeKey}
-            onChange={e => setClaudeKey(e.target.value)}
-            style={{ flex: 1, minWidth: "220px", fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}
-          />
-          <button onClick={saveClaudeKey} className="btn-primary" style={{ padding: "0.65rem 1.25rem", fontSize: "0.82rem", letterSpacing: "0.04em" }}>
-            {claudeSaved ? "Saved ✓" : "Save Key"}
-          </button>
-        </div>
-        {claudeKey && <p style={{ margin: "0.75rem 0 0", fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>Key stored locally. Model: claude-sonnet-4-20250514</p>}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
-        {/* Data & Backup Card */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }}>
+        
         <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
-            📥 Database Backup
+          <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.2rem", fontWeight: "600" }}>
+            Your Data & Backups
           </h3>
-          <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.5rem 0", color: "#888888" }}>
-            Export the localized Growth OS SQL-JSON database as a standard structured snapshot file. Restore this snapshot on any browser console to fully recover active checklist and timeline records.
+          <p style={{ fontSize: "0.95rem", lineHeight: "1.6", margin: "0 0 1.5rem 0", color: "var(--text-secondary)" }}>
+            Everything you enter in this app stays directly on your device. We don't have access to your data.
+            If you're switching devices or just want to be safe, you can download a backup file of your story.
           </p>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            <button onClick={exportData} className="btn-primary" style={{ width: "100%", letterSpacing: "0.05em" }}>
-              📥 Export backup snapshot
+            <button onClick={exportData} className="btn-primary" style={{ width: "100%", padding: "1rem" }}>
+              Download a backup
             </button>
 
             {exportStatus && (
-              <div style={{
-                padding: "0.8rem",
-                borderRadius: "0px",
-                fontSize: "0.75rem",
-                fontWeight: "700",
-                textAlign: "center",
-                background: "#050505",
-                border: "1px dashed #ffffff",
-                color: "#ffffff",
-                fontFamily: "var(--font-mono)"
-              }}>
+              <div style={{ padding: "1rem", borderRadius: "8px", fontSize: "0.9rem", textAlign: "center", background: "rgba(255,255,255,0.05)" }}>
                 {exportStatus}
               </div>
             )}
 
-            {/* Import Action */}
-            <div style={{ borderTop: "1px dashed var(--border-color)", paddingTop: "1rem" }}>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "#888888", marginBottom: "0.5rem", }}>
-                Restore Backup Snapshot:
+            <div style={{ borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: "1.5rem", marginTop: "0.5rem" }}>
+              <label style={{ display: "block", fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem" }}>
+                Restore from a backup:
               </label>
               <input
                 type="file"
                 accept="application/json"
                 onChange={importData}
-                style={{
-                  width: "100%",
-                  padding: "0.5rem",
-                  boxSizing: "border-box",
-                  background: "#050505",
-                  borderRadius: "0px",
-                  border: "1px solid var(--border-color)",
-                  color: "#ffffff",
-                  fontSize: "0.8rem"
-                }}
+                style={{ width: "100%", padding: "0.8rem", background: "rgba(255,255,255,0.03)", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)", color: "var(--text-primary)", fontSize: "0.9rem" }}
               />
             </div>
 
             {importStatus && (
-              <div style={{
-                marginTop: "0.5rem",
-                padding: "0.8rem",
-                borderRadius: "0px",
-                fontSize: "0.75rem",
-                fontWeight: "700",
-                textAlign: "center",
-                background: "#050505",
-                border: "1px dashed #ffffff",
-                color: "#ffffff",
-                fontFamily: "var(--font-mono)"
-              }}>
+              <div style={{ padding: "1rem", borderRadius: "8px", fontSize: "0.9rem", textAlign: "center", background: "rgba(255,255,255,0.05)" }}>
                 {importStatus}
               </div>
             )}
           </div>
         </div>
 
-        {/* Database Sandbox Integrity Card */}
-        <div className="stationery-card" style={{ padding: "2rem" }}>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>
-            🔒 Storage Sandbox Isolation
-          </h3>
-          <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.5rem 0", color: "#888888" }}>
-            Your operational database is locked entirely inside local browser sandbox isolation. Transactions occur strictly offline, offering complete sovereign anonymity and trackless data privacy.
-          </p>
-          <div style={{ background: "#050505", border: "1px dashed var(--border-color)", padding: "1rem", borderRadius: "0px", fontSize: "0.8rem", fontFamily: "var(--font-mono)", color: "#888888" }}>
-            <strong style={{ color: "#ffffff" }}>Active DB Sandbox Schema:</strong>
-            <pre style={{ margin: "0.5rem 0 0 0", overflowX: "auto", color: "#c5c5c5" }}>
-              Key: growth_os_v1
-              Type: LocalStorage Sandbox
-            </pre>
-          </div>
-        </div>
       </div>
 
       {toast.show && <div className="toast-notification">{toast.message}</div>}

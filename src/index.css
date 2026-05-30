@@ -79,7 +79,9 @@ body::before {
 
 body {
   font-family: var(--font-sans);
-  background: var(--bg-page) !important;
+  background: linear-gradient(135deg, var(--grad-1, #09080F), var(--grad-2, #130F2E), var(--grad-3, #1e1b4b)) !important;
+  background-size: 400% 400% !important;
+  animation: breathe 12s ease infinite !important;
   color: var(--text-body) !important;
   overflow-x: hidden;
   font-size: 1rem;
@@ -101,6 +103,11 @@ nav, aside, .btn-primary, .btn-secondary,
    4. ANIMATIONS
    ─────────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: no-preference) {
+  @keyframes breathe {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
   @keyframes spaceshift {
     0%   { background-position: 0% 50%; }
     50%  { background-position: 100% 50%; }
@@ -156,6 +163,7 @@ nav, aside, .btn-primary, .btn-secondary,
 }
 
 /* Fallback (reduced motion) — define keyframes as no-ops */
+@keyframes breathe     { 0%,100%{ background-position:0% 50%; } }
 @keyframes spaceshift  { 0%,100%{ background-position:0% 50%; } }
 @keyframes floatY      { 0%,100%{ transform:translateY(0); } }
 @keyframes fadeInUp    { from{ opacity:0; } to{ opacity:1; } }

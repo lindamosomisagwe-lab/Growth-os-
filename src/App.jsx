@@ -1,69 +1,105 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import WheelOfLife from "./components/WheelOfLife";
 import Goals from "./components/Goals";
-import LifeChapters from "./components/LifeChapters";
-import FloWellness from "./components/FloWellness";
-import MoodTracker from "./components/MoodTracker";
+import DailyLog from "./components/DailyLog";
 import Vault from "./components/Vault";
-import Sparks from "./components/Sparks";
-import SpotifyWidget from "./components/SpotifyWidget";
 import Settings from "./components/Settings";
 import Splash from "./components/Splash";
-import { GamificationProvider } from "./contexts/GamificationContext";
+import { GamificationProvider, useGamification } from "./contexts/GamificationContext";
 
-function GPToast() {
-  const [toasts, setToasts] = React.useState([]);
+// Component to handle dynamic body ombre based on time, mood, and streak
+function OmbreBackgroundController() {
+  const { streak } = useGamification();
+  const [dailyLogs, setDailyLogs] = useState([]);
 
-  React.useEffect(() => {
-    const handleGP = (e) => {
-      const id = Date.now() + Math.random();
-      setToasts(prev => [...prev, { id, ...e.detail }]);
-      setTimeout(() => {
-        setToasts(prev => prev.filter(t => t.id !== id));
-      }, 1500); // 1.5s float animation
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem("growth_os_v1");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.dailyLogs) setDailyLogs(parsed.dailyLogs);
+        } catch (e) {}
+      }
     };
-    window.addEventListener('gp_awarded', handleGP);
-    return () => window.removeEventListener('gp_awarded', handleGP);
+    handleStorageChange();
+    window.addEventListener("growth_os_save", handleStorageChange);
+    return () => window.removeEventListener("growth_os_save", handleStorageChange);
   }, []);
 
-  return (
-    <div style={{ position: "fixed", pointerEvents: "none", zIndex: 9999, top: "50%", left: "50%", transform: "translate(-50%, -50%)" }}>
-      {toasts.map(t => (
-        <div key={t.id} className="float-anim" style={{
-          position: "absolute",
-          color: t.isBonus ? "var(--accent-gold)" : "var(--accent)",
-          fontWeight: "800",
-          fontSize: t.isBonus ? "1.5rem" : "1.2rem",
-          textShadow: "0 2px 10px rgba(0,0,0,0.5)",
-          whiteSpace: "nowrap",
-          animation: "floatY 1.5s ease-out forwards, fadeOut 1.5s ease-out forwards"
-        }}>
-          +{t.amount} GP ⚡ {t.isBonus && "BONUS!"}
-        </div>
-      ))}
-      <style>{`
-        @keyframes fadeOut {
-          0% { opacity: 1; }
-          70% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `}</style>
-    </div>
-  );
+  useEffect(() => {
+    const hr = new Date().getHours();
+    let grad1, grad2, grad3;
+
+    // Time of day base
+    if (hr >= 5 && hr < 12) {
+      grad1 = "#0f0c29"; grad2 = "#302b63"; grad3 = "#c47a2a"; // Morning
+    } else if (hr >= 12 && hr < 17) {
+      grad1 = "#0f2027"; grad2 = "#203a43"; grad3 = "#2c5364"; // Afternoon
+    } else if (hr >= 17 && hr < 21) {
+      grad1 = "#0f0c29"; grad2 = "#302b63"; grad3 = "#6d28d9"; // Evening
+    } else {
+      grad1 = "#09080F"; grad2 = "#130F2E"; grad3 = "#1e1b4b"; // Night
+    }
+
+    // Mood tinting (look at last 3 logs)
+    let sadCount = 0;
+    let happyCount = 0;
+    const last3Logs = dailyLogs.slice(0, 3);
+    last3Logs.forEach(log => {
+      if (log.mood === "sad" || log.mood === "angry") sadCount++;
+      if (log.mood === "happy" || log.mood === "content") happyCount++;
+    });
+
+    if (happyCount >= 2) {
+      // Warm it up
+      grad3 = "#9e4e24"; // warmer
+    } else if (sadCount >= 2) {
+      // Cool it down to deep indigo
+      grad2 = "#0B091B"; 
+      document.body.style.animationDuration = "18s"; // slow down
+    } else {
+      document.body.style.animationDuration = "12s";
+    }
+
+    // Streak brightness
+    if (streak >= 7) {
+      // add subtle brightness by tweaking grad1
+      if (hr >= 5 && hr < 17) grad1 = "#1a164a";
+      else grad1 = "#1a164a"; 
+    }
+
+    document.body.style.setProperty("--grad-1", grad1);
+    document.body.style.setProperty("--grad-2", grad2);
+    document.body.style.setProperty("--grad-3", grad3);
+  }, [dailyLogs, streak]);
+
+  return null;
 }
 
 export default function App() {
-  const [showSplash, setShowSplash] = React.useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Check if first time
+  useEffect(() => {
+    const isFirstTime = localStorage.getItem("growth_os_onboarded");
+    if (isFirstTime === "true") {
+      setShowSplash(false);
+    }
+  }, []);
 
   return (
     <GamificationProvider>
+      <OmbreBackgroundController />
       <Router>
-        {showSplash && <Splash onComplete={() => setShowSplash(false)} />}
-        <GPToast />
-        <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-page)" }}>
+        {showSplash && <Splash onComplete={() => {
+          localStorage.setItem("growth_os_onboarded", "true");
+          setShowSplash(false);
+        }} />}
+        <div style={{ display: "flex", minHeight: "100vh", background: "transparent" }}>
           <Sidebar />
           <main style={{ flex: 1, padding: "3rem", height: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
             <div className="page-wrap">
@@ -71,12 +107,8 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/wheel" element={<WheelOfLife />} />
                 <Route path="/goals" element={<Goals />} />
-                <Route path="/chapters" element={<LifeChapters />} />
-                <Route path="/wellness" element={<FloWellness />} />
-                <Route path="/mood" element={<MoodTracker />} />
+                <Route path="/log" element={<DailyLog />} />
                 <Route path="/vault" element={<Vault />} />
-                <Route path="/sparks" element={<Sparks />} />
-                <Route path="/spotify" element={<SpotifyWidget />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </div>
