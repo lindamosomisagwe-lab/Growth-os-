@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import Logo from "./Logo";
 
-// Sync status: green dot = synced (localStorage-based)
+// ── Sync status dot ────────────────────────────────────────────────────────────
 function SyncDot() {
-  const [status, setStatus] = useState("synced"); // synced | syncing | error
+  const [status, setStatus] = useState("synced");
   useEffect(() => {
     const handler = () => {
       setStatus("syncing");
@@ -16,10 +16,15 @@ function SyncDot() {
   const color = status === "synced" ? "#4ade80" : status === "syncing" ? "#fbbf24" : "#f87171";
   const label = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : "Error";
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.72rem", color: "rgba(255,255,255,0.45)", fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
+    <div style={{
+      display: "flex", alignItems: "center", gap: "0.5rem",
+      fontSize: "0.72rem", color: "rgba(255,255,255,0.35)",
+      fontFamily: "var(--font-mono)", letterSpacing: "0.05em"
+    }}>
       <span style={{
-        width: "7px", height: "7px", borderRadius: "50%", background: color,
-        boxShadow: status === "synced" ? `0 0 6px ${color}` : "none",
+        width: "7px", height: "7px", borderRadius: "50%",
+        background: color,
+        boxShadow: status === "synced" ? `0 0 8px ${color}` : "none",
         flexShrink: 0, display: "inline-block",
         animation: status === "syncing" ? "pulse 1s infinite" : "none"
       }} />
@@ -28,89 +33,102 @@ function SyncDot() {
   );
 }
 
-const coreLinks = [
-  { to: "/",          label: "Dashboard",    end: true },
-  { to: "/wheel",     label: "Wheel of Life" },
-  { to: "/goals",     label: "Goals"         },
-  { to: "/chapters",  label: "Life Chapters" },
-  { to: "/wellness",  label: "Flo / Wellness"},
-  { to: "/mood",      label: "Mood Log"      },
+const coreLinks  = [
+  { to: "/",         label: "Dashboard",     end: true },
+  { to: "/wheel",    label: "Wheel of Life"              },
+  { to: "/goals",    label: "Goals"                      },
+  { to: "/chapters", label: "Life Chapters"              },
+  { to: "/wellness", label: "Flo / Wellness"             },
+  { to: "/mood",     label: "Mood Log"                   },
+];
+const toolLinks  = [
+  { to: "/vault",    label: "Time Vault"  },
+  { to: "/sparks",   label: "Sparks AI"  },
+  { to: "/spotify",  label: "Focus Music" },
+  { to: "/settings", label: "Settings"   },
 ];
 
-const toolLinks = [
-  { to: "/vault",     label: "Time Vault"    },
-  { to: "/sparks",    label: "Sparks AI"     },
-  { to: "/spotify",   label: "Focus Music"   },
-  { to: "/settings",  label: "Settings"      },
-];
+// Section label shared style
+const groupLabel = {
+  display: "block",
+  fontSize: "0.63rem", fontWeight: "700",
+  letterSpacing: "0.18em", textTransform: "uppercase",
+  color: "rgba(255,255,255,0.25)",
+  fontFamily: "var(--font-mono)",
+  padding: "0 0.35rem", marginBottom: "0.5rem"
+};
 
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen,   setIsOpen]   = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    const handleResize = () => {
+    const handle = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       if (!mobile) setIsOpen(false);
     };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("resize", handle);
+    return () => window.removeEventListener("resize", handle);
   }, []);
 
-  const coreLinkStyle = ({ isActive }) => ({
-    display: "flex",
-    alignItems: "center",
-    gap: "0.75rem",
-    padding: "0.75rem 1rem",
+  // Core links — more prominent style
+  const coreStyle = ({ isActive }) => ({
+    display: "flex", alignItems: "center",
+    padding: "0.72rem 1rem",
     borderRadius: "0px",
     textDecoration: "none",
-    fontWeight: isActive ? "700" : "500",
     fontSize: "0.88rem",
-    letterSpacing: "0.04em",
-    transition: "all 0.15s ease-in-out",
-    color: isActive ? "var(--bg-page)" : "rgba(255,255,255,0.7)",
-    background: isActive ? "var(--text-primary)" : "transparent",
-    border: isActive ? "1px solid var(--text-primary)" : "1px solid rgba(255,255,255,0.1)",
-    boxShadow: "none"
+    letterSpacing: "0.03em",
+    transition: "all 0.15s ease",
+    fontWeight: isActive ? "700" : "500",
+    fontStyle: "normal",
+    // Active: gradient pill + gold left bar
+    background: isActive
+      ? "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.06) 100%)"
+      : "transparent",
+    color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.55)",
+    borderLeft: isActive ? "2px solid rgba(201,168,76,0.75)" : "2px solid transparent",
+    borderRight: "none", borderTop: "none", borderBottom: "none",
+    boxShadow: isActive ? "inset 0 0 0 1px rgba(255,255,255,0.1)" : "none",
   });
 
-  const toolLinkStyle = ({ isActive }) => ({
-    display: "flex",
-    alignItems: "center",
-    gap: "0.75rem",
-    padding: "0.6rem 1rem",
+  // Tool links — slightly quieter
+  const toolStyle = ({ isActive }) => ({
+    display: "flex", alignItems: "center",
+    padding: "0.58rem 1rem",
     borderRadius: "0px",
     textDecoration: "none",
+    fontSize: "0.82rem",
+    letterSpacing: "0.03em",
+    transition: "all 0.15s ease",
     fontWeight: isActive ? "700" : "400",
-    fontSize: "0.8rem",
-    letterSpacing: "0.04em",
-    transition: "all 0.15s ease-in-out",
-    color: isActive ? "var(--bg-page)" : "rgba(255,255,255,0.45)",
-    background: isActive ? "rgba(255,255,255,0.15)" : "transparent",
-    border: isActive ? "1px solid rgba(255,255,255,0.3)" : "1px solid transparent",
-    boxShadow: "none"
+    fontStyle: "normal",
+    background: isActive
+      ? "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%)"
+      : "transparent",
+    color: isActive ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.38)",
+    borderLeft: isActive ? "2px solid rgba(201,168,76,0.55)" : "2px solid transparent",
+    borderRight: "none", borderTop: "none", borderBottom: "none",
+    boxShadow: isActive ? "inset 0 0 0 1px rgba(255,255,255,0.08)" : "none",
   });
 
   const handleLinkClick = () => { if (isMobile) setIsOpen(false); };
 
   return (
     <>
-      <style>{`
-        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-      `}</style>
-
       {/* Mobile hamburger */}
       {isMobile && (
         <button
           onClick={() => setIsOpen(!isOpen)}
           style={{
             position: "fixed", top: "1.25rem", left: "1.25rem", zIndex: 3000,
-            background: "#ffffff", color: "#000000",
-            border: "1px solid #ffffff", borderRadius: "0px",
-            width: "44px", height: "44px",
+            background: "linear-gradient(135deg, #2A235C, #1A1535)",
+            color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)",
+            borderRadius: "0px", width: "44px", height: "44px",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: "1.3rem", cursor: "pointer", boxShadow: "none"
+            fontSize: "1.2rem", cursor: "pointer",
+            boxShadow: "0 2px 8px rgba(26,21,53,0.4)"
           }}
           aria-label="Toggle Menu"
         >
@@ -118,84 +136,101 @@ export default function Sidebar() {
         </button>
       )}
 
-      <aside
-        style={{
-          width: "240px",
-          background: "var(--bg-sidebar)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-          padding: "2rem 1.25rem",
-          display: "flex", flexDirection: "column", gap: "0",
-          height: "100vh", boxSizing: "border-box",
-          position: isMobile ? "fixed" : "sticky",
-          top: 0,
-          left: isMobile ? (isOpen ? 0 : "-260px") : 0,
-          zIndex: 2000,
-          transition: "left 0.3s ease-in-out",
-          overflowY: "auto"
-        }}
-      >
-        {/* Logo + Title */}
-        <div style={{ display: "flex", alignItems: "center", gap: "0.8rem", padding: "0 0.25rem", marginBottom: "2rem" }}>
-          <Logo size={26} color="rgba(255,255,255,0.9)" />
-          <span style={{ fontSize: "1rem", fontWeight: "700", letterSpacing: "0.06em", color: "rgba(255,255,255,0.9)", fontFamily: "var(--font-mono)" }}>
+      <aside style={{
+        width: "240px",
+        /* Gradient: CSS class handles background, but keep inline fallback */
+        background: "linear-gradient(180deg, #1C1640 0%, #0F0D28 100%)",
+        borderRight: "1px solid rgba(255,255,255,0.06)",
+        padding: "2rem 1.25rem",
+        display: "flex", flexDirection: "column",
+        height: "100vh", boxSizing: "border-box",
+        position: isMobile ? "fixed" : "sticky",
+        top: 0,
+        left: isMobile ? (isOpen ? 0 : "-260px") : 0,
+        zIndex: 2000,
+        transition: "left 0.3s ease-in-out",
+        overflowY: "auto",
+        boxShadow: "2px 0 24px rgba(0,0,0,0.18)"
+      }}>
+        {/* Dot-grid micro-texture overlay */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px)",
+          backgroundSize: "18px 18px",
+          pointerEvents: "none", zIndex: 0
+        }} />
+
+        {/* Logo */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.8rem",
+          padding: "0 0.35rem", marginBottom: "2.25rem",
+          position: "relative", zIndex: 1
+        }}>
+          <Logo size={26} color="rgba(255,255,255,0.85)" />
+          <span style={{
+            fontSize: "0.95rem", fontWeight: "700",
+            letterSpacing: "0.08em", color: "rgba(255,255,255,0.85)",
+            fontFamily: "var(--font-mono)", fontStyle: "normal"
+          }}>
             GROWTH OS
           </span>
         </div>
 
-        {/* ── CORE group ── */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: "0.3rem", marginBottom: "1.5rem" }}>
-          <span style={{
-            display: "block", fontSize: "0.65rem", fontWeight: "700",
-            letterSpacing: "0.18em", color: "rgba(255,255,255,0.3)",
-            fontFamily: "var(--font-mono)", textTransform: "uppercase",
-            padding: "0 0.25rem", marginBottom: "0.5rem"
-          }}>
-            Core
-          </span>
+        {/* CORE group */}
+        <nav style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginBottom: "1.5rem", position: "relative", zIndex: 1 }}>
+          <span style={groupLabel}>Core</span>
           {coreLinks.map(({ to, label, end }) => (
-            <NavLink key={to} to={to} style={coreLinkStyle} onClick={handleLinkClick} end={end}>
+            <NavLink key={to} to={to} style={coreStyle} onClick={handleLinkClick} end={end}>
               {label}
             </NavLink>
           ))}
         </nav>
 
         {/* Hairline divider */}
-        <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", margin: "0 0.25rem 1.5rem" }} />
+        <div style={{
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent)",
+          margin: "0 0.35rem 1.5rem",
+          position: "relative", zIndex: 1
+        }} />
 
-        {/* ── TOOLS group ── */}
-        <nav style={{ display: "flex", flexDirection: "column", gap: "0.2rem", flex: 1 }}>
-          <span style={{
-            display: "block", fontSize: "0.65rem", fontWeight: "700",
-            letterSpacing: "0.18em", color: "rgba(255,255,255,0.3)",
-            fontFamily: "var(--font-mono)", textTransform: "uppercase",
-            padding: "0 0.25rem", marginBottom: "0.5rem"
-          }}>
-            Tools
-          </span>
+        {/* TOOLS group */}
+        <nav style={{ display: "flex", flexDirection: "column", gap: "0.1rem", flex: 1, position: "relative", zIndex: 1 }}>
+          <span style={groupLabel}>Tools</span>
           {toolLinks.map(({ to, label }) => (
-            <NavLink key={to} to={to} style={toolLinkStyle} onClick={handleLinkClick}>
+            <NavLink key={to} to={to} style={toolStyle} onClick={handleLinkClick}>
               {label}
             </NavLink>
           ))}
         </nav>
 
-        {/* Footer: sync dot + version */}
-        <div style={{ marginTop: "2rem", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {/* Footer */}
+        <div style={{
+          marginTop: "2rem",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          paddingTop: "1rem",
+          display: "flex", flexDirection: "column", gap: "0.5rem",
+          position: "relative", zIndex: 1
+        }}>
           <SyncDot />
-          <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.2)", fontFamily: "var(--font-mono)", letterSpacing: "0.05em" }}>
+          <div style={{
+            fontSize: "0.68rem", color: "rgba(255,255,255,0.18)",
+            fontFamily: "var(--font-mono)", letterSpacing: "0.05em", fontStyle: "normal"
+          }}>
             Command Center v1.0
           </div>
         </div>
       </aside>
 
-      {/* Mobile overlay backdrop */}
+      {/* Mobile overlay */}
       {isMobile && isOpen && (
         <div
           onClick={() => setIsOpen(false)}
           style={{
             position: "fixed", top: 0, left: 0,
             width: "100vw", height: "100vh",
-            background: "rgba(0,0,0,0.5)", zIndex: 1900
+            background: "rgba(0,0,0,0.55)", zIndex: 1900,
+            backdropFilter: "blur(2px)"
           }}
         />
       )}

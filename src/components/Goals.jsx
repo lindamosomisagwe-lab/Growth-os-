@@ -418,8 +418,8 @@ export default function Goals() {
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)", marginBottom: "0.5rem" }}>
                         <span>Progress</span><span>{progressPercent}% ({completedSub}/{totalSub})</span>
                       </div>
-                      <div style={{ width: "100%", height: "3px", background: "var(--border-color)" }}>
-                        <div style={{ width: `${progressPercent}%`, height: "100%", background: "var(--text-primary)", transition: "width 0.3s ease" }} />
+                      <div style={{ width: "100%", height: "3px", background: "rgba(0,0,0,0.08)" }}>
+                        <div style={{ width: `${progressPercent}%`, height: "100%", background: "var(--accent-gold)", transition: "width 0.3s ease", boxShadow: "0 0 6px rgba(201,168,76,0.4)" }} />
                       </div>
                     </div>
                   );

@@ -83,11 +83,12 @@ function SetupBanner({ hasWheel, hasGoal, hasMood }) {
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: "3px", background: "var(--border-color)", marginBottom: "1.25rem", borderRadius: "0" }}>
+      <div style={{ height: "3px", background: "rgba(0,0,0,0.08)", marginBottom: "1.25rem", borderRadius: "0" }}>
         <div style={{
-          height: "100%", background: "var(--accent)",
+          height: "100%", background: "var(--accent-gold)",
           width: `${(completed / steps.length) * 100}%`,
-          transition: "width 0.5s ease"
+          transition: "width 0.5s ease",
+          boxShadow: "0 0 6px rgba(201,168,76,0.4)"
         }} />
       </div>
 
@@ -103,8 +104,8 @@ function SetupBanner({ hasWheel, hasGoal, hasMood }) {
             }}>
               <span style={{
                 width: "18px", height: "18px", borderRadius: "50%",
-                border: `1.5px solid ${step.done ? "var(--accent)" : "var(--border-color)"}`,
-                background: step.done ? "var(--accent)" : "transparent",
+                border: `1.5px solid ${step.done ? "var(--accent-gold)" : "var(--border-color)"}`,
+                background: step.done ? "var(--accent-gold)" : "transparent",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0
               }}>
@@ -353,8 +354,13 @@ export default function Dashboard() {
           <div style={{ fontSize: "3.5rem", fontWeight: "800", fontFamily: "var(--font-mono)", margin: "1rem 0", color: "var(--text-primary)", letterSpacing: "-0.05em" }}>
             {animatedProgress}%
           </div>
-          <div style={{ background: "var(--border-color)", height: "4px", width: "100%", margin: "0.5rem 0 1.5rem 0", overflow: "hidden" }}>
-            <div style={{ background: "var(--text-primary)", width: `${goalsProgress}%`, height: "100%", transition: "width 0.6s ease" }} />
+          <div style={{ background: "rgba(0,0,0,0.08)", height: "4px", width: "100%", margin: "0.5rem 0 1.5rem 0", overflow: "hidden" }}>
+            <div style={{
+              background: "var(--accent-gold)",
+              width: `${goalsProgress}%`, height: "100%",
+              transition: "width 0.6s ease",
+              boxShadow: "0 0 8px rgba(201,168,76,0.35)"
+            }} />
           </div>
           <p style={{ margin: "0 0 2rem 0", fontSize: "0.9rem", color: "var(--text-secondary)", flex: 1 }}>
             Completed <strong style={{ color: "var(--text-primary)" }}>{completedGoals}</strong> of <strong style={{ color: "var(--text-primary)" }}>{totalGoals}</strong> target milestones.

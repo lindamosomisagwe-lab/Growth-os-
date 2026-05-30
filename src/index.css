@@ -1,31 +1,70 @@
-/* src/index.css */
+/* src/index.css — Premium Visual Redesign */
 
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600;1,700&display=swap');
 
-/* 1. Global Reset (Purple Theme) */
-:root {
-  --bg-page: #FAF8F5;          /* Lighter canvas for contrast */
-  --bg-surface: #FFFFFF;       /* Clean white cards */
-  --bg-surface-elevated: #F4F1EA; 
-  --bg-sidebar: #1a1033;       /* Deep purple sidebar */
-  
-  --border-color: #E5E5E5;     
-  --border-color-active: #7F77DD; /* Accent purple */
-  
-  --text-primary: #1a1033;     /* Sidebar color for headers */
-  --text-secondary: #7F77DD;   /* Accent purple for subtext */
-  --text-body: #2F2E2C;        /* Charcoal for readability */
-  
-  --accent: #7F77DD;           /* Primary gradient start */
-  --accent-secondary: #D4537E; /* Secondary gradient end */
+/* ─────────────────────────────────────────────────────────────────────────────
+   0. NOISE TEXTURE — inline SVG grain overlay
+   ─────────────────────────────────────────────────────────────────────────── */
 
-  --radius: 0px;               /* #6: Single border-radius token */
-  
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Cormorant Garamond', Georgia, serif;   /* Cormorant used everywhere */
-  --font-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+/* Noise filter definition (referenced below via url(#noise)) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   1. GLOBAL DESIGN TOKENS
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg-page:     #FDFBF7;          /* Warm white — center of radial gradient */
+  --bg-page-edge: #F0EDE6;         /* Cooler off-white — edges of gradient */
+  --bg-surface:  rgba(255,255,255,0.72);   /* Frosted glass card */
+  --bg-surface-elevated: rgba(255,255,255,0.85);
+  --bg-sidebar:  #1C1640;          /* Top of sidebar gradient */
+
+  /* Borders */
+  --border-color: rgba(0,0,0,0.08);
+  --border-color-active: rgba(127,119,221,0.5);
+  --border-glass: rgba(255,255,255,0.6);
+
+  /* Text — warm dark tones, not cold grays */
+  --text-primary:   #1a1033;       /* Deep navy */
+  --text-body:      #3D3830;       /* Warm dark brown — replaces cool gray */
+  --text-secondary: #8C7E6A;       /* Warm muted brown for mono labels */
+  --text-on-dark:   rgba(255,255,255,0.45);  /* Mono labels on navy */
+
+  /* Accent colors */
+  --accent:           #7F77DD;     /* Primary purple */
+  --accent-secondary: #D4537E;     /* Rose */
+  --accent-gold:      #C9A84C;     /* Warm gold — progress bars, checkmarks, active states */
+
+  /* Radius */
+  --radius: 0px;
+
+  /* Typography */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans:  'Cormorant Garamond', Georgia, serif;
+  --font-mono:  SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+
+  /* Shadows */
+  --shadow-card:       0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-card-hover: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-btn:        0 2px 8px rgba(26,21,53,0.30);
+  --shadow-btn-hover:  0 4px 14px rgba(26,21,53,0.40);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   2. GLOBAL RESET & BASE
+   ─────────────────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -34,43 +73,49 @@
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--bg-page) !important;
+  /* Radial gradient: warm white at center → cooler off-white at edges */
+  background: radial-gradient(ellipse at 50% 35%, var(--bg-page) 0%, var(--bg-page-edge) 100%) !important;
+  background-attachment: fixed !important;
   color: var(--text-body) !important;
   margin: 0;
   overflow-x: hidden;
-  font-size: 1rem;          /* Cormorant reads best slightly larger */
+  font-size: 1rem;
   font-weight: 400;
-  font-style: normal;       /* #3: italic prose is opt-in per element, not global */
+  font-style: normal;
   line-height: 1.85;
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* #3: Prose / narrative elements get the elegant italic — UI chrome stays upright */
+/* Prose italics — opt-in only */
 p, blockquote, .prose {
   font-style: italic;
 }
 
-/* #3: UI chrome must stay upright regardless of cascade */
+/* UI chrome stays upright */
 button, label, input, select, textarea,
 [class*="mono"], [style*="font-mono"],
 nav, aside, .tag, .badge, .btn-primary, .btn-secondary {
   font-style: normal !important;
 }
 
-/* #7: Changed from warm-beige to accent-purple so dots are visible on dark shell bg */
+/* ─────────────────────────────────────────────────────────────────────────────
+   3. DOT GRID (preserved, adjusted to warmer tone)
+   ─────────────────────────────────────────────────────────────────────────── */
 .dot-grid {
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background-image: radial-gradient(rgba(127, 119, 221, 0.12) 1.5px, transparent 1.5px);
+  background-image: radial-gradient(rgba(127,119,221,0.10) 1.5px, transparent 1.5px);
   background-size: 24px 24px;
   z-index: -1;
   pointer-events: none;
 }
 
-/* Force dark mode compatibility across standard HTML tags */
+/* ─────────────────────────────────────────────────────────────────────────────
+   4. TYPOGRAPHY
+   ─────────────────────────────────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6, p, span, label, div, aside, main, section, li, ul, ol, a, input, textarea, select {
   font-family: var(--font-sans);
   color: inherit;
@@ -83,15 +128,22 @@ h1, h2, h3, h4 {
   font-style: italic;
   letter-spacing: 0.02em;
   line-height: 1.2;
+  /* Subtle lift off the background */
+  text-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 
 .tracking-wide {
   letter-spacing: 0.1em !important;
-  
 }
 
-/* 2. Stark Neo-Minimalist Cards (Matte Luxury) */
-/* #4: fadeInUp entrance — cards arrive with purpose, not a hard pop */
+/* Monospace system labels — warm muted tone on light backgrounds */
+[style*="font-mono"], [class*="font-mono"], .mono-label {
+  color: var(--text-secondary) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   5. FROSTED GLASS CARDS
+   ─────────────────────────────────────────────────────────────────────────── */
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -100,16 +152,28 @@ h1, h2, h3, h4 {
 .stationery-card,
 .minimal-card {
   background: var(--bg-surface) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   padding: 2rem;
-  border-radius: var(--radius) !important; /* #6: uses token */
-  border: 0.5px solid var(--border-color) !important;
-  box-shadow: none !important;
+  border-radius: var(--radius) !important;
+  border: 1px solid var(--border-glass) !important;
+  box-shadow: var(--shadow-card) !important;
   color: var(--text-body) !important;
-  transition: background 0.4s ease, border-color 0.2s ease !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease !important;
   animation: fadeInUp 0.35s ease-out both;
+  /* Gold top-accent on main cards */
+  border-top: 2px solid rgba(201,168,76,0.35) !important;
 }
 
-/* Stagger cards by DOM order (up to 6) */
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .stationery-card,
+  .minimal-card {
+    background: rgba(255,255,255,0.92) !important;
+  }
+}
+
+/* Stagger animations */
 .stationery-card:nth-child(1), .minimal-card:nth-child(1) { animation-delay: 0.05s; }
 .stationery-card:nth-child(2), .minimal-card:nth-child(2) { animation-delay: 0.10s; }
 .stationery-card:nth-child(3), .minimal-card:nth-child(3) { animation-delay: 0.15s; }
@@ -120,10 +184,12 @@ h1, h2, h3, h4 {
 .stationery-card:hover,
 .minimal-card:hover {
   background: var(--bg-surface-elevated) !important;
-  border-color: var(--border-color-active) !important;
+  border-color: rgba(255,255,255,0.75) !important;
+  box-shadow: var(--shadow-card-hover) !important;
+  transform: translateY(-2px) !important;
 }
 
-/* Handle legacy studio/stationery containers mapped dynamically */
+/* Legacy container overrides (color-matched cards from old code) */
 div[style*="background-color: rgb(250, 246, 243)"],
 div[style*="background: rgb(250, 246, 243)"],
 div[style*="background:#faf6f3" i],
@@ -133,49 +199,47 @@ div[style*="background:#ffffff" i],
 div[style*="background: #ffffff" i],
 div[style*="background: rgb(249, 245, 242)"],
 div[style*="background:#f9f5f2" i],
-div[style*="background: #f9f5f2" i],
 div[style*="background: rgb(250, 218, 221)"],
 div[style*="background:#fadadd" i],
-div[style*="background: #fadadd" i],
 div[style*="background: rgb(209, 228, 243)"],
 div[style*="background:#d1e4f3" i],
-div[style*="background: #d1e4f3" i],
 div[style*="background: rgb(212, 224, 209)"],
-div[style*="background:#d4e0d1" i],
-div[style*="background: #d4e0d1" i],
-div[style*="background-color: rgb(109, 42, 45)"],
-div[style*="background:#6d2a2d" i],
-div[style*="background: #6d2a2d" i] {
-  background-color: var(--bg-surface) !important;
+div[style*="background:#d4e0d1" i] {
   background: var(--bg-surface) !important;
-  border: 0.5px solid var(--border-color) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--border-glass) !important;
   border-radius: var(--radius) !important;
-  box-shadow: none !important;
+  box-shadow: var(--shadow-card) !important;
 }
 
-/* 3. Inputs, Textareas, and Forms */
-textarea, input[type="text"], input[type="date"], select {
+/* ─────────────────────────────────────────────────────────────────────────────
+   6. FORMS — Inputs, Textareas, Selects
+   ─────────────────────────────────────────────────────────────────────────── */
+textarea, input[type="text"], input[type="date"], input[type="password"], select {
   font-family: var(--font-sans);
   font-size: 0.9rem;
-  border: 0.5px solid var(--border-color) !important;
+  border: 1px solid rgba(0,0,0,0.12) !important;
   border-radius: var(--radius) !important;
-  background: var(--bg-page) !important;
+  background: rgba(255,255,255,0.7) !important;
   color: var(--text-primary) !important;
   outline: none;
   padding: 0.6rem 0.8rem !important;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-textarea::placeholder, input[type="text"]::placeholder {
-  color: var(--text-secondary) !important;
-  opacity: 0.7 !important;
+textarea::placeholder, input::placeholder {
+  color: rgba(0,0,0,0.35) !important;
+  opacity: 1 !important;
 }
 
-textarea:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus {
+textarea:focus, input[type="text"]:focus, input[type="date"]:focus,
+input[type="password"]:focus, select:focus {
   border-color: var(--border-color-active) !important;
+  box-shadow: 0 0 0 3px rgba(127,119,221,0.12) !important;
 }
 
-/* #2: Keyboard focus ring */
+/* Focus rings */
 :focus-visible {
   outline: 2px solid var(--accent) !important;
   outline-offset: 3px !important;
@@ -183,23 +247,24 @@ textarea:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus
 textarea:focus-visible,
 input[type="text"]:focus-visible,
 input[type="date"]:focus-visible,
+input[type="password"]:focus-visible,
 select:focus-visible {
   outline: none !important;
 }
-button:focus-visible,
-a:focus-visible {
+button:focus-visible, a:focus-visible {
   outline: 2px solid var(--accent) !important;
   outline-offset: 3px !important;
-  box-shadow: 0 0 0 4px rgba(127, 119, 221, 0.15) !important;
+  box-shadow: 0 0 0 4px rgba(127,119,221,0.15) !important;
 }
 
+/* Checkboxes */
 input[type="checkbox"] {
   appearance: none;
   width: 1rem;
   height: 1rem;
-  border: 0.5px solid var(--border-color);
+  border: 1px solid rgba(0,0,0,0.18);
   border-radius: var(--radius) !important;
-  background: var(--bg-page);
+  background: rgba(255,255,255,0.8);
   cursor: pointer;
   display: inline-grid;
   place-content: center;
@@ -207,142 +272,176 @@ input[type="checkbox"] {
 }
 
 input[type="checkbox"]:checked {
-  background: var(--text-primary);
-  border-color: var(--text-primary);
+  /* Gold checkmark fill */
+  background: var(--accent-gold) !important;
+  border-color: var(--accent-gold) !important;
 }
 
 input[type="checkbox"]:checked::before {
   content: "";
   width: 0.5rem;
   height: 0.5rem;
-  background-color: var(--bg-page);
+  background-color: #fff;
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 
-.text-muted, .secondary-text {
-  color: var(--text-secondary) !important;
-}
-
-/* 4. Navigation Drawer and Sidebar */
-/* #5: Fixed background override */
+/* ─────────────────────────────────────────────────────────────────────────────
+   7. SIDEBAR — Dark gradient with texture
+   ─────────────────────────────────────────────────────────────────────────── */
 aside {
-  background: var(--bg-sidebar) !important;
-  border-right: 0.5px solid var(--border-color) !important;
-  box-shadow: none !important;
+  /* Dark gradient: top #1C1640 → bottom #0F0D28 */
+  background: linear-gradient(180deg, #1C1640 0%, #0F0D28 100%) !important;
+  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 2px 0 24px rgba(0,0,0,0.18) !important;
   border-radius: var(--radius) !important;
+  position: relative;
 }
 
+/* Faint dot-grid micro-texture over the sidebar */
+aside::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 18px 18px;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 0;
+}
+
+/* Keep all sidebar children above the pseudo-element texture */
+aside > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Sidebar nav text defaults */
 aside span, aside div {
   color: var(--text-primary) !important;
 }
 
+/* Nav links base style */
 aside a {
   border-radius: var(--radius) !important;
-  border: 0.5px solid var(--border-color) !important;
-  background: var(--bg-page) !important;
-  color: var(--text-secondary) !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: rgba(255,255,255,0.55) !important;
   font-weight: 500 !important;
-  letter-spacing: -0.02em;
+  letter-spacing: 0.02em;
   transition: all 0.15s ease !important;
 }
 
-aside a.active,
-aside a.active * {
-  background: var(--text-primary) !important;
-  color: var(--bg-page) !important;
-  border-color: var(--text-primary) !important;
-  box-shadow: none !important;
-  font-weight: 700 !important;
-}
-
+/* Hover: glassy inner glow */
 aside a:hover:not(.active) {
-  background: var(--bg-surface-elevated) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-color-active) !important;
+  background: rgba(255,255,255,0.07) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.10) !important;
+  color: rgba(255,255,255,0.85) !important;
+  border-color: transparent !important;
   transform: none !important;
 }
 
-/* 5. Buttons, Actions & Interactive Overrides (Stark rigid style) */
+/* Active: gradient pill + left gold accent bar */
+aside a.active,
+aside a.active * {
+  background: linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.06) 100%) !important;
+  color: rgba(255,255,255,0.95) !important;
+  border-color: transparent !important;
+  border-left: 2px solid rgba(201,168,76,0.7) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1) !important;
+  font-weight: 700 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   8. BUTTONS
+   ─────────────────────────────────────────────────────────────────────────── */
 button,
 .btn-primary,
 a[style*="background-color: rgb(250, 218, 221)"],
 a[style*="background: rgb(250, 218, 221)"],
 a[style*="background:#fadadd" i],
-a[style*="background: #fadadd" i],
 a[style*="background-color: rgb(209, 228, 243)"],
 a[style*="background: rgb(209, 228, 243)"],
 a[style*="background:#d1e4f3" i],
-a[style*="background: #d1e4f3" i],
 a[style*="background-color: rgb(212, 224, 209)"],
 a[style*="background: rgb(212, 224, 209)"],
-a[style*="background:#d4e0d1" i],
-a[style*="background: #d4e0d1" i] {
-  background-color: var(--text-primary) !important;
-  background: var(--text-primary) !important;
-  color: var(--bg-page) !important;
-  border: 0.5px solid var(--text-primary) !important;
+a[style*="background:#d4e0d1" i] {
+  /* Premium dark gradient instead of flat block */
+  background: linear-gradient(135deg, #2A235C 0%, #1A1535 100%) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(42,35,92,0.5) !important;
   border-radius: var(--radius) !important;
   padding: 0.6rem 1.2rem;
   font-family: var(--font-sans);
-  font-weight: 700 !important;
-  letter-spacing: -0.02em;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em;
   cursor: pointer;
-  transition: all 0.15s ease;
-  box-shadow: none !important;
+  transition: all 0.18s ease !important;
+  box-shadow: var(--shadow-btn) !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  text-shadow: none;
 }
 
 button *,
-.btn-primary *,
-a[style*="background-color: rgb(250, 218, 221)"] *,
-a[style*="background-color: rgb(209, 228, 243)"] *,
-a[style*="background-color: rgb(212, 224, 209)"] * {
-  color: var(--bg-page) !important;
+.btn-primary * {
+  color: #FFFFFF !important;
+  text-shadow: none;
 }
 
 button:hover,
-.btn-primary:hover,
-a[style*="background-color: rgb(250, 218, 221)"]:hover,
-a[style*="background-color: rgb(209, 228, 243)"]:hover,
-a[style*="background-color: rgb(212, 224, 209)"]:hover {
-  transform: none !important;
-  background: var(--bg-page) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--text-primary) !important;
-  box-shadow: none !important;
+.btn-primary:hover {
+  background: linear-gradient(135deg, #342C70 0%, #221B45 100%) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(60,50,110,0.6) !important;
+  box-shadow: var(--shadow-btn-hover) !important;
+  transform: translateY(-1px) !important;
 }
 
 button:hover *,
-.btn-primary:hover *,
-a[style*="background-color: rgb(250, 218, 221)"]:hover *,
-a[style*="background-color: rgb(209, 228, 243)"]:hover *,
-a[style*="background-color: rgb(212, 224, 209)"]:hover * {
-  color: var(--text-primary) !important;
+.btn-primary:hover * {
+  color: #FFFFFF !important;
 }
 
-/* Secondary Button style: stark border with hover inverting */
+button:active,
+.btn-primary:active {
+  transform: translateY(0) !important;
+  box-shadow: var(--shadow-btn) !important;
+}
+
+/* Secondary/outlined buttons */
 button.btn-secondary,
 .btn-secondary {
-  background: var(--bg-page) !important;
+  background: rgba(255,255,255,0.6) !important;
+  backdrop-filter: blur(8px) !important;
   color: var(--text-primary) !important;
-  border: 0.5px solid var(--border-color) !important;
+  border: 1px solid rgba(26,21,53,0.22) !important;
+  box-shadow: none !important;
+}
+
+button.btn-secondary *,
+.btn-secondary * {
+  color: var(--text-primary) !important;
 }
 
 button.btn-secondary:hover,
 .btn-secondary:hover {
-  background: var(--text-primary) !important;
-  color: var(--bg-page) !important;
-  border-color: var(--text-primary) !important;
+  background: rgba(26,21,53,0.06) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(26,21,53,0.4) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
 }
 
-button.btn-secondary:hover * {
-  color: var(--bg-page) !important;
+button.btn-secondary:hover *,
+.btn-secondary:hover * {
+  color: var(--text-primary) !important;
 }
 
-/* 6. Rigid Form Sliders (Square, flat) */
+/* ─────────────────────────────────────────────────────────────────────────────
+   9. RANGE SLIDERS — gold active thumb
+   ─────────────────────────────────────────────────────────────────────────── */
 input[type="range"] {
   -webkit-appearance: none;
   width: 100%;
@@ -357,108 +456,123 @@ input[type="range"]::-webkit-slider-runnable-track {
   width: 100%;
   height: 4px;
   cursor: pointer;
-  background: var(--border-color) !important;
+  background: rgba(0,0,0,0.10) !important;
   border: none !important;
+  border-radius: 2px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: var(--radius) !important;
-  background: var(--text-primary) !important;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  /* Gold thumb */
+  background: var(--accent-gold) !important;
   cursor: pointer;
   -webkit-appearance: none;
-  margin-top: -6px;
-  border: 0.5px solid var(--bg-page) !important;
-  transition: background-color 0.15s ease;
+  margin-top: -7px;
+  border: 2px solid rgba(255,255,255,0.8) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.20) !important;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
-  background: var(--text-secondary) !important;
-  transform: none;
+  background: #D4A83A !important;
+  box-shadow: 0 2px 8px rgba(201,168,76,0.35) !important;
 }
 
 input[type="range"]::-moz-range-track {
   width: 100%;
   height: 4px;
   cursor: pointer;
-  background: var(--border-color) !important;
+  background: rgba(0,0,0,0.10) !important;
   border: none !important;
 }
 
 input[type="range"]::-moz-range-thumb {
-  height: 16px;
-  width: 16px;
-  border-radius: var(--radius) !important;
-  background: var(--text-primary) !important;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background: var(--accent-gold) !important;
   cursor: pointer;
-  border: 0.5px solid var(--bg-page) !important;
+  border: 2px solid rgba(255,255,255,0.8) !important;
 }
 
-input[type="range"]::-moz-range-thumb:hover {
-  background: var(--text-secondary) !important;
-}
+/* ─────────────────────────────────────────────────────────────────────────────
+   10. SCROLLBARS
+   ─────────────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.04); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-gold); }
 
-/* 7. Scrollbars */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-page);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: var(--radius) !important;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
-}
-
-/* 8. Recharts SVG Typography Overrides */
+/* ─────────────────────────────────────────────────────────────────────────────
+   11. RECHARTS — Radar chart styling
+   ─────────────────────────────────────────────────────────────────────────── */
+/* Axis labels — warmer, more readable */
 text, .recharts-text, .recharts-pie-label-text, .recharts-radar-label {
   font-family: var(--font-sans) !important;
-  font-size: 0.75rem !important;
+  font-size: 0.72rem !important;
   font-weight: 600 !important;
-  fill: var(--text-secondary) !important;
-  color: var(--text-secondary) !important;
+  fill: #4A3F7A !important;
+  color: #4A3F7A !important;
 }
 
-/* 9. Layout Splitters & Borders */
+/* Radar grid lines — subtle purple instead of flat gray */
+.recharts-polar-grid line,
+.recharts-polar-grid-angle line,
+.recharts-polar-grid-concentric path,
+.recharts-polar-grid-concentric polygon {
+  stroke: rgba(100,90,160,0.18) !important;
+}
+
+/* Radar filled shape — gold-accent fill */
+.recharts-radar-polygon {
+  fill: rgba(127,119,221,0.18) !important;
+  stroke: var(--accent) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   12. PROGRESS BARS — warm gold fills
+   ─────────────────────────────────────────────────────────────────────────── */
+/* Any inline progress bar div inside cards */
+[style*="background: var(--text-primary)"][style*="height"],
+[style*="background: #ffffff"][style*="height: \"100%\""] {
+  background: var(--accent-gold) !important;
+}
+
+/* Target the setup banner progress bar fill */
+.setup-progress-fill {
+  background: var(--accent-gold) !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   13. DIVIDERS
+   ─────────────────────────────────────────────────────────────────────────── */
 hr {
   border: none !important;
-  border-top: 0.5px solid var(--border-color) !important;
+  border-top: 1px solid rgba(0,0,0,0.08) !important;
   height: 1px;
   margin: 1.5rem 0;
 }
 
-div[style*="borderLeft"], div[style*="border-left"] {
-  border-left: 2px solid var(--text-primary) !important;
-  border-radius: var(--radius) !important;
-}
-
-div[style*="borderBottom"], div[style*="border-bottom"] {
-  border-bottom: 0.5px solid var(--border-color) !important;
-  border-radius: var(--radius) !important;
-}
-
-/* 10. Toast Notification */
+/* ─────────────────────────────────────────────────────────────────────────────
+   14. TOAST NOTIFICATION
+   ─────────────────────────────────────────────────────────────────────────── */
 .toast-notification {
   position: fixed;
   bottom: 2rem;
   left: 50%;
   transform: translateX(-50%);
-  background: var(--bg-surface) !important;
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
   color: var(--text-primary) !important;
   padding: 0.8rem 1.6rem;
   border-radius: var(--radius) !important;
-  border: 0.5px solid var(--text-primary) !important;
+  border: 1px solid rgba(255,255,255,0.8) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08) !important;
   font-weight: 700;
   font-size: 0.85rem;
-  
   letter-spacing: 0.05em;
   z-index: 2500;
   display: flex;
@@ -469,51 +583,36 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
 
 @keyframes toastFadeIn {
   from { bottom: 0; opacity: 0; }
-  to { bottom: 2rem; opacity: 1; }
+  to   { bottom: 2rem; opacity: 1; }
 }
-
 @keyframes toastFadeOut {
   from { bottom: 2rem; opacity: 1; }
-  to { bottom: 0; opacity: 0; }
+  to   { bottom: 0; opacity: 0; }
 }
 
-/* AI Loading Glow Animation */
+/* ─────────────────────────────────────────────────────────────────────────────
+   15. AI LOADING GLOW
+   ─────────────────────────────────────────────────────────────────────────── */
 @keyframes pulseGlow {
-  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(201,168,76,0.4); }
+  70%  { box-shadow: 0 0 0 10px rgba(201,168,76,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
 }
 
 .loading-glow {
   animation: pulseGlow 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
-  border-color: var(--text-primary) !important;
+  border-color: var(--accent-gold) !important;
 }
 
-/* Sync status dot pulse */
+/* Sidebar sync dot pulse */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  50%       { opacity: 0.3; }
 }
 
-/* 11. Viewports & Spacers */
-@media (max-width: 767px) {
-  main {
-    padding: 5rem 1.25rem 2rem 1.25rem !important;
-    height: auto !important;
-    overflow-y: visible !important;
-  }
-  .minimal-card {
-    padding: 1.25rem !important;
-  }
-}
-
-@media (min-width: 768px) {
-  main {
-    padding-bottom: 4rem !important;
-  }
-}
-
-/* Chat UI Styles */
+/* ─────────────────────────────────────────────────────────────────────────────
+   16. CHAT UI (Goal Architect)
+   ─────────────────────────────────────────────────────────────────────────── */
 .chat-container {
   display: flex;
   flex-direction: column;
@@ -521,9 +620,10 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   max-height: 500px;
   overflow-y: auto;
   padding: 2rem 1rem;
-  background: var(--bg-page);
-  border-top: 1px dashed var(--border-color);
-  border-bottom: 1px dashed var(--border-color);
+  background: rgba(253,251,247,0.6);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(0,0,0,0.07);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
   margin-bottom: 2rem;
 }
 
@@ -547,19 +647,18 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   color: var(--text-primary);
 }
 
-/* 12. Tactile & Premium Overhauls */
-
-
-/* Splash Screen Transitions */
+/* ─────────────────────────────────────────────────────────────────────────────
+   17. SPLASH SCREEN
+   ─────────────────────────────────────────────────────────────────────────── */
 .splash-container {
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
-  background: var(--bg-page);
+  background: radial-gradient(ellipse at 50% 35%, var(--bg-page) 0%, var(--bg-page-edge) 100%);
   z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: clip-path 0.6s cubic-bezier(0.77, 0, 0.175, 1);
+  transition: clip-path 0.6s cubic-bezier(0.77,0,0.175,1);
   clip-path: inset(0 0 0 0);
 }
 
@@ -575,20 +674,22 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   opacity: 1;
 }
 
-/* Page Crossfade Transition */
+/* ─────────────────────────────────────────────────────────────────────────────
+   18. PAGE TRANSITIONS
+   ─────────────────────────────────────────────────────────────────────────── */
 .page-wrap {
   animation: fadeIn 200ms ease-out forwards;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
-/* Micro-delight: Checkbox bounce */
+/* Task checkbox bounce */
 @keyframes bounceScale {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.05); }
   100% { transform: scale(1); }
 }
 
@@ -596,22 +697,40 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   animation: bounceScale 0.2s ease-out forwards;
 }
 
-/* #8: Accessibility — disable all motion for users who prefer it */
+/* ─────────────────────────────────────────────────────────────────────────────
+   19. RESPONSIVE
+   ─────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  main {
+    padding: 5rem 1.25rem 2rem 1.25rem !important;
+    height: auto !important;
+    overflow-y: visible !important;
+  }
+  .minimal-card {
+    padding: 1.25rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  main {
+    padding-bottom: 4rem !important;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   20. REDUCED MOTION
+   ─────────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-
-  .stationery-card,
-  .minimal-card {
+  .stationery-card, .minimal-card {
     animation: none !important;
+    transform: none !important;
   }
-
   .splash-container {
     transition: none !important;
   }

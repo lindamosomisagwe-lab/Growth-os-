@@ -96,11 +96,20 @@ export default function WheelOfLife() {
 
   const customTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
-      const { subject } = payload[0].payload;
       return (
-        <div style={{ background: "var(--bg-surface)", padding: "0.6rem 1rem", border: "1px solid var(--border-color)", fontSize: "0.8rem", fontWeight: "700", fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}>
+        <div style={{
+          background: "rgba(255,255,255,0.92)",
+          backdropFilter: "blur(8px)",
+          padding: "0.6rem 1rem",
+          border: "1px solid rgba(255,255,255,0.7)",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+          fontSize: "0.78rem", fontWeight: "700",
+          fontFamily: "var(--font-mono)", color: "var(--text-primary)"
+        }}>
           {payload.map((p, i) => (
-            <div key={i}>{p.name}: {p.value} / 10</div>
+            <div key={i} style={{ color: "var(--text-primary)" }}>
+              {p.name}: <span style={{ color: "var(--accent-gold)", fontWeight: "800" }}>{p.value}</span> / 10
+            </div>
           ))}
         </div>
       );
@@ -136,17 +145,57 @@ export default function WheelOfLife() {
       </header>
 
       {/* Radar chart */}
-      <div style={{ width: "100%", height: "300px", display: "flex", justifyContent: "center", alignItems: "center", background: "var(--bg-surface)", border: "1px solid var(--border-color)", padding: "1.5rem", boxSizing: "border-box", marginBottom: "1.5rem" }}>
+      <div style={{
+        width: "100%", height: "320px",
+        display: "flex", justifyContent: "center", alignItems: "center",
+        background: "rgba(255,255,255,0.65)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.6)",
+        borderTop: "2px solid rgba(201,168,76,0.35)",
+        boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+        padding: "1.5rem", boxSizing: "border-box", marginBottom: "1.5rem"
+      }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-            <PolarGrid stroke="var(--border-color)" strokeWidth={1} />
-            <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--text-secondary)", fontWeight: "700", fontSize: "0.72rem", fontFamily: "var(--font-mono)" }} />
+            {/* Premium purple grid lines */}
+            <PolarGrid stroke="rgba(100,90,160,0.18)" strokeWidth={1} />
+            {/* Warmer, bolder axis labels */}
+            <PolarAngleAxis
+              dataKey="subject"
+              tick={{ fill: "#4A3F7A", fontWeight: "600", fontSize: "0.72rem", fontFamily: "var(--font-mono)" }}
+            />
             <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-            <Radar name="This Week" dataKey="current" stroke="var(--accent)" fill="var(--accent)" fillOpacity={0.2} style={{ transition: "all 0.3s ease" }} />
+            {/* Soft purple fill — premium glow */}
+            <Radar
+              name="This Week"
+              dataKey="current"
+              stroke="#7F77DD"
+              strokeWidth={2}
+              fill="#7F77DD"
+              fillOpacity={0.22}
+              style={{ transition: "all 0.3s ease" }}
+            />
             {compareMode && lastMonthData && (
-              <Radar name="Last Month" dataKey="lastMonth" stroke="var(--accent-secondary)" fill="var(--accent-secondary)" fillOpacity={0.15} strokeDasharray="5 3" />
+              <Radar
+                name="Last Month"
+                dataKey="lastMonth"
+                stroke="#C9A84C"
+                strokeWidth={1.5}
+                fill="#C9A84C"
+                fillOpacity={0.12}
+                strokeDasharray="5 3"
+              />
             )}
-            {compareMode && lastMonthData && <Legend wrapperStyle={{ fontSize: "0.75rem", fontFamily: "var(--font-mono)" }} />}
+            {compareMode && lastMonthData && (
+              <Legend
+                wrapperStyle={{
+                  fontSize: "0.75rem",
+                  fontFamily: "var(--font-mono)",
+                  color: "var(--text-body)"
+                }}
+              />
+            )}
             <Tooltip content={customTooltip} />
           </RadarChart>
         </ResponsiveContainer>
@@ -155,13 +204,29 @@ export default function WheelOfLife() {
       {/* Sliders */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", overflowY: "auto", maxHeight: "360px", paddingRight: "0.5rem" }}>
         {categories.map((cat) => (
-          <div key={cat} style={{ background: "var(--bg-surface)", padding: "1rem 1.2rem", border: "1px solid var(--border-color)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <div key={cat} style={{
+            background: "rgba(255,255,255,0.65)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            padding: "1rem 1.2rem",
+            border: "1px solid rgba(255,255,255,0.6)",
+            borderTop: "2px solid rgba(201,168,76,0.28)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            display: "flex", flexDirection: "column", gap: "0.5rem",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease"
+          }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "700", color: "var(--text-primary)", fontSize: "0.85rem", letterSpacing: "0.02em", textTransform: "capitalize" }}>
+              <span style={{ fontWeight: "700", color: "var(--text-primary)", fontSize: "0.85rem", letterSpacing: "0.02em", textTransform: "capitalize", fontStyle: "normal" }}>
                 {cat}
               </span>
-              {/* Inline score display: "7 / 10" */}
-              <span style={{ border: "1px solid var(--border-color)", color: "var(--text-primary)", padding: "2px 8px", fontSize: "0.78rem", fontWeight: "700", fontFamily: "var(--font-mono)", minWidth: "52px", textAlign: "center" }}>
+              {/* Inline score: warm gold accent when rating > 7 */}
+              <span style={{
+                border: `1px solid ${data.ratings[cat] >= 7 ? "rgba(201,168,76,0.5)" : "rgba(0,0,0,0.10)"}`,
+                color: data.ratings[cat] >= 7 ? "var(--accent-gold)" : "var(--text-primary)",
+                padding: "2px 8px", fontSize: "0.78rem", fontWeight: "700",
+                fontFamily: "var(--font-mono)", minWidth: "52px", textAlign: "center",
+                fontStyle: "normal"
+              }}>
                 {data.ratings[cat]} / 10
               </span>
             </div>
