@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
 
 function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
 
@@ -29,6 +30,7 @@ function WaterGlass({ filled, onToggle }) {
 }
 
 export default function FloWellness() {
+  const { addGp } = useGamification();
   const [wellness, setWellness] = useState(() => {
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
@@ -65,6 +67,11 @@ export default function FloWellness() {
     const next = wellness.waterGlasses === glassIndex + 1 ? glassIndex : glassIndex + 1;
     changeVal("waterGlasses", next);
     triggerToast(`${next} / 8 glasses logged`);
+    
+    // Award 20 GP if target hit for the first time today
+    if (next === 8 && wellness.waterGlasses < 8) {
+      addGp(20, "hydration_goal");
+    }
   };
 
   const toggleCheck = field => {
@@ -87,7 +94,7 @@ export default function FloWellness() {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "1.5rem" }}>
 
         {/* Cycle Tracker */}
-        <div className="stationery-card" style={{ padding: "2rem" }}>
+        <div className="stationery-card module-flo" style={{ padding: "2rem" }}>
           <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Cycle Tracker</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             <div>
@@ -107,7 +114,7 @@ export default function FloWellness() {
         </div>
 
         {/* Hydration & Nutrition Card */}
-        <div className="stationery-card" style={{ padding: "2rem" }}>
+        <div className="stationery-card module-flo" style={{ padding: "2rem" }}>
           <h3 style={{ margin: "0 0 1.5rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Hydration & Fuel</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
 
@@ -146,7 +153,7 @@ export default function FloWellness() {
       </div>
 
       {/* Daily Wellness Log */}
-      <div className="stationery-card" style={{ marginTop: "1.5rem", padding: "2rem" }}>
+      <div className="stationery-card module-flo" style={{ marginTop: "1.5rem", padding: "2rem" }}>
         <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Daily Wellness Log</h3>
         <textarea
           placeholder="Enter symptoms, sleep duration, physical logs or recoveries…"

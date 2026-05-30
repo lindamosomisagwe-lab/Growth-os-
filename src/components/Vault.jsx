@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
 
 function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
 
@@ -24,6 +25,7 @@ function EmptyState({ onCta }) {
 }
 
 export default function Vault() {
+  const { addGp } = useGamification();
   const [capsules, setCapsules] = useState(() => {
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
@@ -57,6 +59,7 @@ export default function Vault() {
     };
     setCapsules(prev => [...prev, newCapsule]);
     setTitle(""); setMessage(""); setRevealDate("");
+    addGp(30, "vault_seal");
   };
 
   const isUnlocked = date => {
@@ -71,17 +74,20 @@ export default function Vault() {
 
   return (
     <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>Time Vault Archive</h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
-          SEALED PERSONAL CORRESPONDENCE // REVEAL ON DESIGNATED DATELINE
-        </p>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>Time Vault Archive</h2>
+          <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
+            SEALED PERSONAL CORRESPONDENCE // REVEAL ON DESIGNATED DATELINE
+          </p>
+        </div>
+        <span style={{ fontSize: "1.8rem" }} aria-hidden="true">🕰️</span>
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "2rem" }}>
 
         {/* Create form */}
-        <div ref={formRef} className="stationery-card" style={{ height: "fit-content", padding: "2rem" }}>
+        <div ref={formRef} className="stationery-card module-vault" style={{ height: "fit-content", padding: "2rem" }}>
           <h3 style={{ margin: "0 0 1.2rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Seal Time Capsule</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <input type="text" placeholder="Capsule title (e.g. On Freelance Launch)…" value={title} onChange={e => setTitle(e.target.value)} style={{ width: "100%", letterSpacing: "0.02em" }} />
@@ -109,7 +115,7 @@ export default function Vault() {
             capsules.map(c => {
               const unlocked = isUnlocked(c.revealDate);
               return (
-                <div key={c.id} className="stationery-card" style={{ borderLeft: `3px solid ${unlocked ? "var(--accent)" : "var(--border-color)"}`, padding: "1.5rem" }}>
+                <div key={c.id} className="stationery-card module-vault" style={{ borderLeft: `3px solid ${unlocked ? "var(--accent)" : "var(--border-color)"}`, padding: "1.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                     <div>
                       <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.01em" }}>

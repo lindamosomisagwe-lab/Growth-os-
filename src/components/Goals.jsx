@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
 
 // ── Empty State component ──────────────────────────────────────────────────────
 function EmptyState({ icon, hook, cta, onCta }) {
@@ -130,6 +131,7 @@ function ThinkingDots() {
 
 // ── Goals main component ───────────────────────────────────────────────────────
 export default function Goals() {
+  const { addGp } = useGamification();
   const [isMounted, setIsMounted] = useState(false);
   const [goals, setGoals] = useState([]);
 
@@ -233,7 +235,10 @@ export default function Goals() {
     setGoals(prev => {
       const next = prev.map(g => g.id === id ? { ...g, completed: !g.completed } : g);
       const target = next.find(g => g.id === id);
-      if (target) triggerToast(target.completed ? "Objective Completed" : "Objective Re-opened");
+      if (target) {
+        if (target.completed) addGp(100, "goal_complete");
+        triggerToast(target.completed ? "Objective Completed" : "Objective Re-opened");
+      }
       return next;
     });
   };
@@ -249,7 +254,10 @@ export default function Goals() {
     setGoals(prev => {
       const next = prev.map(g => g.id === goalId ? { ...g, sub: g.sub.map(s => s.id === subId ? { ...s, completed: !s.completed } : s) } : g);
       const sub = next.find(g => g.id === goalId)?.sub.find(s => s.id === subId);
-      if (sub) triggerToast(sub.completed ? "Sub-goal Complete" : "Sub-goal Pending");
+      if (sub) {
+        if (sub.completed) addGp(50, "subgoal_complete");
+        triggerToast(sub.completed ? "Sub-goal Complete" : "Sub-goal Pending");
+      }
       return next;
     });
   };
@@ -268,6 +276,7 @@ export default function Goals() {
       const t = g?.sub.find(s => s.id === subId)?.tasks?.find(t => t.id === taskId);
       if (t && !t.completed) {
         setBouncingTasks(p => new Set(p).add(taskId));
+        addGp(15, "task_complete");
         setTimeout(() => {
           setBouncingTasks(p => { const s = new Set(p); s.delete(taskId); return s; });
           setGoals(prev2 => prev2.map(g2 => g2.id === goalId ? { ...g2, sub: g2.sub.map(s2 => s2.id === subId ? { ...s2, tasks: s2.tasks.map(t2 => t2.id === taskId ? { ...t2, completed: true } : t2) } : s2) } : g2));
@@ -284,11 +293,14 @@ export default function Goals() {
 
   return (
     <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>Objectives & Task Hierarchies</h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
-          Tier 1 (Big Goal) // Tier 2 (Sub-Goal) // Tier 3 (Daily Task)
-        </p>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>Objectives & Task Hierarchies</h2>
+          <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
+            Tier 1 (Big Goal) // Tier 2 (Sub-Goal) // Tier 3 (Daily Task)
+          </p>
+        </div>
+        <span style={{ fontSize: "1.8rem" }} aria-hidden="true">🚀</span>
       </header>
 
       <ReflectiveNudges onAddGoal={addGoal} />
@@ -359,7 +371,7 @@ export default function Goals() {
         ) : (
           <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
             {goals.map((g, gIdx) => (
-              <li key={g.id} style={{ background: "var(--bg-surface)", padding: "1.5rem", marginBottom: "1.5rem", border: "1px solid var(--border-color)" }}>
+              <li key={g.id} className="stationery-card module-goals" style={{ padding: "1.5rem", marginBottom: "1.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
                   <label style={{ display: "flex", alignItems: "center", gap: "0.75rem", cursor: "pointer", flex: 1 }}>
                     <input type="checkbox" checked={g.completed} onChange={() => toggleGoal(g.id)} style={{ width: "1.2rem", height: "1.2rem" }} />

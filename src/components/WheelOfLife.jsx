@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, Legend } from "recharts";
+import { useGamification } from "../contexts/GamificationContext";
 
 const categories = ["career", "business", "fun", "creativity", "health", "academics", "finance", "relationships"];
 
@@ -16,6 +17,7 @@ function saveOS(key, value) {
 }
 
 export default function WheelOfLife() {
+  const { addGp } = useGamification();
   const [data, setData] = useState(() => {
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
@@ -60,10 +62,20 @@ export default function WheelOfLife() {
       timestamp: new Date().toISOString(),
       ratings: { ...data.ratings }
     };
+    
+    // Determine if we should award GP (only once a day for snapshots)
+    const today = new Date().toISOString().split("T")[0];
+    const snapshotsToday = data.snapshots?.filter(s => s.timestamp.startsWith(today)).length || 0;
+    
     setData(prev => ({
       ...prev,
       snapshots: [snapshot, ...(prev.snapshots || [])].slice(0, 12) // keep last 12
     }));
+    
+    if (snapshotsToday === 0) {
+      addGp(25, "wheel_snapshot");
+    }
+
     triggerToast("Wheel scores saved & snapshot stored.");
   };
 
@@ -98,13 +110,14 @@ export default function WheelOfLife() {
     if (active && payload && payload.length) {
       return (
         <div style={{
-          background: "rgba(255,255,255,0.92)",
+          background: "rgba(26,21,53,0.92)",
           backdropFilter: "blur(8px)",
           padding: "0.6rem 1rem",
-          border: "1px solid rgba(255,255,255,0.7)",
-          boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+          border: "1px solid rgba(167,139,250,0.3)",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
           fontSize: "0.78rem", fontWeight: "700",
-          fontFamily: "var(--font-mono)", color: "var(--text-primary)"
+          fontFamily: "var(--font-mono)", color: "var(--text-primary)",
+          borderRadius: "8px"
         }}>
           {payload.map((p, i) => (
             <div key={i} style={{ color: "var(--text-primary)" }}>
@@ -133,48 +146,39 @@ export default function WheelOfLife() {
             <button
               onClick={() => setCompareMode(m => !m)}
               className={compareMode ? "btn-primary" : "btn-secondary"}
-              style={{ fontSize: "0.78rem", padding: "0.5rem 1rem", letterSpacing: "0.04em" }}
+              style={{ fontSize: "0.78rem", padding: "0.65rem 1rem", letterSpacing: "0.04em" }}
             >
               {compareMode ? "Compare: ON" : "Compare"}
             </button>
           )}
-          <button onClick={saveSnapshot} className="btn-primary" style={{ fontSize: "0.78rem", padding: "0.5rem 1rem", letterSpacing: "0.04em" }}>
+          <button onClick={saveSnapshot} className="btn-primary" style={{ fontSize: "0.78rem", padding: "0.65rem 1.4rem", letterSpacing: "0.04em" }}>
             Save Snapshot
           </button>
         </div>
       </header>
 
       {/* Radar chart */}
-      <div style={{
+      <div className="stationery-card module-wheel" style={{
         width: "100%", height: "320px",
         display: "flex", justifyContent: "center", alignItems: "center",
-        background: "rgba(255,255,255,0.65)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        border: "1px solid rgba(255,255,255,0.6)",
-        borderTop: "2px solid rgba(201,168,76,0.35)",
-        boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
         padding: "1.5rem", boxSizing: "border-box", marginBottom: "1.5rem"
       }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={chartData}>
-            {/* Premium purple grid lines */}
-            <PolarGrid stroke="rgba(100,90,160,0.18)" strokeWidth={1} />
-            {/* Warmer, bolder axis labels */}
+            <PolarGrid stroke="rgba(167,139,250,0.15)" strokeWidth={1} />
             <PolarAngleAxis
               dataKey="subject"
-              tick={{ fill: "#4A3F7A", fontWeight: "600", fontSize: "0.72rem", fontFamily: "var(--font-mono)" }}
+              tick={{ fill: "#9B93BC", fontWeight: "600", fontSize: "0.72rem", fontFamily: "var(--font-mono)" }}
             />
             <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-            {/* Soft purple fill — premium glow */}
             <Radar
               name="This Week"
               dataKey="current"
-              stroke="#7F77DD"
+              stroke="#A78BFA"
               strokeWidth={2}
-              fill="#7F77DD"
-              fillOpacity={0.22}
-              style={{ transition: "all 0.3s ease" }}
+              fill="#A78BFA"
+              fillOpacity={0.25}
+              style={{ transition: "all 0.3s ease", filter: "drop-shadow(0 0 8px rgba(167,139,250,0.4))" }}
             />
             {compareMode && lastMonthData && (
               <Radar
@@ -204,28 +208,20 @@ export default function WheelOfLife() {
       {/* Sliders */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", overflowY: "auto", maxHeight: "360px", paddingRight: "0.5rem" }}>
         {categories.map((cat) => (
-          <div key={cat} style={{
-            background: "rgba(255,255,255,0.65)",
-            backdropFilter: "blur(8px)",
-            WebkitBackdropFilter: "blur(8px)",
+          <div key={cat} className="stationery-card module-wheel" style={{
             padding: "1rem 1.2rem",
-            border: "1px solid rgba(255,255,255,0.6)",
-            borderTop: "2px solid rgba(201,168,76,0.28)",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            display: "flex", flexDirection: "column", gap: "0.5rem",
-            transition: "transform 0.2s ease, box-shadow 0.2s ease"
+            display: "flex", flexDirection: "column", gap: "0.5rem"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ fontWeight: "700", color: "var(--text-primary)", fontSize: "0.85rem", letterSpacing: "0.02em", textTransform: "capitalize", fontStyle: "normal" }}>
                 {cat}
               </span>
-              {/* Inline score: warm gold accent when rating > 7 */}
               <span style={{
-                border: `1px solid ${data.ratings[cat] >= 7 ? "rgba(201,168,76,0.5)" : "rgba(0,0,0,0.10)"}`,
+                border: `1px solid ${data.ratings[cat] >= 7 ? "rgba(254,214,64,0.4)" : "rgba(255,255,255,0.10)"}`,
                 color: data.ratings[cat] >= 7 ? "var(--accent-gold)" : "var(--text-primary)",
                 padding: "2px 8px", fontSize: "0.78rem", fontWeight: "700",
                 fontFamily: "var(--font-mono)", minWidth: "52px", textAlign: "center",
-                fontStyle: "normal"
+                fontStyle: "normal", borderRadius: "6px"
               }}>
                 {data.ratings[cat]} / 10
               </span>

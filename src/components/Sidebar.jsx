@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import Logo from "./Logo";
+import { useGamification } from "../contexts/GamificationContext";
 
 // ── Sync status dot ────────────────────────────────────────────────────────────
 function SyncDot() {
@@ -18,7 +19,7 @@ function SyncDot() {
   return (
     <div style={{
       display: "flex", alignItems: "center", gap: "0.5rem",
-      fontSize: "0.72rem", color: "rgba(255,255,255,0.35)",
+      fontSize: "0.72rem", color: "var(--text-secondary)",
       fontFamily: "var(--font-mono)", letterSpacing: "0.05em"
     }}>
       <span style={{
@@ -34,33 +35,72 @@ function SyncDot() {
 }
 
 const coreLinks  = [
-  { to: "/",         label: "Dashboard",     end: true },
-  { to: "/wheel",    label: "Wheel of Life"              },
-  { to: "/goals",    label: "Goals"                      },
-  { to: "/chapters", label: "Life Chapters"              },
-  { to: "/wellness", label: "Flo / Wellness"             },
-  { to: "/mood",     label: "Mood Log"                   },
+  { to: "/",         label: "Dashboard",     icon: "🏠", end: true },
+  { to: "/wheel",    label: "Wheel of Life", icon: "🎯" },
+  { to: "/goals",    label: "Goals",         icon: "🚀" },
+  { to: "/chapters", label: "Life Chapters", icon: "📖" },
+  { to: "/wellness", label: "Flo / Wellness",icon: "🌿" },
+  { to: "/mood",     label: "Mood Log",      icon: "🧠" },
 ];
 const toolLinks  = [
-  { to: "/vault",    label: "Time Vault"  },
-  { to: "/sparks",   label: "Sparks AI"  },
-  { to: "/spotify",  label: "Focus Music" },
-  { to: "/settings", label: "Settings"   },
+  { to: "/vault",    label: "Time Vault",    icon: "⏳" },
+  { to: "/sparks",   label: "Sparks AI",     icon: "✨" },
+  { to: "/spotify",  label: "Focus Music",   icon: "🎵" },
+  { to: "/settings", label: "Settings",      icon: "⚙️" },
 ];
 
-// Section label shared style
 const groupLabel = {
   display: "block",
   fontSize: "0.63rem", fontWeight: "700",
   letterSpacing: "0.18em", textTransform: "uppercase",
-  color: "rgba(255,255,255,0.25)",
+  color: "var(--text-secondary)",
   fontFamily: "var(--font-mono)",
   padding: "0 0.35rem", marginBottom: "0.5rem"
 };
 
+function NavItem({ to, label, icon, end, onClick, isTool }) {
+  const [hovered, setHovered] = useState(false);
+  
+  return (
+    <NavLink 
+      to={to} 
+      end={end} 
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={({ isActive }) => (isActive ? "active" : "")}
+      style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: isTool ? "0.58rem 1rem" : "0.72rem 1rem",
+        fontSize: isTool ? "0.82rem" : "0.88rem",
+        position: "relative"
+      }}
+    >
+      {({ isActive }) => (
+        <>
+          <span>{label}</span>
+          <span 
+            aria-hidden="true"
+            style={{
+              opacity: hovered || isActive ? 1 : 0,
+              transform: hovered || isActive ? "translateX(0)" : "translateX(-10px)",
+              transition: "all 0.15s ease",
+              filter: isActive ? "drop-shadow(0 0 6px rgba(167,139,250,0.5))" : "none"
+            }}
+          >
+            {icon}
+          </span>
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 export default function Sidebar() {
   const [isOpen,   setIsOpen]   = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const { gp, streak, getRank, streakShields } = useGamification();
+  const rank = getRank();
 
   useEffect(() => {
     const handle = () => {
@@ -72,63 +112,21 @@ export default function Sidebar() {
     return () => window.removeEventListener("resize", handle);
   }, []);
 
-  // Core links — more prominent style
-  const coreStyle = ({ isActive }) => ({
-    display: "flex", alignItems: "center",
-    padding: "0.72rem 1rem",
-    borderRadius: "0px",
-    textDecoration: "none",
-    fontSize: "0.88rem",
-    letterSpacing: "0.03em",
-    transition: "all 0.15s ease",
-    fontWeight: isActive ? "700" : "500",
-    fontStyle: "normal",
-    // Active: gradient pill + gold left bar
-    background: isActive
-      ? "linear-gradient(135deg, rgba(255,255,255,0.13) 0%, rgba(255,255,255,0.06) 100%)"
-      : "transparent",
-    color: isActive ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.55)",
-    borderLeft: isActive ? "2px solid rgba(201,168,76,0.75)" : "2px solid transparent",
-    borderRight: "none", borderTop: "none", borderBottom: "none",
-    boxShadow: isActive ? "inset 0 0 0 1px rgba(255,255,255,0.1)" : "none",
-  });
-
-  // Tool links — slightly quieter
-  const toolStyle = ({ isActive }) => ({
-    display: "flex", alignItems: "center",
-    padding: "0.58rem 1rem",
-    borderRadius: "0px",
-    textDecoration: "none",
-    fontSize: "0.82rem",
-    letterSpacing: "0.03em",
-    transition: "all 0.15s ease",
-    fontWeight: isActive ? "700" : "400",
-    fontStyle: "normal",
-    background: isActive
-      ? "linear-gradient(135deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%)"
-      : "transparent",
-    color: isActive ? "rgba(255,255,255,0.90)" : "rgba(255,255,255,0.38)",
-    borderLeft: isActive ? "2px solid rgba(201,168,76,0.55)" : "2px solid transparent",
-    borderRight: "none", borderTop: "none", borderBottom: "none",
-    boxShadow: isActive ? "inset 0 0 0 1px rgba(255,255,255,0.08)" : "none",
-  });
-
   const handleLinkClick = () => { if (isMobile) setIsOpen(false); };
 
   return (
     <>
-      {/* Mobile hamburger */}
       {isMobile && (
         <button
           onClick={() => setIsOpen(!isOpen)}
           style={{
             position: "fixed", top: "1.25rem", left: "1.25rem", zIndex: 3000,
-            background: "linear-gradient(135deg, #2A235C, #1A1535)",
+            background: "linear-gradient(135deg, #1A1535, #0D0B1A)",
             color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)",
-            borderRadius: "0px", width: "44px", height: "44px",
+            borderRadius: "12px", width: "44px", height: "44px",
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: "1.2rem", cursor: "pointer",
-            boxShadow: "0 2px 8px rgba(26,21,53,0.4)"
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)"
           }}
           aria-label="Toggle Menu"
         >
@@ -136,40 +134,17 @@ export default function Sidebar() {
         </button>
       )}
 
-      <aside style={{
-        width: "240px",
-        /* Gradient: CSS class handles background, but keep inline fallback */
-        background: "linear-gradient(180deg, #1C1640 0%, #0F0D28 100%)",
-        borderRight: "1px solid rgba(255,255,255,0.06)",
-        padding: "2rem 1.25rem",
-        display: "flex", flexDirection: "column",
-        height: "100vh", boxSizing: "border-box",
-        position: isMobile ? "fixed" : "sticky",
-        top: 0,
-        left: isMobile ? (isOpen ? 0 : "-260px") : 0,
-        zIndex: 2000,
-        transition: "left 0.3s ease-in-out",
-        overflowY: "auto",
-        boxShadow: "2px 0 24px rgba(0,0,0,0.18)"
-      }}>
-        {/* Dot-grid micro-texture overlay */}
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: "radial-gradient(rgba(255,255,255,0.055) 1px, transparent 1px)",
-          backgroundSize: "18px 18px",
-          pointerEvents: "none", zIndex: 0
-        }} />
-
+      <aside>
         {/* Logo */}
         <div style={{
           display: "flex", alignItems: "center", gap: "0.8rem",
           padding: "0 0.35rem", marginBottom: "2.25rem",
           position: "relative", zIndex: 1
         }}>
-          <Logo size={26} color="rgba(255,255,255,0.85)" />
+          <Logo size={26} color="var(--text-primary)" />
           <span style={{
             fontSize: "0.95rem", fontWeight: "700",
-            letterSpacing: "0.08em", color: "rgba(255,255,255,0.85)",
+            letterSpacing: "0.08em", color: "var(--text-primary)",
             fontFamily: "var(--font-mono)", fontStyle: "normal"
           }}>
             GROWTH OS
@@ -179,17 +154,15 @@ export default function Sidebar() {
         {/* CORE group */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "0.15rem", marginBottom: "1.5rem", position: "relative", zIndex: 1 }}>
           <span style={groupLabel}>Core</span>
-          {coreLinks.map(({ to, label, end }) => (
-            <NavLink key={to} to={to} style={coreStyle} onClick={handleLinkClick} end={end}>
-              {label}
-            </NavLink>
+          {coreLinks.map(link => (
+            <NavItem key={link.to} {...link} onClick={handleLinkClick} />
           ))}
         </nav>
 
         {/* Hairline divider */}
         <div style={{
           height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.10), transparent)",
+          background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)",
           margin: "0 0.35rem 1.5rem",
           position: "relative", zIndex: 1
         }} />
@@ -197,16 +170,46 @@ export default function Sidebar() {
         {/* TOOLS group */}
         <nav style={{ display: "flex", flexDirection: "column", gap: "0.1rem", flex: 1, position: "relative", zIndex: 1 }}>
           <span style={groupLabel}>Tools</span>
-          {toolLinks.map(({ to, label }) => (
-            <NavLink key={to} to={to} style={toolStyle} onClick={handleLinkClick}>
-              {label}
-            </NavLink>
+          {toolLinks.map(link => (
+            <NavItem key={link.to} {...link} onClick={handleLinkClick} isTool />
           ))}
         </nav>
+        
+        {/* GAMIFICATION STATS PANEL */}
+        <div style={{
+          margin: "1.5rem 0",
+          background: "rgba(255,255,255,0.04)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "16px",
+          padding: "1rem",
+          display: "flex", flexDirection: "column", gap: "0.5rem",
+          position: "relative", zIndex: 1,
+          boxShadow: "0 4px 16px rgba(0,0,0,0.2)"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}>
+            <span style={{ color: "var(--text-secondary)" }}>Total GP</span>
+            <span style={{ color: "var(--accent-gold)", fontWeight: "800" }}>⚡ {gp.toLocaleString()}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}>
+            <span style={{ color: "var(--text-secondary)" }}>Rank</span>
+            <span style={{ color: "var(--text-primary)", fontWeight: "700" }}>{rank.emoji} {rank.name}</span>
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}>
+            <span style={{ color: "var(--text-secondary)" }}>Streak</span>
+            <span style={{ color: "#f5576c", fontWeight: "800" }}>🔥 {streak} {streak === 1 ? 'day' : 'days'}</span>
+          </div>
+          {streakShields > 0 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", fontFamily: "var(--font-mono)" }}>
+              <span style={{ color: "var(--text-secondary)" }}>Shields</span>
+              <span style={{ color: "#60a5fa", fontWeight: "800" }}>🛡️ {streakShields}</span>
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
         <div style={{
-          marginTop: "2rem",
+          marginTop: "auto",
           borderTop: "1px solid rgba(255,255,255,0.06)",
           paddingTop: "1rem",
           display: "flex", flexDirection: "column", gap: "0.5rem",
@@ -214,10 +217,10 @@ export default function Sidebar() {
         }}>
           <SyncDot />
           <div style={{
-            fontSize: "0.68rem", color: "rgba(255,255,255,0.18)",
+            fontSize: "0.68rem", color: "rgba(255,255,255,0.2)",
             fontFamily: "var(--font-mono)", letterSpacing: "0.05em", fontStyle: "normal"
           }}>
-            Command Center v1.0
+            Command Center v2.0
           </div>
         </div>
       </aside>
@@ -229,8 +232,8 @@ export default function Sidebar() {
           style={{
             position: "fixed", top: 0, left: 0,
             width: "100vw", height: "100vh",
-            background: "rgba(0,0,0,0.55)", zIndex: 1900,
-            backdropFilter: "blur(2px)"
+            background: "rgba(0,0,0,0.7)", zIndex: 1900,
+            backdropFilter: "blur(4px)"
           }}
         />
       )}

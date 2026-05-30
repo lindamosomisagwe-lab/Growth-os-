@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
 
 function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
 
@@ -25,6 +26,7 @@ function EmptyState({ onCta }) {
 }
 
 export default function LifeChapters() {
+  const { addGp } = useGamification();
   const [chapters, setChapters] = useState(() => {
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
@@ -67,6 +69,7 @@ export default function LifeChapters() {
     };
     setChapters(prev => [newChapter, ...prev]);
     setTitle(""); setDate(""); setNote(""); setPhoto("");
+    addGp(40, "chapter_log");
   };
 
   const scrollToForm = () => {
@@ -76,19 +79,22 @@ export default function LifeChapters() {
 
   return (
     <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
-      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.04em" }}>
-          Life Timeline Chronicles
-        </h1>
-        <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
-          ARCHIVE PERSONAL MILESTONES // HISTORICAL TIMELINE ENTRIES
-        </p>
+      <header style={{ marginBottom: "2rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <h1 style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem", fontWeight: "800", letterSpacing: "-0.04em" }}>
+            Life Timeline Chronicles
+          </h1>
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
+            ARCHIVE PERSONAL MILESTONES // HISTORICAL TIMELINE ENTRIES
+          </p>
+        </div>
+        <span style={{ fontSize: "1.8rem" }} aria-hidden="true">📖</span>
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "2rem", alignItems: "start" }}>
 
         {/* Log Form */}
-        <div ref={formRef} className="stationery-card" style={{ padding: "2rem" }}>
+        <div ref={formRef} className="stationery-card module-chapters" style={{ padding: "2rem" }}>
           <h3 style={{ margin: "0 0 1.25rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Log a New Chapter</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
@@ -136,7 +142,7 @@ export default function LifeChapters() {
             <EmptyState onCta={scrollToForm} />
           ) : (
             chapters.map(c => (
-              <div key={c.id} className="stationery-card" style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "relative", padding: "1.5rem" }}>
+              <div key={c.id} className="stationery-card module-chapters" style={{ display: "flex", flexDirection: "column", gap: "1rem", position: "relative", padding: "1.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", borderBottom: "1px dashed var(--border-color)", paddingBottom: "0.75rem" }}>
                   <div>
                     <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", fontWeight: "800", color: "var(--text-primary)", letterSpacing: "-0.01em" }}>

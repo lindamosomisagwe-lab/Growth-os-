@@ -160,15 +160,18 @@ Write in second person ("you"), mixed case (not all caps), warm and direct tone.
                 onClick={() => handleSelect(state)}
                 disabled={isLoading}
                 style={{
-                  background: isAct ? "var(--text-primary)" : "transparent",
-                  color: isAct ? "var(--bg-page)" : "var(--text-primary)",
-                  border: isAct ? "1px solid var(--text-primary)" : "1px solid var(--border-color)",
-                  padding: "0.9rem 1rem",
+                  background: isAct ? "rgba(254,214,64,0.15)" : "rgba(255,255,255,0.04)",
+                  color: isAct ? "var(--accent-gold)" : "var(--text-primary)",
+                  border: isAct ? "1px solid rgba(254,214,64,0.4)" : "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: isAct ? "0 0 16px rgba(254,214,64,0.15)" : "none",
+                  padding: "0.9rem 1.2rem",
+                  borderRadius: "12px",
                   cursor: isLoading ? "wait" : "pointer",
                   fontWeight: "600", fontSize: "0.88rem",
                   letterSpacing: "0.01em", textAlign: "left",
-                  transition: "all 0.15s ease", display: "block", width: "100%",
-                  opacity: isLoading && !isAct ? 0.5 : 1
+                  transition: "all 0.2s cubic-bezier(0.34,1.56,0.64,1)", display: "block", width: "100%",
+                  opacity: isLoading && !isAct ? 0.5 : 1,
+                  transform: isAct ? "scale(1.02)" : "scale(1)"
                 }}
               >
                 {state.label}
@@ -178,7 +181,7 @@ Write in second person ("you"), mixed case (not all caps), warm and direct tone.
         </div>
 
         {/* Affirmation Board */}
-        <div className="stationery-card" style={{
+        <div className="stationery-card module-sparks" style={{
           textAlign: "center", display: "flex", flexDirection: "column",
           justifyContent: "center", minHeight: "300px", position: "relative",
           overflow: "hidden", padding: "2.5rem 2rem", gap: "1.5rem"
