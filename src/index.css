@@ -489,6 +489,12 @@ div[style*="borderBottom"], div[style*="border-bottom"] {
   border-color: var(--text-primary) !important;
 }
 
+/* Sync status dot pulse */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 /* 11. Viewports & Spacers */
 @media (max-width: 767px) {
   main {

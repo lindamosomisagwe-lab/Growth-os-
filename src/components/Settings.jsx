@@ -4,6 +4,8 @@ export default function Settings() {
   const [importStatus, setImportStatus] = useState("");
   const [exportStatus, setExportStatus] = useState("");
   const [toast, setToast] = useState({ show: false, message: "" });
+  const [claudeKey, setClaudeKey] = useState(() => localStorage.getItem("claude_api_key") || "");
+  const [claudeSaved, setClaudeSaved] = useState(false);
 
   useEffect(() => {
     if (toast.show) {
@@ -61,16 +63,43 @@ export default function Settings() {
     reader.readAsText(file);
   };
 
+  const saveClaudeKey = () => {
+    localStorage.setItem("claude_api_key", claudeKey);
+    setClaudeSaved(true);
+    setTimeout(() => setClaudeSaved(false), 2500);
+  };
+
   return (
-    <div style={{ color: "#ffffff", fontFamily: "var(--font-sans)" }}>
+    <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)" }}>
       <header style={{ marginBottom: "1.5rem", borderBottom: "1px solid var(--border-color)", paddingBottom: "1rem" }}>
-        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+        <h2 style={{ margin: "0", fontSize: "1.6rem", fontWeight: "800", letterSpacing: "-0.03em" }}>
           System Settings Console
         </h2>
-        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "#888888", fontFamily: "var(--font-mono)", }}>
-          LOCAL STORAGE MAINTENANCE // BACKUP &amp; DISASTER RECOVERY
+        <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.8rem", color: "var(--text-secondary)", fontFamily: "var(--font-mono)" }}>
+          LOCAL STORAGE MAINTENANCE // BACKUP & DISASTER RECOVERY
         </p>
       </header>
+
+      {/* Claude API Key Card */}
+      <div className="stationery-card" style={{ padding: "2rem", marginBottom: "1.5rem" }}>
+        <h3 style={{ margin: "0 0 0.75rem 0", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "-0.02em" }}>Sparks AI — Claude API Key</h3>
+        <p style={{ fontSize: "0.85rem", lineHeight: "1.6", margin: "0 0 1.25rem 0", color: "var(--text-secondary)", fontStyle: "italic" }}>
+          Paste your Claude API key here to enable personalized affirmations in Sparks AI. The key is stored only in your browser's localStorage.
+        </p>
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          <input
+            type="password"
+            placeholder="sk-ant-…"
+            value={claudeKey}
+            onChange={e => setClaudeKey(e.target.value)}
+            style={{ flex: 1, minWidth: "220px", fontFamily: "var(--font-mono)", fontSize: "0.85rem" }}
+          />
+          <button onClick={saveClaudeKey} className="btn-primary" style={{ padding: "0.65rem 1.25rem", fontSize: "0.82rem", letterSpacing: "0.04em" }}>
+            {claudeSaved ? "Saved ✓" : "Save Key"}
+          </button>
+        </div>
+        {claudeKey && <p style={{ margin: "0.75rem 0 0", fontSize: "0.75rem", fontFamily: "var(--font-mono)", color: "var(--text-secondary)" }}>Key stored locally. Model: claude-sonnet-4-20250514</p>}
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1.5rem" }}>
         {/* Data & Backup Card */}
