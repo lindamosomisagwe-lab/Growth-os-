@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import GameHUD from "./components/GameHUD";
 import Dashboard from "./components/Dashboard";
 import WheelOfLife from "./components/WheelOfLife";
 import Goals from "./components/Goals";
@@ -9,7 +10,6 @@ import Vault from "./components/Vault";
 import Settings from "./components/Settings";
 import Splash from "./components/Splash";
 import Profile from "./components/Profile";
-import MyJourney from "./components/MyJourney";
 import { GamificationProvider, useGamification } from "./contexts/GamificationContext";
 
 // Component to handle dynamic body ombre based on time, mood, and streak
@@ -82,6 +82,24 @@ function OmbreBackgroundController() {
   return null;
 }
 
+function RouteColorController() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    let accent = "#7C5CFC"; // Home default (Purple-indigo)
+    const path = location.pathname;
+    
+    if (path === "/wheel") accent = "#4FACFE"; // Sky blue
+    else if (path === "/goals") accent = "#F05A7E"; // Coral-pink
+    else if (path === "/log") accent = "#43E97B"; // Mint green
+    else if (path === "/vault") accent = "#A78BFA"; // Deep purple
+    
+    document.documentElement.style.setProperty("--page-accent", accent);
+  }, [location.pathname]);
+
+  return null;
+}
+
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
@@ -97,14 +115,16 @@ export default function App() {
     <GamificationProvider>
       <OmbreBackgroundController />
       <Router>
+        <RouteColorController />
         {showSplash && <Splash onComplete={() => {
           localStorage.setItem("growth_os_onboarded", "true");
           setShowSplash(false);
         }} />}
         <div style={{ display: "flex", minHeight: "100vh", background: "transparent" }}>
           <Sidebar />
-          <main style={{ flex: 1, padding: "3rem", height: "100vh", overflowY: "auto", boxSizing: "border-box" }}>
-            <div className="page-wrap">
+          <main style={{ flex: 1, padding: "0", height: "100vh", overflowY: "auto", boxSizing: "border-box", position: "relative" }}>
+            <GameHUD />
+            <div className="page-wrap" style={{ padding: "2rem 3rem" }}>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/wheel" element={<WheelOfLife />} />
@@ -113,7 +133,6 @@ export default function App() {
                 <Route path="/vault" element={<Vault />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/profile" element={<Profile />} />
-                <Route path="/journey" element={<MyJourney />} />
               </Routes>
             </div>
           </main>
