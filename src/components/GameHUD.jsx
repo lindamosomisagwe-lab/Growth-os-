@@ -23,7 +23,7 @@ export default function GameHUD() {
         <span className="val">Ch.{progress.current_chapter}</span>
       </div>
       {progress.streak_shield_available && (
-        <div className="hud-chip" style={{ background: "rgba(249, 212, 35, 0.15)", borderColor: "rgba(249, 212, 35, 0.3)" }}>
+        <div className="hud-chip">
           <span className="icon">🛡️</span>
           <span className="val" style={{ color: "#F9D423" }}>Ready</span>
         </div>

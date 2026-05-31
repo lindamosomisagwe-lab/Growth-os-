@@ -37,12 +37,13 @@ function DailyChest({ awardXP, triggerToast }) {
   if (opened) return null;
 
   return (
-    <div className="stationery-card anim-float-up" style={{ padding: "2rem", textAlign: "center", cursor: "pointer", background: "linear-gradient(135deg, rgba(249, 212, 35, 0.1), rgba(255, 142, 83, 0.1))", border: "1px solid rgba(249, 212, 35, 0.3)", marginBottom: "2rem" }} onClick={openChest}>
+    <div className="stationery-card anim-float-up" style={{ padding: "1.5rem", textAlign: "center", cursor: "pointer", background: "linear-gradient(135deg, rgba(249, 212, 35, 0.1), rgba(255, 142, 83, 0.1))", border: "1px solid rgba(249, 212, 35, 0.3)", marginBottom: "2rem" }} onClick={openChest}>
       <div style={{ fontSize: "4rem", animation: animating ? "chestShimmer 0.6s forwards" : "pulse 2s infinite" }}>
         {animating ? "✨" : "🎁"}
       </div>
-      <h3 style={{ margin: "1rem 0 0", color: "#F9D423", fontSize: "1.2rem", fontWeight: "800" }}>Daily Reward Available</h3>
-      <p style={{ margin: "0.5rem 0 0", color: "var(--text-secondary)", fontSize: "0.9rem", fontWeight: "600" }}>Tap to claim your XP</p>
+      <h3 className="text-primary" style={{ margin: "1rem 0 0", fontSize: "1.2rem", fontWeight: "700" }}>Daily Reward Available</h3>
+      <p className="text-secondary" style={{ margin: "0.5rem 0 0", fontSize: "0.9rem" }}>Tap to claim your XP</p>
+      <p className="text-tertiary" style={{ margin: "0.5rem 0 0", fontSize: "0.75rem", fontStyle: "italic" }}>expires tonight</p>
     </div>
   );
 }
@@ -158,14 +159,15 @@ export default function Dashboard() {
   const weekLogs = weekDates.map(date => {
     const log = (state.dailyLogs || []).find(l => l.date === date);
     let emoji = "";
+    let bgColor = "transparent";
     if (log && log.mood) {
-      if (log.mood === "happy") emoji = "😄";
-      else if (log.mood === "content") emoji = "😊";
-      else if (log.mood === "neutral") emoji = "😐";
-      else if (log.mood === "sad") emoji = "😢";
-      else if (log.mood === "angry") emoji = "😤";
+      if (log.mood === "happy") { emoji = "😄"; bgColor = "rgba(255,215,0,0.4)"; }
+      else if (log.mood === "content") { emoji = "😊"; bgColor = "rgba(67, 233, 123, 0.4)"; }
+      else if (log.mood === "neutral") { emoji = "😐"; bgColor = "rgba(108, 122, 137, 0.4)"; }
+      else if (log.mood === "sad") { emoji = "😢"; bgColor = "rgba(79, 172, 254, 0.4)"; }
+      else if (log.mood === "angry") { emoji = "😤"; bgColor = "rgba(240, 90, 126, 0.4)"; }
     }
-    return { date, emoji, log };
+    return { date, emoji, log, bgColor };
   });
 
   const todayIso = new Date().toISOString().split("T")[0];
@@ -205,10 +207,10 @@ export default function Dashboard() {
         <div className="float-anim" style={{ position: "absolute", right: "10%", top: "20%", fontSize: "4rem", opacity: 0.2, pointerEvents: "none", filter: "blur(2px)" }} aria-hidden="true">{timeConfig.emoji}</div>
         
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", fontFamily: "var(--font-sans)", letterSpacing: "0.02em", marginBottom: "0.5rem" }}>
+          <div className="text-tertiary" style={{ fontSize: "0.9rem", fontFamily: "var(--font-sans)", letterSpacing: "0.02em", marginBottom: "0.5rem" }}>
             {todayStr}
           </div>
-          <h1 style={{ margin: "0", fontSize: "2.5rem", fontWeight: "800", letterSpacing: "-0.02em", fontFamily: "var(--font-serif)" }}>
+          <h1 className="text-primary" style={{ margin: "0", fontSize: "36px", fontWeight: "700", letterSpacing: "-0.02em", fontFamily: "var(--font-serif)", textShadow: "0 0 40px rgba(167, 139, 250, 0.5)" }}>
             {finalGreeting}
           </h1>
         </div>
@@ -218,16 +220,16 @@ export default function Dashboard() {
 
       {/* The Centerpiece: Today's Focus */}
       <div className="stationery-card" style={{ padding: "2.5rem", marginBottom: "2.5rem", textAlign: "center" }}>
-        <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", fontWeight: "800", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
-          Today's Quest
+        <div className="text-secondary" style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
+          ⚔️ Today's Quest
         </div>
         
         {pinnedTask ? (
           <>
-            <h2 style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem", fontWeight: "800", color: "var(--text-primary)" }}>
+            <h2 className="text-primary" style={{ margin: "0 0 0.5rem 0", fontSize: "1.8rem" }}>
               {pinnedTask.title}
             </h2>
-            <p style={{ margin: "0 0 2rem 0", fontSize: "0.9rem", color: "var(--text-secondary)", fontWeight: "600" }}>
+            <p className="text-tertiary" style={{ margin: "0 0 2rem 0", fontSize: "0.9rem" }}>
               Part of: {pinnedGoal.title}
             </p>
             <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap", position: "relative" }}>
@@ -238,23 +240,22 @@ export default function Dashboard() {
               )}
               <button 
                 onClick={() => handleTaskAction('done')} 
-                className={doneAnim ? "btn-secondary" : "btn-primary"}
-                style={{ padding: "0.8rem 2rem", fontSize: "1.1rem", position: "relative" }}
+                className={doneAnim ? "btn-card-secondary" : "btn-card-primary"}
                 disabled={doneAnim}
               >
                 {doneAnim ? "✓" : "✓ Done"}
               </button>
-              <button onClick={() => handleTaskAction('tomorrow')} className="btn-secondary" style={{ padding: "0.8rem 1.5rem", fontSize: "1.1rem" }}>
+              <button onClick={() => handleTaskAction('tomorrow')} className="btn-card-secondary">
                 ↷ Tomorrow
               </button>
             </div>
           </>
         ) : (
           <>
-            <h2 style={{ margin: "0 0 1rem 0", fontSize: "1.4rem", fontWeight: "600", color: "var(--text-secondary)" }}>
+            <h2 className="text-secondary" style={{ margin: "0 0 1rem 0", fontSize: "1.4rem" }}>
               No active quests right now.
             </h2>
-            <Link to="/goals" className="btn-secondary" style={{ display: "inline-block", padding: "0.8rem 2rem" }}>
+            <Link to="/goals" className="btn-card-secondary" style={{ display: "inline-block", textDecoration: "none" }}>
               View Map
             </Link>
           </>
@@ -270,13 +271,13 @@ export default function Dashboard() {
               <circle cx="28" cy="28" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
               <circle cx="28" cy="28" r="20" fill="none" stroke="#4FACFE" strokeWidth="6" strokeDasharray={`${(wheelPercent / 100) * wheelCirc} ${wheelCirc}`} strokeLinecap="round" className="progress-ring__circle" />
             </svg>
-            <div style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "16px", fontWeight: "800", color: "#FFF" }}>
+            <div className="text-primary" style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "16px", fontWeight: "800" }}>
               {averageRating}
             </div>
           </div>
           <div>
-            <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "700", textTransform: "uppercase" }}>Balance</div>
-            <div style={{ color: "#FFF", fontSize: "1.1rem", fontWeight: "800" }}>Wheel of Life</div>
+            <div className="text-secondary" style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase" }}>BALANCE</div>
+            <div className="text-primary" style={{ fontSize: "1.1rem" }}>Wheel of Life</div>
           </div>
         </Link>
 
@@ -286,13 +287,13 @@ export default function Dashboard() {
               <circle cx="28" cy="28" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
               <circle cx="28" cy="28" r="20" fill="none" stroke={hasLoggedToday ? "#43E97B" : "rgba(255,255,255,0.1)"} strokeWidth="6" strokeDasharray={hasLoggedToday ? `${wheelCirc} ${wheelCirc}` : `0 ${wheelCirc}`} strokeLinecap="round" className="progress-ring__circle" />
             </svg>
-            <div style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "20px" }}>
+            <div style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "20px", opacity: 1 }}>
               {hasLoggedToday ? "✓" : "📋"}
             </div>
           </div>
           <div>
-            <div style={{ color: "var(--text-secondary)", fontSize: "0.85rem", fontWeight: "700", textTransform: "uppercase" }}>Today</div>
-            <div style={{ color: "#FFF", fontSize: "1.1rem", fontWeight: "800" }}>{hasLoggedToday ? "Logged" : "Not yet logged"}</div>
+            <div className="text-secondary" style={{ fontSize: "11px", letterSpacing: "0.1em", textTransform: "uppercase" }}>TODAY</div>
+            <div className="text-primary" style={{ fontSize: "1.1rem" }}>{hasLoggedToday ? "Logged" : "Not yet logged"}</div>
           </div>
         </Link>
       </div>
@@ -303,14 +304,14 @@ export default function Dashboard() {
             const isToday = day.date === todayRaw;
             return (
               <div key={i} onClick={() => { if(day.log || isToday) navigate('/log') }} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", cursor: (day.log || isToday) ? "pointer" : "default" }}>
-                <div style={{ fontSize: "0.75rem", fontWeight: "700", color: isToday ? "var(--text-primary)" : "var(--text-secondary)", opacity: isToday ? 1 : 0.6 }}>
+                <div className={isToday ? "text-primary" : "text-secondary"} style={{ fontSize: "12px", fontWeight: isToday ? "700" : "500", opacity: isToday ? 1 : 0.6 }}>
                   {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}
                 </div>
                 <div style={{ 
-                  width: "44px", height: "44px", borderRadius: "16px", 
-                  background: day.emoji ? "rgba(255,255,255,0.05)" : "transparent",
-                  border: day.emoji ? "1px solid rgba(255,255,255,0.1)" : "1px solid rgba(255,255,255,0.05)",
-                  display: "grid", placeContent: "center", fontSize: "1.4rem",
+                  width: "32px", height: "32px", borderRadius: "50%", 
+                  background: day.emoji ? day.bgColor : "rgba(255,255,255,0.1)",
+                  border: day.emoji ? "1px solid rgba(255,255,255,0.4)" : "1px solid rgba(255,255,255,0.2)",
+                  display: "grid", placeContent: "center", fontSize: "1.1rem",
                 }}>
                   {day.emoji}
                 </div>
@@ -322,15 +323,15 @@ export default function Dashboard() {
 
       {daysUntilCapsule !== null && daysUntilCapsule <= 30 ? (
         <Link to="/vault" className="stationery-card" style={{ padding: "1.5rem", textDecoration: "none", display: "flex", alignItems: "center", gap: "1rem", background: "rgba(167,139,250,0.05)", borderColor: "rgba(167,139,250,0.2)" }}>
-          <span style={{ fontSize: "2rem" }}>💌</span>
-          <p style={{ margin: 0, fontSize: "1rem", fontWeight: "600", color: "var(--text-primary)" }}>
-            A letter from your past self unlocks in <span style={{ color: "var(--accent)", fontWeight: "800" }}>{daysUntilCapsule} days</span>.
+          <span style={{ fontSize: "2rem", opacity: 1 }}>💌</span>
+          <p className="text-primary" style={{ margin: 0, fontSize: "1rem" }}>
+            A letter from your past self unlocks in <span style={{ color: "var(--accent)" }}>{daysUntilCapsule} days</span>.
           </p>
         </Link>
       ) : (
         <Link to="/vault" className="stationery-card" style={{ padding: "1.5rem", textDecoration: "none", display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: "2rem" }}>💌</span>
-          <p style={{ margin: 0, fontSize: "1rem", fontWeight: "600", color: "var(--text-secondary)" }}>
+          <span style={{ fontSize: "2rem", opacity: 1 }}>💌</span>
+          <p className="text-secondary" style={{ margin: 0, fontSize: "0.95rem", fontStyle: "normal" }}>
             It's been {daysSinceLastVault} days since your last letter. Write to your future self?
           </p>
         </Link>

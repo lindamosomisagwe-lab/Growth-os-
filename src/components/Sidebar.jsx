@@ -52,26 +52,11 @@ export default function Sidebar() {
           <NavLink
             key={link.path}
             to={link.path}
-            className={({ isActive }) => `sidebar-link ${isActive ? "active" : ""}`}
-            style={({ isActive }) => ({
-              display: "flex", alignItems: "center", gap: "1rem", textDecoration: "none",
-              height: "52px", padding: "0 1rem", borderRadius: "16px",
-              background: isActive ? "linear-gradient(135deg, rgba(124,92,252,0.3), rgba(167,139,250,0.15))" : "rgba(255,255,255,0.05)",
-              border: isActive ? "1px solid rgba(124,92,252,0.4)" : "1px solid transparent",
-              color: isActive ? "#FFF" : "var(--text-body)",
-              fontWeight: isActive ? "800" : "600",
-              position: "relative",
-              transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)"
-            })}
+            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
           >
-            {({ isActive }) => (
-              <>
-                {isActive && <div style={{ position: "absolute", left: "6px", width: "4px", height: "24px", background: "var(--page-accent)", borderRadius: "2px" }} />}
-                <span style={{ fontSize: "1.3rem", filter: isActive ? "drop-shadow(0 0 8px rgba(255,255,255,0.4))" : "none", transition: "transform 0.2s", transform: isActive ? "scale(1.1)" : "scale(1)" }} aria-hidden="true">{link.icon}</span>
-                <span>{link.label}</span>
-                <span className="nav-arrow" style={{ marginLeft: "auto", opacity: isActive ? 1 : 0, transform: isActive ? "translateX(0)" : "translateX(-10px)", transition: "all 0.2s" }}>→</span>
-              </>
-            )}
+            <span className="nav-icon" aria-hidden="true">{link.icon}</span>
+            <span>{link.label}</span>
+            <span className="nav-arrow" aria-hidden="true">→</span>
           </NavLink>
         ))}
       </nav>
