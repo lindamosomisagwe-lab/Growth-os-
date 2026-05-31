@@ -14,7 +14,8 @@ import { GamificationProvider, useGamification } from "./contexts/GamificationCo
 
 // Component to handle dynamic body ombre based on time, mood, and streak
 function OmbreBackgroundController() {
-  const { streak } = useGamification();
+  const { progress } = useGamification();
+  const streak = progress ? progress.streak_days : 0;
   const [dailyLogs, setDailyLogs] = useState([]);
 
   useEffect(() => {

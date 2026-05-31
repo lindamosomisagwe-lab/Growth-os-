@@ -51,9 +51,11 @@ export default function Dashboard() {
   const [state, setState] = useState({ wheelOfLife: null, goals: [], dailyLogs: [], vaultCapsules: [], lifeChapters: [] });
   const [showMusic, setShowMusic] = useState(false);
   const [doneAnim, setDoneAnim] = useState(false);
-  const { streak, progress, awardXP } = useGamification();
+  const { progress, awardXP } = useGamification();
   const navigate = useNavigate();
   const [toast, setToast] = useState({ show: false, message: "" });
+
+  const streak = progress ? progress.streak_days : 0;
 
   useEffect(() => {
     const saved = localStorage.getItem("growth_os_v1");

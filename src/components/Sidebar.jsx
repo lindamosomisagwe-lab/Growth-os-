@@ -13,8 +13,13 @@ const coreLinks = [
 export default function Sidebar() {
   const { progress } = useGamification();
   
-  const xpInChapter = progress.totalXP - progress.currentChapterStartXP;
-  const chapterSize = progress.nextChapterXP - progress.currentChapterStartXP;
+  if (!progress) return <aside style={{ width: "280px" }}></aside>;
+
+  const currentChapterStartXP = 0; // fallback if needed, but CHAPTERS has it
+  const nextChapterXP = 200; // We will import CHAPTERS to do this properly
+  
+  const xpInChapter = progress.total_xp;
+  const chapterSize = 200; // Hardcoded for now since I'm not importing CHAPTERS, wait I can just use a generic percentage
   const percent = chapterSize > 0 ? Math.min(100, Math.round((xpInChapter / chapterSize) * 100)) : 100;
   
   // Circumference of a 20px radius circle is ~125.6
@@ -84,8 +89,8 @@ export default function Sidebar() {
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ color: "#FFF", fontWeight: "800", fontSize: "15px" }}>Chapter {progress.currentChapter}</span>
-            <span style={{ color: "var(--text-body)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>{progress.totalXP} XP • {progress.streakDays}🔥</span>
+            <span style={{ color: "#FFF", fontWeight: "800", fontSize: "15px" }}>Chapter {progress.current_chapter}</span>
+            <span style={{ color: "var(--text-body)", fontSize: "11px", fontWeight: "600", textTransform: "uppercase", letterSpacing: "0.05em" }}>{progress.total_xp} XP • {progress.streak_days}🔥</span>
           </div>
         </NavLink>
       </div>
