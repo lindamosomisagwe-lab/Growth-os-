@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
 
 function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
 
 export default function Vault() {
+  const { awardXP } = useGamification();
   const [activeTab, setActiveTab] = useState("letters"); // "letters" or "story"
 
   const [capsules, setCapsules] = useState(() => {
@@ -40,7 +42,7 @@ export default function Vault() {
     dispatchSave();
   }, [capsules, chapters]);
 
-  const addCapsule = () => {
+  const addCapsule = async () => {
     if (!capTitle.trim() || !capMessage.trim() || !revealDate) return;
     const newCapsule = {
       id: Date.now(),
@@ -51,6 +53,7 @@ export default function Vault() {
     };
     setCapsules(prev => [...prev, newCapsule]);
     setCapTitle(""); setCapMessage(""); setRevealDate("");
+    await awardXP("seal_letter");
   };
 
   const addChapter = () => {

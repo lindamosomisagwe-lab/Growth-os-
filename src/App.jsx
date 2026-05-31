@@ -8,6 +8,8 @@ import DailyLog from "./components/DailyLog";
 import Vault from "./components/Vault";
 import Settings from "./components/Settings";
 import Splash from "./components/Splash";
+import Profile from "./components/Profile";
+import MyJourney from "./components/MyJourney";
 import { GamificationProvider, useGamification } from "./contexts/GamificationContext";
 
 // Component to handle dynamic body ombre based on time, mood, and streak
@@ -110,6 +112,8 @@ export default function App() {
                 <Route path="/log" element={<DailyLog />} />
                 <Route path="/vault" element={<Vault />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/journey" element={<MyJourney />} />
               </Routes>
             </div>
           </main>

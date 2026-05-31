@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGamification } from "../contexts/GamificationContext";
 import SpotifyWidget from "./SpotifyWidget";
+import WeeklyRecap from "./WeeklyRecap";
 
 // Helper to get dates for the current week (Mon-Sun)
 const getWeekDates = () => {
@@ -18,7 +19,8 @@ const getWeekDates = () => {
 export default function Dashboard() {
   const [state, setState] = useState({ wheelOfLife: null, goals: [], dailyLogs: [], vaultCapsules: [], lifeChapters: [] });
   const [showMusic, setShowMusic] = useState(false);
-  const { streak } = useGamification();
+  const [doneAnim, setDoneAnim] = useState(false);
+  const { streak, progress, awardXP } = useGamification();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -72,29 +74,43 @@ export default function Dashboard() {
   const pinnedGoal = state.goals?.find(g => g.pinned && !g.completed) || state.goals?.find(g => !g.completed);
   const pinnedTask = pinnedGoal?.subgoals?.find(s => !s.completed);
 
-  const handleTaskAction = (action) => {
+  const handleTaskAction = async (action) => {
     if (!pinnedGoal || !pinnedTask) return;
+    
+    if (action === "done") {
+      setDoneAnim(true);
+      await awardXP(`task_complete_${pinnedTask.id}`);
+      
+      // Delay to let animation play
+      setTimeout(() => {
+        const newGoals = [...state.goals];
+        const goalIndex = newGoals.findIndex(g => g.id === pinnedGoal.id);
+        const taskIndex = newGoals[goalIndex].subgoals.findIndex(s => s.id === pinnedTask.id);
+        newGoals[goalIndex].subgoals[taskIndex].completed = true;
+        
+        if (newGoals[goalIndex].subgoals.every(s => s.completed)) {
+          newGoals[goalIndex].completed = true;
+        }
+        dispatchSave({ ...state, goals: newGoals });
+        setDoneAnim(false);
+      }, 800);
+      return;
+    }
+
     const newGoals = [...state.goals];
     const goalIndex = newGoals.findIndex(g => g.id === pinnedGoal.id);
     const taskIndex = newGoals[goalIndex].subgoals.findIndex(s => s.id === pinnedTask.id);
     
-    if (action === "done") {
-      newGoals[goalIndex].subgoals[taskIndex].completed = true;
-    } else if (action === "skip") {
-      // Just visually complete it or remove it, depending on standard behaviour. For now, mark completed.
+    if (action === "skip") {
       newGoals[goalIndex].subgoals[taskIndex].completed = true;
     } else if (action === "tomorrow") {
-      // Logic for tomorrow: typically push it down or keep it uncompleted for now.
-      // We will just leave it uncompleted but perhaps push it to the end of the array.
       const t = newGoals[goalIndex].subgoals.splice(taskIndex, 1)[0];
       newGoals[goalIndex].subgoals.push(t);
     }
 
-    // Check if goal completed
     if (newGoals[goalIndex].subgoals.every(s => s.completed)) {
       newGoals[goalIndex].completed = true;
     }
-
     dispatchSave({ ...state, goals: newGoals });
   };
 
@@ -163,6 +179,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <WeeklyRecap />
+
       {/* The Centerpiece: Today's Focus */}
       <div className="stationery-card" style={{ padding: "2.5rem", marginBottom: "2.5rem", textAlign: "center" }}>
         <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)", letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: "1.5rem" }}>
@@ -177,9 +195,24 @@ export default function Dashboard() {
             <p style={{ margin: "0 0 2rem 0", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
               Part of: {pinnedGoal.title}
             </p>
-            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
-              <button onClick={() => handleTaskAction('done')} className="btn-primary" style={{ padding: "0.8rem 2rem", fontSize: "0.95rem" }}>
-                ✓ Done
+            <div style={{ display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap", position: "relative" }}>
+              {doneAnim && (
+                <div style={{ position: "absolute", top: "-30px", fontSize: "1.2rem", fontWeight: "bold", color: "#FFFFFF", animation: "floatUpAndFade 0.8s ease-out forwards" }}>
+                  +10 XP
+                </div>
+              )}
+              <button 
+                onClick={() => handleTaskAction('done')} 
+                className={doneAnim ? "btn-secondary" : "btn-primary"}
+                style={{ padding: "0.8rem 2rem", fontSize: "0.95rem", position: "relative" }}
+                disabled={doneAnim}
+              >
+                {doneAnim ? "✓" : "✓ Done"}
+                {!doneAnim && (
+                  <span style={{ position: "absolute", top: "-8px", right: "-8px", background: "#A78BFA", color: "#FFF", fontSize: "0.6rem", padding: "2px 6px", borderRadius: "10px", fontWeight: "700" }}>
+                    +10 XP
+                  </span>
+                )}
               </button>
               <button onClick={() => handleTaskAction('tomorrow')} className="btn-secondary" style={{ padding: "0.8rem 1.5rem", fontSize: "0.95rem" }}>
                 ↷ Tomorrow
@@ -211,7 +244,9 @@ export default function Dashboard() {
         <div className="stationery-card" style={{ flex: 1, minWidth: "140px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <span style={{ fontSize: "1.2rem" }}>🔥</span>
           <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>Your streak</span>
-          <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--text-primary)" }}>{streak} days</span>
+          <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "var(--text-primary)" }}>
+            {streak} days {progress?.streak_shield_available && <span style={{ fontSize: "0.8rem" }}>🛡️</span>}
+          </span>
         </div>
         <Link to="/log" className="stationery-card" style={{ flex: 1, minWidth: "140px", padding: "1.25rem", textDecoration: "none", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <span style={{ fontSize: "1.2rem" }}>📋</span>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
 
 const moods = [
   { emoji: "😁", label: "Great", id: "happy" },
@@ -27,40 +28,48 @@ export default function DailyLog() {
   const [note, setNote] = useState("");
 
   const [expandedLogId, setExpandedLogId] = useState(null);
+  const [flashAnim, setFlashAnim] = useState(false);
+  const { awardXP } = useGamification();
 
-  const saveLog = () => {
+  const saveLog = async () => {
     if (!mood) return; 
     
-    const newLog = {
-      id: Date.now(),
-      date: new Date().toLocaleDateString(),
-      mood,
-      win: win.trim(),
-      intention: intention.trim(),
-      hydration: showMore ? hydration : 0,
-      sleep: showMore ? sleep : null,
-      energy: showMore ? energy : null,
-      note: showMore ? note.trim() : ""
-    };
+    setFlashAnim(true);
+    await awardXP("daily_checkin");
 
-    const newLogs = [newLog, ...logs];
-    setLogs(newLogs);
-    
-    const saved = localStorage.getItem("growth_os_v1");
-    const parsed = saved ? JSON.parse(saved) : {};
-    parsed.dailyLogs = newLogs;
-    localStorage.setItem("growth_os_v1", JSON.stringify(parsed));
-    dispatchSave();
+    setTimeout(() => {
+      const newLog = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString(),
+        mood,
+        win: win.trim(),
+        intention: intention.trim(),
+        hydration: showMore ? hydration : 0,
+        sleep: showMore ? sleep : null,
+        energy: showMore ? energy : null,
+        note: showMore ? note.trim() : ""
+      };
 
-    // Reset
-    setMood("");
-    setWin("");
-    setIntention("");
-    setShowMore(false);
-    setHydration(0);
-    setSleep(7);
-    setEnergy(5);
-    setNote("");
+      const newLogs = [newLog, ...logs];
+      setLogs(newLogs);
+      
+      const saved = localStorage.getItem("growth_os_v1");
+      const parsed = saved ? JSON.parse(saved) : {};
+      parsed.dailyLogs = newLogs;
+      localStorage.setItem("growth_os_v1", JSON.stringify(parsed));
+      dispatchSave();
+
+      // Reset
+      setMood("");
+      setWin("");
+      setIntention("");
+      setShowMore(false);
+      setHydration(0);
+      setSleep(7);
+      setEnergy(5);
+      setNote("");
+      setFlashAnim(false);
+    }, 500);
   };
 
   return (
@@ -75,7 +84,12 @@ export default function DailyLog() {
         </div>
       </header>
 
-      <div className="stationery-card" style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "2.5rem", marginBottom: "3rem" }}>
+      <div className="stationery-card" style={{ 
+        padding: "2rem", display: "flex", flexDirection: "column", gap: "2.5rem", marginBottom: "3rem",
+        boxShadow: flashAnim ? "0 0 30px rgba(167,139,250,0.6)" : "none",
+        borderColor: flashAnim ? "rgba(167,139,250,0.8)" : "rgba(255,255,255,0.08)",
+        transition: "box-shadow 0.3s ease, border-color 0.3s ease"
+      }}>
         
         {/* Mood */}
         <section>

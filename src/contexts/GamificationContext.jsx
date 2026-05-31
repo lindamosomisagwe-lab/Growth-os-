@@ -1,80 +1,51 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getUserProgress, awardXP, processDailyStreak, CHAPTERS, FEATURE_GATES } from '../services/xpService';
 
 const GamificationContext = createContext();
 
 export const useGamification = () => useContext(GamificationContext);
 
-export const GamificationProvider = ({ children }) => {
-  const [streak, setStreak] = useState(0);
-
-  const calculateStreak = () => {
-    try {
-      const saved = localStorage.getItem('growth_os_v1');
-      if (!saved) return 0;
-      
-      const parsed = JSON.parse(saved);
-      const logs = parsed.dailyLogs || [];
-      
-      if (logs.length === 0) return 0;
-
-      // Extract unique dates from logs and sort descending
-      const uniqueDates = [...new Set(logs.map(l => l.date))]
-        .map(d => new Date(d))
-        .sort((a, b) => b - a);
-
-      let currentStreak = 0;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (uniqueDates.length === 0) return 0;
-
-      // Check if today or yesterday is the first date
-      let checkDate = new Date(uniqueDates[0]);
-      checkDate.setHours(0, 0, 0, 0);
-
-      if (checkDate.getTime() === today.getTime() || checkDate.getTime() === yesterday.getTime()) {
-        currentStreak = 1;
-        
-        // Count backwards
-        for (let i = 1; i < uniqueDates.length; i++) {
-          const prevDate = new Date(uniqueDates[i]);
-          prevDate.setHours(0, 0, 0, 0);
-          
-          const expectedDate = new Date(checkDate);
-          expectedDate.setDate(expectedDate.getDate() - 1);
-          
-          if (prevDate.getTime() === expectedDate.getTime()) {
-            currentStreak++;
-            checkDate = prevDate;
-          } else {
-            break;
-          }
-        }
-      }
-
-      return currentStreak;
-    } catch (e) {
-      console.error(e);
-      return 0;
-    }
+export const useFeatureUnlock = (featureName) => {
+  const { progress } = useGamification();
+  const requiredChapter = FEATURE_GATES[featureName] || 1;
+  const currentChapter = progress?.current_chapter || 1;
+  
+  return { 
+    unlocked: currentChapter >= requiredChapter,
+    requiredChapter,
+    chapterTitle: CHAPTERS.find(c => c.level === requiredChapter)?.title || ""
   };
+};
 
+export const GamificationProvider = ({ children }) => {
+  const [progress, setProgress] = useState(null);
+  
   useEffect(() => {
-    setStreak(calculateStreak());
+    const init = async () => {
+      const userId = "local_user";
+      await processDailyStreak(userId);
+      setProgress(getUserProgress());
+    };
+    init();
 
-    const handleSave = () => {
-      setStreak(calculateStreak());
+    const handleUpdate = () => {
+      setProgress(getUserProgress());
     };
 
-    window.addEventListener("growth_os_save", handleSave);
-    return () => window.removeEventListener("growth_os_save", handleSave);
+    window.addEventListener("xp_db_updated", handleUpdate);
+    return () => window.removeEventListener("xp_db_updated", handleUpdate);
   }, []);
 
+  const triggerAwardXP = async (eventType) => {
+    const res = await awardXP("local_user", eventType);
+    if (res && res.xpAwarded > 0) {
+      window.dispatchEvent(new CustomEvent("xp_awarded_event", { detail: res }));
+    }
+    return res;
+  };
+
   return (
-    <GamificationContext.Provider value={{ streak }}>
+    <GamificationContext.Provider value={{ progress, awardXP: triggerAwardXP }}>
       {children}
     </GamificationContext.Provider>
   );

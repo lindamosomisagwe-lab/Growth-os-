@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useGamification } from "../contexts/GamificationContext";
+import GoalCompleteSequence from "./GoalCompleteSequence";
+import { Link } from "react-router-dom";
 
 function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
 
 export default function Goals() {
+  const { awardXP } = useGamification();
+  const [epicSequence, setEpicSequence] = useState(null);
+
   const [goals, setGoals] = useState(() => {
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
@@ -64,13 +70,22 @@ export default function Goals() {
     setBuilderData({ bigGoal: "", firstStep: "", firstTask: "" });
   };
 
-  const toggleGoal = (id) => {
+  const toggleGoal = async (id) => {
+    let targetGoal;
     setGoals(prev => {
       const target = prev.find(g => g.id === id);
-      const isCompleting = !target.completed;
-      if (isCompleting) triggerToast(`🎉 You did it. ${target.title} — complete.`);
+      targetGoal = target;
       return prev.map(g => g.id === id ? { ...g, completed: !g.completed } : g);
     });
+
+    if (targetGoal && !targetGoal.completed) {
+      const res = await awardXP(`goal_complete_${id}`);
+      if (res && res.xpAwarded > 0) {
+        setEpicSequence({ result: { ...res, goal: { text: targetGoal.title } } });
+      } else {
+        triggerToast(`🎉 You did it. ${targetGoal.title} — complete.`);
+      }
+    }
   };
 
   const togglePin = (id) => {
@@ -81,11 +96,27 @@ export default function Goals() {
     setGoals(prev => prev.filter(g => g.id !== id));
   };
 
-  const toggleStep = (goalId, stepId) => {
+  const toggleStep = async (goalId, stepId) => {
+    let isCompleting = false;
+    let targetStep;
     setGoals(prev => prev.map(g => g.id === goalId ? {
       ...g,
-      subgoals: g.subgoals.map(s => s.id === stepId ? { ...s, completed: !s.completed } : s)
+      subgoals: g.subgoals.map(s => {
+        if (s.id === stepId) {
+          isCompleting = !s.completed;
+          targetStep = s;
+          return { ...s, completed: !s.completed };
+        }
+        return s;
+      })
     } : g));
+
+    if (isCompleting) {
+      const res = await awardXP(`step_complete_${stepId}`);
+      if (res && res.xpAwarded > 0) {
+        triggerToast(`🎯 Step complete — ${targetStep?.title} (+${res.xpAwarded} XP${res.isBonus ? ' ⚡' : ''})`);
+      }
+    }
   };
 
   const deleteStep = (goalId, stepId) => {
@@ -100,14 +131,25 @@ export default function Goals() {
     } : g));
   };
 
-  const toggleTask = (goalId, stepId, taskId) => {
+  const toggleTask = async (goalId, stepId, taskId) => {
+    let isCompleting = false;
     setGoals(prev => prev.map(g => g.id === goalId ? {
       ...g,
       subgoals: g.subgoals.map(s => s.id === stepId ? {
         ...s,
-        tasks: s.tasks.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t)
+        tasks: s.tasks.map(t => {
+          if (t.id === taskId) {
+            isCompleting = !t.completed;
+            return { ...t, completed: !t.completed };
+          }
+          return t;
+        })
       } : s)
     } : g));
+
+    if (isCompleting) {
+      await awardXP(`task_complete_${taskId}`);
+    }
   };
 
   const deleteTask = (goalId, stepId, taskId) => {
@@ -138,7 +180,15 @@ export default function Goals() {
             Break it down. Step by step.
           </p>
         </div>
+        <Link to="/journey" className="btn-secondary" style={{ textDecoration: "none" }}>My Journey →</Link>
       </header>
+
+      {epicSequence && (
+        <GoalCompleteSequence 
+          result={epicSequence.result} 
+          onClose={() => setEpicSequence(null)} 
+        />
+      )}
 
       {/* Goal Builder / Fallback */}
       <div style={{ marginBottom: "2.5rem" }}>

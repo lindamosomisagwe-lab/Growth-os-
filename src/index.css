@@ -121,6 +121,12 @@ nav, aside, .btn-primary, .btn-secondary,
     from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
   }
+  @keyframes floatUpAndFade {
+    0%   { opacity: 0; transform: translateY(10px); }
+    20%  { opacity: 1; transform: translateY(0); }
+    80%  { opacity: 1; transform: translateY(-15px); }
+    100% { opacity: 0; transform: translateY(-25px); }
+  }
   @keyframes shimmer {
     0%   { background-position: -200% center; }
     100% { background-position: 200% center; }
@@ -167,6 +173,7 @@ nav, aside, .btn-primary, .btn-secondary,
 @keyframes spaceshift  { 0%,100%{ background-position:0% 50%; } }
 @keyframes floatY      { 0%,100%{ transform:translateY(0); } }
 @keyframes fadeInUp    { from{ opacity:0; } to{ opacity:1; } }
+@keyframes floatUpAndFade{ 0%,100%{ opacity:0; } 50%{ opacity:1; } }
 @keyframes shimmer     { 0%,100%{ background-position:0 center; } }
 @keyframes emojiPop    { 0%,100%{ transform:scale(1); opacity:1; } }
 @keyframes toastFadeIn { from{ opacity:0; } to{ opacity:1; } }
@@ -186,13 +193,17 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: 0.01em;
-  /* Gradient text: lavender → purple */
-  background: linear-gradient(135deg, #E0D7FF 0%, #A78BFA 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  /* Remove any conflicting color overrides */
-  color: transparent !important;
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.25);
+}
+
+.stationery-card p {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+label {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500 !important;
 }
 
 /* Monospace labels — visible purple-gray */
@@ -337,24 +348,24 @@ textarea, input[type="text"], input[type="date"],
 input[type="password"], select {
   font-family: var(--font-sans);
   font-size: 0.9rem;
-  background: var(--bg-input) !important;
-  border: 1px solid var(--border-input) !important;
+  background: rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
   border-radius: var(--radius-sm) !important;
-  color: var(--text-primary) !important;
+  color: #FFFFFF !important;
   outline: none;
   padding: 0.65rem 0.85rem !important;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 textarea::placeholder, input::placeholder {
-  color: rgba(255,255,255,0.3) !important;
+  color: rgba(255, 255, 255, 0.45) !important;
   opacity: 1 !important;
 }
 
 textarea:focus, input[type="text"]:focus, input[type="date"]:focus,
 input[type="password"]:focus, select:focus {
-  border-color: #A78BFA !important;
-  box-shadow: 0 0 0 3px rgba(167,139,250,0.2) !important;
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Focus rings */

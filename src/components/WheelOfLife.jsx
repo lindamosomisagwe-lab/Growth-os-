@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, Legend } from "recharts";
+import { useGamification } from "../contexts/GamificationContext";
 
 const defaultCategories = ["Health", "Work", "Relationships", "Money", "Personal Growth"];
 const extendedCategories = ["Fun", "Creativity", "Learning"];
@@ -9,6 +10,7 @@ function dispatchSave() {
 }
 
 export default function WheelOfLife() {
+  const { awardXP } = useGamification();
   const [data, setData] = useState(() => {
     const saved = localStorage.getItem("growth_os_v1");
     if (saved) {
@@ -58,7 +60,7 @@ export default function WheelOfLife() {
     setData(prev => ({ ...prev, notes: { ...prev.notes, [cat]: note } }));
   };
 
-  const saveSnapshot = () => {
+  const saveSnapshot = async () => {
     const snapshot = {
       timestamp: new Date().toISOString(),
       ratings: { ...data.ratings }
@@ -69,6 +71,7 @@ export default function WheelOfLife() {
       snapshots: [snapshot, ...(prev.snapshots || [])].slice(0, 12)
     }));
     
+    await awardXP("update_life_balance");
     triggerToast("Saved to your story. ✨");
   };
 
