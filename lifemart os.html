@@ -1,403 +1,1777 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LifeSmart OS — Personal Growth Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LifeSmart OS — Personal Growth Dashboard</title>
+  <meta name="description" content="Your personal growth OS. Track mood, goals, life balance, and daily quests in one beautiful dashboard.">
 
-    <!-- React app bundling module script -->
-    <script type="module" src="/src/main.jsx"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* ══════════════════════════════════════════
+       1. CSS VARIABLE SYSTEM — SINGLE SOURCE OF TRUTH
+       ══════════════════════════════════════════ */
+    :root {
+      /* Section accent colours */
+      --color-home:    #7C5CFC;
+      --color-balance: #4FACFE;
+      --color-goals:   #F05A7E;
+      --color-today:   #43E97B;
+      --color-vault:   #A78BFA;
 
-    <!-- Chart.js for premium circular charts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+      /* Section gradient pairs */
+      --grad-home:    linear-gradient(135deg, #7C5CFC, #5B3FD4);
+      --grad-balance: linear-gradient(135deg, #4FACFE, #00C6FF);
+      --grad-goals:   linear-gradient(135deg, #F05A7E, #E83B6A);
+      --grad-today:   linear-gradient(135deg, #43E97B, #38F9D7);
+      --grad-vault:   linear-gradient(135deg, #A78BFA, #8B5CF6);
 
+      /* Section dark backgrounds */
+      --bg-home:    linear-gradient(160deg, #1a0533 0%, #2d0f55 40%, #09080F 100%);
+      --bg-balance: linear-gradient(160deg, #0c2a4a 0%, #0f3d6e 40%, #09080F 100%);
+      --bg-goals:   linear-gradient(160deg, #2d0a1e 0%, #5c1035 40%, #09080F 100%);
+      --bg-today:   linear-gradient(160deg, #052e16 0%, #0a4a26 40%, #09080F 100%);
+      --bg-vault:   linear-gradient(160deg, #1a0c2e 0%, #2e1555 40%, #09080F 100%);
 
+      /* Gamification colours */
+      --color-xp:      #F9D423;
+      --color-streak:  #FF6B6B;
+      --color-chapter: #667EEA;
 
+      /* Dynamic page accent — JS updates these */
+      --color-accent: #7C5CFC;
+      --grad-accent:  linear-gradient(135deg, #7C5CFC, #5B3FD4);
+      --bg-page:      linear-gradient(160deg, #1a0533 0%, #2d0f55 40%, #09080F 100%);
 
+      /* Glass system */
+      --glass-bg:     rgba(15, 12, 40, 0.58);
+      --glass-border: rgba(255, 255, 255, 0.11);
+      --glass-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'paper': '#FFFFFF',         // Cozy card paper background
-                        'beige': '#FAF8F5',         // Layout background
-                        'blush': '#D4537E',         // Muted Blush toggles and buttons
-                        'clay': '#7F77DD',          // Clay Taupe accents, borders and charts
-                        'charcoal': '#2F2E2C',      // Typography and high-contrast structural text
+      /* Text hierarchy */
+      --text-primary:   #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.75);
+      --text-tertiary:  rgba(255,255,255,0.45);
+      --text-label:     rgba(255,255,255,0.6);
+    }
 
-                        // Purple Theme Extensions
-                        'sidebar-bg': '#1a1033',
-                        'gradient-start': '#7F77DD',
-                        'gradient-end': '#D4537E',
-                        'accent-purple': '#7F77DD',
+    /* ══════════════════════════════════════════
+       2. BASE
+       ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-                        // Legacy utility aliases for zero-break compatibility
-                        'sunflower': '#D4537E',
-                        'tech-blue': '#7F77DD',
-                        'partner-blue': '#1a1033'
-                    },
-                    fontFamily: { 'nunito': ['Nunito', 'sans-serif'] },
-                    boxShadow: {
-                        'brutal': '6px 6px 0px 0px #7F77DD',
-                        'brutal-sm': '3px 3px 0px 0px #7F77DD',
-                        'brutal-active': '1px 1px 0px 0px #7F77DD',
-                    },
-                    borderWidth: { '3': '3px' }
-                }
-            }
-        }
-    </script>
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      background: var(--bg-page);
+      transition: background 0.6s ease;
+      color: var(--text-primary);
+    }
 
-    <style>
-        body {
-            font-family: 'Nunito', sans-serif;
-            background-color: #FAF8F5;
-            color: #2F2E2C;
-            margin: 0;
-            overflow-x: hidden;
-        }
+    /* View-transition timing */
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 0.25s;
+      animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+    }
 
-        .dot-grid {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: radial-gradient(rgba(127, 119, 221, 0.15) 1.5px, transparent 1.5px);
-            background-size: 24px 24px;
-            z-index: -1;
-            pointer-events: none;
-        }
+    /* ══════════════════════════════════════════
+       3. LAYOUT
+       ══════════════════════════════════════════ */
+    .app-shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
 
-        .brutal-btn {
-            transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-        }
+    /* ══════════════════════════════════════════
+       4. SIDEBAR
+       ══════════════════════════════════════════ */
+    .sidebar {
+      width: 68px;
+      flex-shrink: 0;
+      background: rgba(6, 4, 20, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0 16px;
+      gap: 4px;
+      position: relative;
+      z-index: 10;
+    }
 
-        .brutal-btn:active {
-            transform: translate(3px, 3px);
-            box-shadow: 1px 1px 0px 0px #7F77DD;
-        }
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--grad-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: background 0.5s ease;
+      flex-shrink: 0;
+    }
 
-        .notebook-textarea {
-            background-color: transparent;
-            background-image: repeating-linear-gradient(transparent, transparent 31px, rgba(127, 119, 221, 0.2) 32px);
-            line-height: 32px;
-            padding-top: 6px;
-            border: none;
-            resize: vertical;
-            outline: none;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 600;
-            color: #2F2E2C;
-            width: 100%;
-        }
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 100%;
+      align-items: center;
+      padding: 0 8px;
+    }
 
-        textarea.notebook-textarea {
-            min-height: 150px;
-        }
+    /* Each nav item has a --nav-color set inline */
+    .nav-item {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.18s ease, background 0.18s ease;
+      flex-shrink: 0;
+    }
 
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
+    /* Colour bar on the left */
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0;
+      background: var(--nav-color, #7C5CFC);
+      border-radius: 0 3px 3px 0;
+      transition: height 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
 
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 20px;
-            width: 20px;
-            border-radius: 50%;
-            background: #D4537E;
-            cursor: pointer;
-            border: 3px solid #7F77DD;
-            margin-top: -8px;
-            box-shadow: 2px 2px 0px 0px #7F77DD;
-        }
+    .nav-item:hover {
+      color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.07);
+    }
 
-        input[type=range].partner-slider::-webkit-slider-thumb {
-            background: #FFFFFF;
-            border-color: #1a1033;
-            box-shadow: 2px 2px 0px 0px #1a1033;
-        }
+    .nav-item.active {
+      color: #FFFFFF;
+      background: color-mix(in srgb, var(--nav-color, #7C5CFC) 20%, transparent);
+    }
 
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            cursor: pointer;
-            background: rgba(127, 119, 221, 0.1);
-            border-radius: 3px;
-            border: 1px solid #7F77DD;
-        }
+    .nav-item.active::before { height: 60%; }
 
-        .monoline-checkbox {
-            width: 24px;
-            height: 24px;
-            border: 3px solid #7F77DD;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            background: #FFFFFF;
-            transition: all 0.1s ease-in-out;
-            box-shadow: 2px 2px 0px 0px #7F77DD;
-        }
+    .nav-item svg { width: 20px; height: 20px; }
 
-        .monoline-checkbox.checked {
-            background: #D4537E;
-            box-shadow: 1px 1px 0px 0px #7F77DD;
-            transform: translate(1px, 1px);
-        }
+    .sidebar-spacer { flex: 1; }
 
-        .monoline-checkbox.checked::after {
-            content: "X";
-            color: #FFFFFF;
-            font-weight: 900;
-            font-size: 16px;
-            line-height: 1;
-        }
+    .sidebar-settings {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
 
-        .polaroid {
-            background: #FFFFFF;
-            padding: 12px 12px 40px 12px;
-            border: 3px solid #7F77DD;
-            box-shadow: 6px 6px 0px 0px #7F77DD;
-            transform: rotate(calc(-3deg + 6deg * var(--rand)));
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
+    .sidebar-settings:hover {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.07);
+    }
 
-        .polaroid:hover {
-            transform: scale(1.05) rotate(0deg);
-            z-index: 10;
-        }
+    /* ══════════════════════════════════════════
+       5. MAIN CONTENT
+       ══════════════════════════════════════════ */
+    .main-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
 
-        .polaroid img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border: 3px solid #7F77DD;
-        }
+    .main-scroll::-webkit-scrollbar { width: 5px; }
+    .main-scroll::-webkit-scrollbar-track { background: transparent; }
+    .main-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+    .main-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
 
-        @keyframes flyAirplane {
-            0% {
-                transform: translate(0, 0) rotate(0deg) scale(1);
-                opacity: 1;
-            }
+    .content-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 28px 48px;
+    }
 
-            50% {
-                transform: translate(150px, -100px) rotate(15deg) scale(1.2);
-                opacity: 1;
-            }
+    /* ══════════════════════════════════════════
+       6. HUD TOP BAR
+       ══════════════════════════════════════════ */
+    .hud-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
 
-            100% {
-                transform: translate(300px, -200px) rotate(30deg) scale(0.5);
-                opacity: 0;
-            }
-        }
+    .page-heading {
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 36px;
+      line-height: 1.1;
+      text-shadow: 0 0 40px color-mix(in srgb, var(--color-accent) 60%, transparent);
+      transition: text-shadow 0.5s ease;
+    }
 
-        .fly-animation {
-            animation: flyAirplane 1.5s ease-out forwards;
-        }
+    .page-subheading {
+      color: var(--text-tertiary);
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
 
-        @keyframes sweatDrop {
-            0% {
-                transform: translateY(0) scale(0);
-                opacity: 0;
-            }
+    .hud-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
 
-            50% {
-                transform: translateY(10px) scale(1);
-                opacity: 1;
-            }
+    /* Colour-coded chips */
+    .hud-chip {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 999px;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
 
-            100% {
-                transform: translateY(20px) scale(0.5);
-                opacity: 0;
-            }
-        }
+    .hud-streak {
+      background: linear-gradient(135deg, rgba(255,107,107,0.22), rgba(255,142,83,0.18));
+      border: 1px solid rgba(255,107,107,0.38);
+    }
 
-        .sweat-animation {
-            animation: sweatDrop 1s ease-in forwards;
-        }
+    .hud-xp {
+      background: linear-gradient(135deg, rgba(249,212,35,0.22), rgba(248,54,0,0.15));
+      border: 1px solid rgba(249,212,35,0.38);
+    }
 
-        @keyframes burstStar {
-            0% {
-                transform: scale(0) rotate(0deg);
-                opacity: 1;
-            }
+    .hud-chapter {
+      background: linear-gradient(135deg, rgba(102,126,234,0.22), rgba(118,75,162,0.18));
+      border: 1px solid rgba(102,126,234,0.38);
+    }
 
-            50% {
-                transform: scale(1.5) rotate(45deg);
-                opacity: 1;
-            }
+    .hud-chip-emoji { font-size: 15px; line-height: 1; }
 
-            100% {
-                transform: scale(2) rotate(90deg);
-                opacity: 0;
-            }
-        }
+    .hud-chip-number {
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
 
-        .burst-animation {
-            animation: burstStar 0.5s ease-out forwards;
-        }
+    .hud-chip-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
 
-        @keyframes shootConfetti {
-            0% {
-                transform: translateY(0) scale(1) rotate(0deg);
-                opacity: 1;
-            }
+    .hud-streak .hud-chip-label  { color: rgba(255,107,107,0.8); }
+    .hud-xp     .hud-chip-label  { color: rgba(249,212,35,0.8); }
+    .hud-chapter .hud-chip-label { color: rgba(167,139,250,0.8); }
 
-            100% {
-                transform: translate(var(--tx), var(--ty)) scale(0.5) rotate(720deg);
-                opacity: 0;
-            }
-        }
+    /* ══════════════════════════════════════════
+       7. CARDS — GLASS SYSTEM
+       ══════════════════════════════════════════ */
+    .card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--glass-border);
+      border-top: 3px solid var(--color-accent);
+      border-radius: 24px;
+      box-shadow: var(--glass-shadow);
+      position: relative;
+      overflow: hidden;
+      will-change: transform;
+      /* Stagger entrance */
+      opacity: 0;
+      transform: translateY(14px);
+    }
 
-        .confetti-particle {
-            animation: shootConfetti 1.2s ease-out forwards;
-        }
-    </style>
+    /* Hero cards get an accent tint */
+    .card-hero {
+      background: linear-gradient(
+        140deg,
+        rgba(15,12,40,0.72) 0%,
+        color-mix(in srgb, var(--color-accent) 14%, rgba(15,12,40,0.72)) 100%
+      );
+    }
+
+    /* Section overrides — card top border colour */
+    .card-home    { border-top-color: var(--color-home); }
+    .card-balance { border-top-color: var(--color-balance); }
+    .card-goals   { border-top-color: var(--color-goals); }
+    .card-today   { border-top-color: var(--color-today); }
+    .card-vault   { border-top-color: var(--color-vault); }
+
+    /* ── TEXT HIERARCHY ── */
+    .t-primary   { color: #FFFFFF; font-weight: 600; }
+    .t-secondary { color: rgba(255,255,255,0.75); font-weight: 500; }
+    .t-tertiary  { color: rgba(255,255,255,0.45); }
+    .t-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════════════════
+       8. BUTTONS
+       ══════════════════════════════════════════ */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--grad-accent);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 24px;
+      border-bottom: 4px solid color-mix(in srgb, var(--color-accent) 60%, #000);
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 35%, transparent);
+      cursor: pointer;
+      transform: translateY(0);
+      transition: transform 0.08s ease,
+                  border-bottom-width 0.08s ease,
+                  box-shadow 0.08s ease,
+                  filter 0.15s ease,
+                  background 0.5s ease,
+                  border-bottom-color 0.5s ease;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 6px 24px color-mix(in srgb, var(--color-accent) 50%, transparent);
+    }
+
+    .btn-primary:active {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 4px color-mix(in srgb, var(--color-accent) 20%, transparent);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-bottom: 4px solid rgba(0,0,0,0.4);
+      border-radius: 14px;
+      padding: 12px 24px;
+      cursor: pointer;
+      transform: translateY(0);
+      transition: transform 0.08s ease, border-bottom-width 0.08s ease, background 0.15s ease;
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.35); }
+    .btn-secondary:active { transform: translateY(3px); border-bottom-width: 1px; }
+
+    /* ══════════════════════════════════════════
+       9. GRID
+       ══════════════════════════════════════════ */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .col-span-2 { grid-column: 1 / -1; }
+
+    @media (max-width: 680px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .col-span-2 { grid-column: 1; }
+      .content-wrap { padding: 20px 16px 48px; }
+      .hud-bar { flex-direction: column; gap: 12px; }
+      .hud-chips { justify-content: flex-start; }
+      .page-heading { font-size: 28px; }
+    }
+
+    /* ══════════════════════════════════════════
+       10. CARD INTERNALS
+       ══════════════════════════════════════════ */
+
+    /* ── Quest progress bar ── */
+    .quest-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .quest-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--grad-accent);
+      transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1), background 0.5s ease;
+    }
+
+    /* ── Countdown badge ── */
+    .countdown-badge {
+      background: rgba(240,90,126,0.18);
+      border: 1px solid rgba(240,90,126,0.42);
+      color: rgba(240,90,126,0.95);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      display: inline-block;
+    }
+
+    /* ── Weekly strip ── */
+    .day-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+    .day-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease;
+    }
+
+    .day-circle:hover { transform: scale(1.12); }
+    .day-circle.logged-happy   { background: #F5A623; border-color: #F5A623; box-shadow: 0 0 14px rgba(245,166,35,0.45); }
+    .day-circle.logged-content { background: #43E97B; border-color: #43E97B; box-shadow: 0 0 14px rgba(67,233,123,0.4); }
+    .day-circle.logged-neutral { background: #4FACFE; border-color: #4FACFE; box-shadow: 0 0 14px rgba(79,172,254,0.4); }
+    .day-circle.logged-sad     { background: #A78BFA; border-color: #A78BFA; box-shadow: 0 0 14px rgba(167,139,250,0.4); }
+    .day-circle.logged-angry   { background: #F05A7E; border-color: #F05A7E; box-shadow: 0 0 14px rgba(240,90,126,0.4); }
+
+    .day-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); }
+    .day-label.today { color: #FFFFFF; font-weight: 700; }
+
+    .today-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      transition: background 0.5s ease;
+    }
+
+    /* ── Balance ring ── */
+    .balance-ring-wrap {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      flex-shrink: 0;
+    }
+
+    .balance-ring-wrap svg {
+      width: 58px;
+      height: 58px;
+      transform: rotate(-90deg);
+    }
+
+    .balance-ring-label {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    /* ── Vault glow ── */
+    .vault-icon-wrap {
+      font-size: 36px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 14px rgba(167,139,250,0.45));
+    }
+
+    /* ── Gift shimmer ── */
+    .gift-shimmer {
+      display: inline-block;
+      font-size: 56px;
+      line-height: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       11. TOAST SYSTEM
+       ══════════════════════════════════════════ */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(15,12,40,0.92);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-left: 4px solid var(--color-accent);
+      border-radius: 14px;
+      padding: 12px 20px;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 14px;
+      pointer-events: all;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 240px;
+      max-width: 340px;
+    }
+
+    /* ══════════════════════════════════════════
+       12. PAGE VIEWS
+       ══════════════════════════════════════════ */
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    /* ══════════════════════════════════════════
+       13. SECTION-SPECIFIC CARD INTERNALS
+       ══════════════════════════════════════════ */
+
+    /* Goals map node */
+    .goal-node {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .goal-node.completed {
+      background: color-mix(in srgb, var(--color-goals) 25%, transparent);
+      border: 2px solid var(--color-goals);
+      box-shadow: 0 0 20px rgba(240,90,126,0.5);
+    }
+
+    .goal-node.active {
+      background: color-mix(in srgb, var(--color-goals) 20%, transparent);
+      border: 2px solid var(--color-goals);
+    }
+
+    .goal-node .pulse-ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid rgba(240,90,126,0.4);
+    }
+
+    .goal-node.locked {
+      background: rgba(255,255,255,0.06);
+      border: 2px dashed rgba(255,255,255,0.18);
+    }
+
+    /* Today mood buttons */
+    .mood-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      opacity: 0.7;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .mood-btn:hover { opacity: 0.9; transform: scale(1.04); }
+
+    .mood-btn.selected {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+
+    .mood-btn:not(.selected) { opacity: 0.45; filter: grayscale(0.25); }
+
+    .mood-emoji { display: inline-block; font-size: 28px; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .mood-btn.selected .mood-emoji { transform: scale(1.35); }
+
+    .mood-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7); }
+
+    /* Specific mood selected states */
+    .mood-btn[data-mood="happy"].selected    { background: rgba(254,214,35,0.18);  border-color: #FED623; box-shadow: 0 0 20px rgba(254,214,35,0.3); }
+    .mood-btn[data-mood="content"].selected  { background: rgba(67,233,123,0.18);  border-color: #43E97B; box-shadow: 0 0 20px rgba(67,233,123,0.3); }
+    .mood-btn[data-mood="neutral"].selected  { background: rgba(79,172,254,0.18);  border-color: #4FACFE; box-shadow: 0 0 20px rgba(79,172,254,0.3); }
+    .mood-btn[data-mood="sad"].selected      { background: rgba(167,139,250,0.18); border-color: #A78BFA; box-shadow: 0 0 20px rgba(167,139,250,0.3); }
+    .mood-btn[data-mood="angry"].selected    { background: rgba(240,90,126,0.18);  border-color: #F05A7E; box-shadow: 0 0 20px rgba(240,90,126,0.3); }
+
+    /* Hydration glasses */
+    .glass-container { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .water-glass {
+      width: 36px;
+      height: 48px;
+      border-radius: 4px 4px 8px 8px;
+      border: 2px solid rgba(79,172,254,0.35);
+      background: rgba(79,172,254,0.1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .water-glass.filled {
+      border-color: #4FACFE;
+    }
+
+    .water-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, rgba(79,172,254,0.85), rgba(0,198,255,0.65));
+      height: 0;
+      transition: height 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .water-glass.filled .water-fill { height: 100%; }
+
+    /* Life Balance sliders */
+    .balance-slider-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); width: 80px; flex-shrink: 0; }
+    .slider-score { font-size: 14px; font-weight: 800; color: var(--color-balance); width: 24px; text-align: right; flex-shrink: 0; }
+
+    input[type=range].balance-range {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 6px;
+      background: rgba(79,172,254,0.15);
+      border-radius: 3px;
+      border: 1px solid rgba(79,172,254,0.25);
+      outline: none;
+    }
+
+    input[type=range].balance-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4FACFE;
+      cursor: pointer;
+      border: 3px solid rgba(79,172,254,0.4);
+      box-shadow: 0 0 10px rgba(79,172,254,0.5);
+      transition: transform 0.15s ease;
+    }
+
+    input[type=range].balance-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* Vault letter cards */
+    .letter-card {
+      background: rgba(167,139,250,0.1);
+      border: 1px solid rgba(167,139,250,0.22);
+      border-top: 3px solid var(--color-vault);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 0 20px rgba(167,139,250,0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .letter-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(167,139,250,0.25);
+    }
+
+    .letter-sealed {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(167,139,250,0.18);
+      border: 1px solid rgba(167,139,250,0.4);
+      color: #A78BFA;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ══════════════════════════════════════════
+       14. ANIMATIONS — wrapped in prefers-reduced-motion
+       ══════════════════════════════════════════ */
+    @media (prefers-reduced-motion: no-preference) {
+
+      /* Card entrance stagger */
+      @keyframes cardEntrance {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .card.entering {
+        animation: cardEntrance 0.42s cubic-bezier(0.22,1,0.36,1) forwards;
+      }
+
+      /* Card hover spring */
+      .card {
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+                    box-shadow 0.3s ease,
+                    border-color 0.5s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.55),
+                    0 0 0 1px var(--color-accent) inset,
+                    inset 0 1px 0 rgba(255,255,255,0.1);
+      }
+
+      /* Gift shimmer float */
+      @keyframes giftFloat {
+        0%,100% { transform: translateY(0)   scale(1);    filter: drop-shadow(0 0 10px rgba(167,139,250,0.5)); }
+        50%      { transform: translateY(-8px) scale(1.06); filter: drop-shadow(0 0 24px rgba(167,139,250,0.85)); }
+      }
+
+      .gift-shimmer { animation: giftFloat 2.6s ease-in-out infinite; }
+
+      /* Streak bounce */
+      @keyframes streakBounce {
+        0%   { transform: scale(1) rotate(0); }
+        35%  { transform: scale(1.5) rotate(-12deg); }
+        65%  { transform: scale(0.92) rotate(6deg); }
+        100% { transform: scale(1) rotate(0); }
+      }
+
+      .streak-bounce { animation: streakBounce 0.42s cubic-bezier(0.34,1.56,0.64,1); }
+
+      /* XP float */
+      @keyframes xpFloat {
+        0%   { opacity: 1; transform: translateY(0) scale(1); }
+        20%  { opacity: 1; transform: translateY(-10px) scale(1.12); }
+        100% { opacity: 0; transform: translateY(-44px) scale(0.88); }
+      }
+
+      .xp-float-el {
+        position: fixed;
+        color: var(--color-xp);
+        font-weight: 900;
+        font-size: 18px;
+        pointer-events: none;
+        z-index: 9998;
+        text-shadow: 0 0 12px rgba(249,212,35,0.7);
+        animation: xpFloat 0.95s ease forwards;
+      }
+
+      /* Check draw */
+      @keyframes checkDraw {
+        from { stroke-dashoffset: 30; }
+        to   { stroke-dashoffset: 0; }
+      }
+
+      .check-path {
+        stroke: var(--color-today);
+        stroke-width: 2.5;
+        stroke-dasharray: 30;
+        stroke-dashoffset: 30;
+        fill: none;
+        animation: checkDraw 0.35s ease forwards;
+      }
+
+      /* Strikethrough */
+      @keyframes strikeSlide {
+        from { width: 0; }
+        to   { width: 100%; }
+      }
+
+      .task-done {
+        position: relative;
+        color: rgba(255,255,255,0.45);
+      }
+
+      .task-done::after {
+        content: '';
+        position: absolute;
+        height: 2px;
+        background: rgba(255,255,255,0.45);
+        top: 50%; left: 0;
+        animation: strikeSlide 0.28s ease 0.18s forwards;
+        width: 0;
+      }
+
+      /* Goals path draw */
+      @keyframes pathDraw {
+        from { stroke-dashoffset: var(--path-length, 400); }
+        to   { stroke-dashoffset: 0; }
+      }
+
+      .goals-path {
+        stroke-dasharray: var(--path-length, 400);
+        stroke-dashoffset: var(--path-length, 400);
+        animation: pathDraw 1.6s cubic-bezier(0.22,1,0.36,1) forwards;
+      }
+
+      /* Active node pulse ring */
+      @keyframes nodePulse {
+        0%,100% { transform: scale(1); opacity: 0.5; }
+        50%      { transform: scale(1.22); opacity: 0.18; }
+      }
+
+      .pulse-ring { animation: nodePulse 2.1s ease infinite; }
+
+      /* Toast in/out */
+      @keyframes toastIn  {
+        from { transform: translateX(120%); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
+      }
+      @keyframes toastOut {
+        from { transform: translateX(0);    opacity: 1; }
+        to   { transform: translateX(120%); opacity: 0; }
+      }
+
+      .toast { animation: toastIn 0.32s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      .toast.dismissing { animation: toastOut 0.26s ease forwards; }
+
+      /* Chest lid fly + light burst */
+      @keyframes lidFly {
+        to { transform: translateY(-100px) rotate(18deg); opacity: 0; }
+      }
+      @keyframes lightBurst {
+        0%   { opacity: 0; transform: scale(0.5); }
+        45%  { opacity: 0.85; transform: scale(1.6); }
+        100% { opacity: 0; transform: scale(2.2); }
+      }
+    }
+
+    /* Reduced motion fallback */
+    @media (prefers-reduced-motion: reduce) {
+      .card { opacity: 1; transform: none; transition: none; }
+      .gift-shimmer { animation: none; }
+      .pulse-ring { animation: none; }
+    }
+
+    /* ══════════════════════════════════════════
+       15. EMOJI VISIBILITY SYSTEM
+       Core rule: no emoji ever sits naked on a same-tone background.
+       Every emoji gets at minimum a drop-shadow baseline. Prominent
+       emoji get a dark-glass container that works on all backgrounds.
+       ══════════════════════════════════════════ */
+
+    /* Baseline drop-shadow on every emoji — lightweight universal protection */
+    .emoji,
+    .hud-chip-emoji,
+    .mood-emoji,
+    .gift-shimmer,
+    .vault-icon-wrap {
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.55));
+    }
+
+    /* Dark-glass pill — use on any emoji over a coloured surface */
+    .emoji-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      flex-shrink: 0;
+    }
+
+    /* Card header icon tile — 44 × 44 dark pill for section icons */
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+    }
+
+    /* Nav emoji badge — per-section colour tile */
+    .nav-emoji-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: color-mix(in srgb, var(--nav-color, #7C5CFC) 20%, rgba(0,0,0,0.25));
+      border: 1px solid color-mix(in srgb, var(--nav-color, #7C5CFC) 30%, transparent);
+      font-size: 16px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+    }
+
+    /* Gift shimmer gets an enhanced glow shadow instead of plain drop-shadow */
+    .gift-shimmer {
+      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.6));
+    }
+
+    /* Vault icon — existing glow kept, add base shadow too */
+    .vault-icon-wrap {
+      filter: drop-shadow(0 0 14px rgba(167,139,250,0.45)) drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+    }
+
+    /* Goal node emoji — always inside a coloured node circle so they're fine,
+       but add a subtle shadow for depth */
+    .goal-node { text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+  </style>
 </head>
 
 <body>
-    <!-- Dot grid background -->
-    <div class="dot-grid"></div>
+  <!-- Toast container -->
+  <div id="toast-container"></div>
 
-    <!-- App Shell: Sidebar + Main Content -->
-    <!-- Shell: matches Shell.tsx — dark bg, sidebar + scrollable main -->
-    <div class="flex h-screen w-full bg-[#1c1c1c] overflow-hidden">
+  <div class="app-shell">
 
-        <!-- ===================== SIDEBAR ===================== -->
-        <aside id="sidebar" class="w-16 h-screen bg-[#1a1033] flex flex-col items-center py-4 gap-4 flex-shrink-0">
+    <!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+    <aside class="sidebar">
+      <div class="logo-mark" id="logo-mark">G</div>
 
-            <!-- Logo -->
-            <div class="w-9 h-9 rounded-[10px] bg-gradient-to-br from-[#7F77DD] to-[#D4537E] flex items-center justify-center text-white font-medium text-base mb-2 shadow-md">
-                G
+      <nav class="sidebar-nav">
+        <div class="nav-item active"
+             id="nav-home"
+             data-page="home"
+             style="--nav-color: var(--color-home)"
+             title="Home"
+             onclick="navigateTo('home')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-balance"
+             data-page="balance"
+             style="--nav-color: var(--color-balance)"
+             title="Life Balance"
+             onclick="navigateTo('balance')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" d="M12 3v9m0 0l6 6m-6-6l-6 6"/>
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-goals"
+             data-page="goals"
+             style="--nav-color: var(--color-goals)"
+             title="Goals Map"
+             onclick="navigateTo('goals')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="5"/>
+            <circle cx="12" cy="12" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-today"
+             data-page="today"
+             style="--nav-color: var(--color-today)"
+             title="Today"
+             onclick="navigateTo('today')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="17" rx="2"/>
+            <path stroke-linecap="round" d="M8 2v3M16 2v3M3 9h18"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-vault"
+             data-page="vault"
+             style="--nav-color: var(--color-vault)"
+             title="Vault"
+             onclick="navigateTo('vault')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="7" width="18" height="14" rx="2"/>
+            <path stroke-linecap="round" d="M16 7V5a2 2 0 0 0-4 0v2"/>
+            <circle cx="12" cy="14" r="2"/>
+          </svg>
+        </div>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-settings" title="Settings">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </div>
+    </aside>
+    <!-- ═══════════════════════ END SIDEBAR ═══════════════════════ -->
+
+    <!-- ═══════════════════════ MAIN ═══════════════════════ -->
+    <main class="main-scroll">
+      <div class="content-wrap">
+
+        <!-- HUD Top Bar -->
+        <div class="hud-bar">
+          <div>
+            <h1 class="page-heading" id="page-heading">Good night.</h1>
+            <p class="page-subheading" id="page-subheading">Sunday, June 1</p>
+          </div>
+          <div class="hud-chips">
+            <div class="hud-chip hud-streak">
+              <span class="hud-chip-emoji" id="streak-emoji">🔥</span>
+              <span class="hud-chip-number" id="streak-count">7</span>
+              <span class="hud-chip-label">Streak</span>
+            </div>
+            <div class="hud-chip hud-xp">
+              <span class="hud-chip-emoji">⚡</span>
+              <span class="hud-chip-number" id="xp-count">1240</span>
+              <span class="hud-chip-label">XP</span>
+            </div>
+            <div class="hud-chip hud-chapter">
+              <span class="hud-chip-emoji">📖</span>
+              <span class="hud-chip-number">Ch.1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ PAGE: HOME ══ -->
+        <div id="page-home" class="page-view active">
+          <div class="dashboard-grid" id="home-grid">
+
+            <!-- Daily Reward -->
+            <div class="card card-home card-hero" style="padding: 24px; display:flex; flex-direction:column; gap:12px;">
+              <div class="t-label">Daily Reward Available</div>
+              <div style="display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:12px;">
+                <!-- 🎁 sits in a dark pill so it never blends into the purple card gradient -->
+                <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.14); border-radius:20px; padding:12px 16px; display:inline-flex;">
+                  <span class="gift-shimmer" id="gift-box">🎁</span>
+                </div>
+                <div style="text-align:center;">
+                  <p class="t-primary" style="font-weight:700; font-size:18px; margin:0 0 4px;">Claim Your Reward</p>
+                  <p class="t-secondary" style="font-size:14px; margin:0;">Tap to claim your XP bonus</p>
+                </div>
+                <span class="countdown-badge">⏱ Expires tonight · 11:59 PM</span>
+              </div>
+              <button class="btn-primary" style="width:100%;" id="claim-btn" onclick="claimReward(event)">🎁 Claim +150 XP</button>
             </div>
 
-            <!-- Nav Items -->
-            <nav class="flex flex-col gap-1 w-full items-center">
-
-                <!-- Dashboard -->
-                <div id="nav-dashboard"
-                     title="Dashboard"
-                     onclick="setActive(this)"
-                     class="sidebar-item active w-11 h-11 rounded-[10px] flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-                    <!-- Dashboard icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7" rx="1"/>
-                        <rect x="14" y="3" width="7" height="7" rx="1"/>
-                        <rect x="3" y="14" width="7" height="7" rx="1"/>
-                        <rect x="14" y="14" width="7" height="7" rx="1"/>
-                    </svg>
+            <!-- Today's Quest -->
+            <div class="card card-today card-hero" style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <!-- 🎯 in dark pill — green card could wash out a green emoji -->
+                <div class="emoji-container" style="width:28px; height:28px; border-radius:8px; font-size:14px;">🎯</div>
+                <span class="t-label">Today's Quest</span>
+              </div>
+              <div>
+                <p class="t-primary" style="font-weight:700; font-size:18px; margin:0 0 6px;">Less Stressed</p>
+                <p class="t-secondary" style="font-size:14px; margin:0 0 4px;">Part of: <span style="color:rgba(255,255,255,0.85);">Emotional Wellness</span></p>
+                <p class="t-tertiary" style="font-size:13px; margin:0;">3 of 5 steps completed</p>
+              </div>
+              <div>
+                <div class="quest-track">
+                  <div class="quest-fill" style="width:60%;"></div>
                 </div>
+                <p class="t-tertiary" style="font-size:12px; margin-top:6px;">60% complete</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-primary" style="flex:1;" onclick="completeQuest(event, this)">Done ✓</button>
+                <button class="btn-secondary" style="flex:1;">Tomorrow</button>
+              </div>
+            </div>
 
-                <!-- Goals -->
-                <div id="nav-goals"
-                     title="Goals"
-                     onclick="setActive(this)"
-                     class="sidebar-item w-11 h-11 rounded-[10px] flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-                    <!-- Goals / target icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"/>
-                        <circle cx="12" cy="12" r="5"/>
-                        <circle cx="12" cy="12" r="1" fill="currentColor"/>
-                    </svg>
-                </div>
+            <!-- Weekly Mood Strip -->
+            <div class="card card-home col-span-2" style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span class="t-label">This Week's Mood</span>
+                <span style="background:rgba(124,92,252,0.22); border:1px solid rgba(124,92,252,0.45); color:#A78BFA; font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px;">Weekly log</span>
+              </div>
+              <div id="weekly-strip" style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;"></div>
+            </div>
 
-                <!-- Time Vault -->
-                <div id="nav-time"
-                     title="Time Vault"
-                     onclick="setActive(this)"
-                     class="sidebar-item w-11 h-11 rounded-[10px] flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-                    <!-- Clock icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path stroke-linecap="round" d="M12 7v5l3 3"/>
-                    </svg>
-                </div>
-
-                <!-- Mood -->
-                <div id="nav-mood"
-                     title="Mood Log"
-                     onclick="setActive(this)"
-                     class="sidebar-item w-11 h-11 rounded-[10px] flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-                    <!-- Smile icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="9"/>
-                        <path stroke-linecap="round" d="M9 14s1 2 3 2 3-2 3-2"/>
-                        <circle cx="9" cy="10" r="1" fill="currentColor"/>
-                        <circle cx="15" cy="10" r="1" fill="currentColor"/>
-                    </svg>
-                </div>
-
-                <!-- Wheel of Life -->
-                <div id="nav-wheel"
-                     title="Wheel of Life"
-                     onclick="setActive(this)"
-                     class="sidebar-item w-11 h-11 rounded-[10px] flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-                    <!-- Radar / pie icon -->
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" d="M12 3v9m0 0l6 6m-6-6l-6 6"/>
-                        <circle cx="12" cy="12" r="9"/>
-                    </svg>
-                </div>
-
-            </nav>
-
-            <!-- Spacer -->
-            <div class="flex-1"></div>
-
-            <!-- Settings (pinned to bottom) -->
-            <div title="Settings"
-                 class="sidebar-item w-11 h-11 rounded-[10px] flex items-center justify-center text-white/40 hover:bg-white/10 hover:text-white transition-all cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            <!-- Life Balance Stat Card -->
+            <div class="card card-balance" style="padding: 20px; display:flex; align-items:center; gap:16px;">
+              <div class="balance-ring-wrap">
+                <svg viewBox="0 0 58 58">
+                  <circle cx="29" cy="29" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+                  <circle cx="29" cy="29" r="22" fill="none" stroke="#4FACFE" stroke-width="8"
+                          stroke-dasharray="138.2" stroke-dashoffset="55.3" stroke-linecap="round"
+                          style="transition: stroke-dashoffset 0.8s cubic-bezier(0.34,1.56,0.64,1)"/>
                 </svg>
+                <div class="balance-ring-label">4·4</div>
+              </div>
+              <div>
+                <div class="t-label" style="margin-bottom:4px;">Balance</div>
+                <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 3px;">Wheel of Life</p>
+                <p class="t-tertiary" style="font-size:12px; margin:0;">Last updated today</p>
+              </div>
+              <!-- ⚖️ in dark pill — blue card could wash out lighter emoji -->
+              <div class="card-icon" style="margin-left:auto; font-size:24px;">⚖️</div>
             </div>
 
-        </aside>
-        <!-- =================== END SIDEBAR =================== -->
-
-        <!-- Main Content Area -->
-        <main id="main-content" class="flex-1 overflow-y-auto p-6 md:p-8">
-            <!-- max-w-7xl container matches Shell.tsx children wrapper -->
-            <div class="max-w-7xl mx-auto">
-                <!-- page.tsx: Dashboard entry point -->
-                <h1 class="text-white text-2xl font-nunito font-bold">Growth OS Dashboard</h1>
-
-                <!-- Dashboard sections go below this line -->
+            <!-- Today Stat Card -->
+            <div class="card card-today" style="padding: 20px; display:flex; align-items:center; gap:16px;">
+              <!-- 📋 in a dark circle — mint green card background could clash with green-tinted emoji -->
+              <div class="card-icon" style="border-radius:50%; width:52px; height:52px; font-size:24px;">📋</div>
+              <div>
+                <div class="t-label" style="margin-bottom:4px;">Today</div>
+                <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 3px;">Not yet logged</p>
+                <p class="t-tertiary" style="font-size:12px; margin:0;">Tap to start your check-in</p>
+              </div>
+              <div style="margin-left:auto;">
+                <button class="btn-primary" style="padding:9px 18px; font-size:13px;" onclick="navigateTo('today')">Log</button>
+              </div>
             </div>
-        </main>
 
-    </div>
+            <!-- Vault Nudge -->
+            <div class="card card-vault col-span-2" style="padding: 24px; display:flex; align-items:center; gap:20px;">
+              <!-- 🔒 in dark pill — lavender vault card; lock emoji can blend into purple tones -->
+              <div class="card-icon" style="width:52px; height:52px; font-size:28px; border-radius:16px; background:rgba(0,0,0,0.35); box-shadow:0 0 16px rgba(167,139,250,0.3);">🔒</div>
+              <div style="flex:1;">
+                <div class="t-label" style="margin-bottom:6px;">Vault</div>
+                <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 5px;">Time Vault — Your Letters</p>
+                <p style="color:rgba(255,255,255,0.8); font-size:14px; font-weight:500; margin:0; line-height:1.5;">
+                  It's been <strong style="color:var(--color-vault);">0 days</strong> since your last letter to your future self. Write one tonight?
+                </p>
+              </div>
+              <button class="btn-primary" style="white-space:nowrap; flex-shrink:0;" onclick="navigateTo('vault')">Open Vault</button>
+            </div>
 
-    <script>
-        // Active sidebar item highlight
-        function setActive(el) {
-            document.querySelectorAll('.sidebar-item').forEach(item => {
-                item.classList.remove('bg-white/10', 'text-white');
-                item.classList.add('text-white/40');
-            });
-            el.classList.add('bg-white/10', 'text-white');
-            el.classList.remove('text-white/40');
+          </div>
+        </div>
+
+        <!-- ══ PAGE: LIFE BALANCE ══ -->
+        <div id="page-balance" class="page-view">
+          <div class="dashboard-grid" id="balance-grid">
+
+            <div class="card card-balance col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div class="t-label" style="margin-bottom:4px;">Life Balance</div>
+                  <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Wheel of Life</p>
+                </div>
+                <button class="btn-primary" onclick="showToast('✅ Balance saved!', 'balance')">💾 Save Balance</button>
+              </div>
+
+              <div class="balance-slider-wrap">
+                <div class="slider-row">
+                  <span class="slider-label">Health</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="7" oninput="updateSlider(this)">
+                  <span class="slider-score">7</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Career</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="5" oninput="updateSlider(this)">
+                  <span class="slider-score">5</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Finance</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="4" oninput="updateSlider(this)">
+                  <span class="slider-score">4</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Family</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="8" oninput="updateSlider(this)">
+                  <span class="slider-score">8</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Growth</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="6" oninput="updateSlider(this)">
+                  <span class="slider-score">6</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Social</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="3" oninput="updateSlider(this)">
+                  <span class="slider-score">3</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Fun</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="6" oninput="updateSlider(this)">
+                  <span class="slider-score">6</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Purpose</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="7" oninput="updateSlider(this)">
+                  <span class="slider-score">7</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: GOALS MAP ══ -->
+        <div id="page-goals" class="page-view">
+          <div class="dashboard-grid" id="goals-grid">
+
+            <div class="card card-goals col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div class="t-label" style="margin-bottom:4px;">Goals Map</div>
+                  <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Chapter 1: Foundation</p>
+                </div>
+                <button class="btn-primary">🎯 Add Goal</button>
+              </div>
+
+              <!-- Goals path SVG -->
+              <div style="position:relative; display:flex; flex-direction:column; gap:16px; padding: 8px 0;">
+                <svg style="position:absolute; left:25px; top:0; height:100%; width:4px; overflow:visible;" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="pathGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#F05A7E"/>
+                      <stop offset="100%" stop-color="#E83B6A"/>
+                    </linearGradient>
+                  </defs>
+                  <line x1="2" y1="26" x2="2" y2="95%" stroke="url(#pathGrad)" stroke-width="3" stroke-linecap="round" class="goals-path" style="--path-length:400;"/>
+                </svg>
+
+                <!-- Goal nodes —
+                     ✅ is high-contrast on any background.
+                     🎯 is inside a coral coloured node so it's fine.
+                     🔐 is dark on dark; swap to ⛔ which has a red ring for contrast.
+                -->
+                <div style="display:flex; align-items:center; gap:16px; padding-left:8px;">
+                  <div class="goal-node completed">✅</div>
+                  <div>
+                    <p class="t-primary" style="font-weight:700; font-size:15px; margin:0 0 3px;">Morning Routine</p>
+                    <p class="t-tertiary" style="font-size:12px; margin:0;">Completed · 7 days streak</p>
+                  </div>
+                  <div style="margin-left:auto; background:rgba(240,90,126,0.18); border:1px solid rgba(240,90,126,0.4); color:#F05A7E; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px;">+200 XP</div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:16px; padding-left:8px;">
+                  <div class="goal-node active">
+                    <div class="pulse-ring"></div>
+                    🎯
+                  </div>
+                  <div>
+                    <p class="t-primary" style="font-weight:700; font-size:15px; margin:0 0 3px;">Less Stressed</p>
+                    <p class="t-tertiary" style="font-size:12px; margin:0;">In progress · 3 of 5 steps</p>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:16px; padding-left:8px;">
+                  <!-- 🔐 dark on dark → swap to ⛔ (red ring, high contrast) -->
+                  <div class="goal-node locked">⛔</div>
+                  <div>
+                    <p style="color:rgba(255,255,255,0.4); font-weight:600; font-size:15px; margin:0 0 3px;">Read 12 Books</p>
+                    <p class="t-tertiary" style="font-size:12px; margin:0;">Locked — complete above first</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: TODAY ══ -->
+        <div id="page-today" class="page-view">
+          <div class="dashboard-grid" id="today-grid">
+
+            <!-- Mood check-in -->
+            <!-- Note: mood emoji (😄😊😐😢😤) are all inherently
+                 high-contrast multi-colour glyphs — safe on any dark bg.
+                 They sit in their own coloured mood-btn containers.
+                 The dark overlay on the card is enough separation. -->
+            <div class="card card-today col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div>
+                <div class="t-label" style="margin-bottom:4px;">Today's Check-in</div>
+                <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">How are you feeling?</p>
+              </div>
+
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="mood-btn" data-mood="happy" onclick="selectMood(this)">
+                  <span class="mood-emoji">😄</span>
+                  <span class="mood-label">Happy</span>
+                </button>
+                <button class="mood-btn" data-mood="content" onclick="selectMood(this)">
+                  <span class="mood-emoji">😊</span>
+                  <span class="mood-label">Content</span>
+                </button>
+                <button class="mood-btn" data-mood="neutral" onclick="selectMood(this)">
+                  <span class="mood-emoji">😐</span>
+                  <span class="mood-label">Neutral</span>
+                </button>
+                <button class="mood-btn" data-mood="sad" onclick="selectMood(this)">
+                  <span class="mood-emoji">😢</span>
+                  <span class="mood-label">Sad</span>
+                </button>
+                <button class="mood-btn" data-mood="angry" onclick="selectMood(this)">
+                  <span class="mood-emoji">😤</span>
+                  <span class="mood-label">Stressed</span>
+                </button>
+              </div>
+
+              <button class="btn-primary" style="align-self:flex-start;" onclick="logMood(event, this)">Log Mood +30 XP</button>
+            </div>
+
+            <!-- Hydration -->
+            <div class="card card-today" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <!-- 💧 in dark pill — green card bg can wash out blue-tinted emoji -->
+                <div class="card-icon" style="width:36px; height:36px; border-radius:10px; font-size:18px;">💧</div>
+                <div>
+                  <div class="t-label" style="margin-bottom:2px;">Hydration</div>
+                  <p class="t-primary" style="font-weight:700; font-size:16px; margin:0;">Water intake</p>
+                </div>
+              </div>
+              <div class="glass-container" id="water-glasses"></div>
+              <p class="t-tertiary" style="font-size:12px;" id="water-label">0 of 8 glasses</p>
+            </div>
+
+            <!-- Daily tasks -->
+            <div class="card card-today" style="padding:24px; display:flex; flex-direction:column; gap:14px;">
+              <!-- ✅ checkmark emoji in tasks is high-contrast (white+green). Safe. -->
+              <div class="t-label">Daily Tasks</div>
+              <div id="task-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+              <button class="btn-secondary" style="align-self:flex-start; padding:8px 16px; font-size:13px;">+ Add task</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: VAULT ══ -->
+        <div id="page-vault" class="page-view">
+          <div class="dashboard-grid" id="vault-grid">
+
+            <div class="card card-vault col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div class="t-label" style="margin-bottom:4px;">Time Vault</div>
+                  <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Letters to Future You</p>
+                </div>
+                <!-- ✉️ is high-contrast white/cream envelope — safe on purple vault bg.
+                     Replaces 💌 (pink on purple would clash). -->
+                <button class="btn-primary">✉️ Write Letter</button>
+              </div>
+
+              <!-- Letter cards -->
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="letter-card">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <p class="t-primary" style="font-weight:700; margin:0;">To future me in 1 year</p>
+                    <!-- 🔒 dark emoji on lavender pill → swap to text + icon for clarity -->
+                    <span class="letter-sealed">📬 Sealed</span>
+                  </div>
+                  <p style="color:rgba(255,255,255,0.55); font-size:13px; margin:0;">Opens on June 1, 2027</p>
+                </div>
+
+                <div class="letter-card">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <p class="t-primary" style="font-weight:700; margin:0;">My 30-day reflection</p>
+                    <!-- 🔓 is fine on green — open lock has good contrast -->
+                    <span class="letter-sealed" style="background:rgba(67,233,123,0.15); border-color:rgba(67,233,123,0.4); color:#43E97B;">🔓 Open</span>
+                  </div>
+                  <p style="color:rgba(255,255,255,0.7); font-size:13px; margin:0; line-height:1.6;">"I committed to showing up every day no matter how small the step..."</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+    <!-- ═══════════════════════ END MAIN ═══════════════════════ -->
+
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════
+       PAGE COLOUR SYSTEM
+       ══════════════════════════════════════════ */
+    const PAGE_COLORS = {
+      home:    { accent: '#7C5CFC', grad: 'linear-gradient(135deg,#7C5CFC,#5B3FD4)', bg: 'linear-gradient(160deg,#1a0533 0%,#2d0f55 40%,#09080F 100%)' },
+      balance: { accent: '#4FACFE', grad: 'linear-gradient(135deg,#4FACFE,#00C6FF)', bg: 'linear-gradient(160deg,#0c2a4a 0%,#0f3d6e 40%,#09080F 100%)' },
+      goals:   { accent: '#F05A7E', grad: 'linear-gradient(135deg,#F05A7E,#E83B6A)', bg: 'linear-gradient(160deg,#2d0a1e 0%,#5c1035 40%,#09080F 100%)' },
+      today:   { accent: '#43E97B', grad: 'linear-gradient(135deg,#43E97B,#38F9D7)', bg: 'linear-gradient(160deg,#052e16 0%,#0a4a26 40%,#09080F 100%)' },
+      vault:   { accent: '#A78BFA', grad: 'linear-gradient(135deg,#A78BFA,#8B5CF6)', bg: 'linear-gradient(160deg,#1a0c2e 0%,#2e1555 40%,#09080F 100%)' }
+    };
+
+    const PAGE_HEADINGS = {
+      home:    { h: 'Good night.',     sub: 'Sunday, June 1' },
+      balance: { h: 'Life Balance.',   sub: 'Wheel of Life Assessment' },
+      goals:   { h: 'Goals Map.',      sub: 'Chapter 1 — Foundation' },
+      today:   { h: "Today's Log.",    sub: 'Check in, track your day' },
+      vault:   { h: 'Time Vault.',     sub: 'Letters to your future self' }
+    };
+
+    let currentPage = 'home';
+
+    function setPageColor(page) {
+      const c = PAGE_COLORS[page];
+      const root = document.documentElement;
+      root.style.setProperty('--color-accent', c.accent);
+      root.style.setProperty('--grad-accent',  c.grad);
+      root.style.setProperty('--bg-page',      c.bg);
+      document.body.style.background = c.bg;
+
+      // Logo mark gradient
+      document.getElementById('logo-mark').style.background = c.grad;
+
+      // Page heading glow
+      document.getElementById('page-heading').style.textShadow =
+        `0 0 40px color-mix(in srgb, ${c.accent} 60%, transparent)`;
+    }
+
+    function navigateTo(page) {
+      if (page === currentPage) return;
+      currentPage = page;
+
+      // Switch nav active state
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const navEl = document.getElementById('nav-' + page);
+      if (navEl) navEl.classList.add('active');
+
+      // Update page colour
+      setPageColor(page);
+
+      // Update heading
+      const h = PAGE_HEADINGS[page];
+      document.getElementById('page-heading').textContent = h.h;
+      document.getElementById('page-subheading').textContent = h.sub;
+
+      // Switch page view
+      document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+      const targetPage = document.getElementById('page-' + page);
+      if (targetPage) targetPage.classList.add('active');
+
+      // Stagger card entrances
+      staggerCards(targetPage);
+    }
+
+    function staggerCards(container) {
+      if (!container) return;
+      const cards = container.querySelectorAll('.card');
+      cards.forEach((card, i) => {
+        card.style.animation = 'none';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(14px)';
+        // Force reflow
+        void card.offsetWidth;
+        card.style.animation = '';
+        card.classList.remove('entering');
+        setTimeout(() => {
+          card.classList.add('entering');
+        }, i * 75);
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       NUMBER TICKER
+       ══════════════════════════════════════════ */
+    function tickNumber(element, from, to, duration = 620) {
+      const start = performance.now();
+      function update(time) {
+        const progress = Math.min((time - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = Math.round(from + (to - from) * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    /* ══════════════════════════════════════════
+       XP FLOAT
+       ══════════════════════════════════════════ */
+    function spawnXPFloat(x, y, amount) {
+      const el = document.createElement('div');
+      el.className = 'xp-float-el';
+      el.textContent = '+' + amount + ' XP';
+      el.style.left = (x - 30) + 'px';
+      el.style.top  = (y - 20) + 'px';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+
+    /* ══════════════════════════════════════════
+       STREAK BOUNCE
+       ══════════════════════════════════════════ */
+    function bounceStreak() {
+      const el = document.getElementById('streak-emoji');
+      el.classList.remove('streak-bounce');
+      void el.offsetWidth;
+      el.classList.add('streak-bounce');
+      el.addEventListener('animationend', () => el.classList.remove('streak-bounce'), { once: true });
+    }
+
+    /* ══════════════════════════════════════════
+       TOAST
+       ══════════════════════════════════════════ */
+    function showToast(message, page) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      const pageColor = page ? PAGE_COLORS[page]?.accent : PAGE_COLORS[currentPage]?.accent;
+      toast.style.borderLeftColor = pageColor || 'var(--color-accent)';
+      toast.innerHTML = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('dismissing');
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+      }, 2800);
+    }
+
+    /* ══════════════════════════════════════════
+       CLAIM REWARD
+       ══════════════════════════════════════════ */
+    function claimReward(e) {
+      const btn = document.getElementById('claim-btn');
+      if (btn.disabled) return;
+      btn.disabled = true;
+
+      // XP float
+      spawnXPFloat(e.clientX, e.clientY, 150);
+
+      // Streak bounce
+      bounceStreak();
+
+      // Tick XP
+      const xpEl = document.getElementById('xp-count');
+      tickNumber(xpEl, 1240, 1390);
+
+      // Gift animation stop
+      const gift = document.getElementById('gift-box');
+      gift.style.animation = 'none';
+      gift.textContent = '✨';
+
+      // Button update
+      btn.textContent = '🎉 Reward Claimed!';
+      btn.style.background = 'linear-gradient(135deg,#2D6A4F,#1B4332)';
+      btn.style.borderBottomColor = '#0d2b1f';
+
+      showToast('🎁 <strong>+150 XP</strong> added to your account!', 'home');
+    }
+
+    /* ══════════════════════════════════════════
+       COMPLETE QUEST
+       ══════════════════════════════════════════ */
+    function completeQuest(e, btn) {
+      spawnXPFloat(e.clientX, e.clientY, 75);
+      bounceStreak();
+      const xpEl = document.getElementById('xp-count');
+      const cur = parseInt(xpEl.textContent.replace(/,/g,''));
+      tickNumber(xpEl, cur, cur + 75);
+
+      // Progress bar to 100%
+      const fill = btn.closest('.card').querySelector('.quest-fill');
+      if (fill) fill.style.width = '100%';
+
+      btn.textContent = '✓ Done!';
+      btn.disabled = true;
+      showToast('⚔️ Quest complete! <strong>+75 XP</strong>', 'today');
+    }
+
+    /* ══════════════════════════════════════════
+       MOOD LOG
+       ══════════════════════════════════════════ */
+    function selectMood(btn) {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    function logMood(e, btn) {
+      const selected = document.querySelector('.mood-btn.selected');
+      if (!selected) { showToast('👆 Select a mood first!', 'today'); return; }
+      spawnXPFloat(e.clientX, e.clientY, 30);
+      const xpEl = document.getElementById('xp-count');
+      const cur = parseInt(xpEl.textContent.replace(/,/g,''));
+      tickNumber(xpEl, cur, cur + 30);
+      btn.textContent = '✅ Mood Logged!';
+      btn.disabled = true;
+      showToast(`${selected.querySelector('.mood-emoji').textContent} Mood logged! <strong>+30 XP</strong>`, 'today');
+    }
+
+    /* ══════════════════════════════════════════
+       SLIDER SYNC
+       ══════════════════════════════════════════ */
+    function updateSlider(input) {
+      const row = input.closest('.slider-row');
+      if (row) row.querySelector('.slider-score').textContent = input.value;
+    }
+
+    /* ══════════════════════════════════════════
+       WEEKLY MOOD STRIP
+       ══════════════════════════════════════════ */
+    const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const todayDow = new Date().getDay();
+    const adjustedToday = todayDow === 0 ? 6 : todayDow - 1;
+    const MOODS = [null, 'logged-happy', 'logged-content', null, 'logged-neutral', null, null];
+    const MOOD_EMOJI = {
+      'logged-happy':   '😊',
+      'logged-content': '😌',
+      'logged-neutral': '😐',
+      'logged-sad':     '😢',
+      'logged-angry':   '😠'
+    };
+
+    function buildWeeklyStrip() {
+      const strip = document.getElementById('weekly-strip');
+      strip.innerHTML = '';
+      DAYS.forEach((day, i) => {
+        const isToday = i === adjustedToday;
+        const mood = MOODS[i];
+
+        const col = document.createElement('div');
+        col.className = 'day-col';
+
+        const circle = document.createElement('div');
+        circle.className = 'day-circle' + (mood ? ' ' + mood : '');
+        if (mood && MOOD_EMOJI[mood]) circle.textContent = MOOD_EMOJI[mood];
+
+        const label = document.createElement('div');
+        label.className = 'day-label' + (isToday ? ' today' : '');
+        label.textContent = day;
+
+        col.append(circle, label);
+        if (isToday) {
+          const dot = document.createElement('div');
+          dot.className = 'today-dot';
+          col.appendChild(dot);
+        }
+        strip.appendChild(col);
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       HYDRATION GLASSES
+       ══════════════════════════════════════════ */
+    let filledGlasses = 0;
+    const TOTAL_GLASSES = 8;
+
+    function buildGlasses() {
+      const container = document.getElementById('water-glasses');
+      if (!container) return;
+      container.innerHTML = '';
+      for (let i = 0; i < TOTAL_GLASSES; i++) {
+        const g = document.createElement('div');
+        g.className = 'water-glass' + (i < filledGlasses ? ' filled' : '');
+        const fill = document.createElement('div');
+        fill.className = 'water-fill';
+        g.appendChild(fill);
+        g.onclick = () => toggleGlass(i);
+        container.appendChild(g);
+      }
+      const lbl = document.getElementById('water-label');
+      if (lbl) lbl.textContent = `${filledGlasses} of ${TOTAL_GLASSES} glasses`;
+    }
+
+    function toggleGlass(idx) {
+      filledGlasses = filledGlasses === idx + 1 ? idx : idx + 1;
+      buildGlasses();
+    }
+
+    /* ══════════════════════════════════════════
+       DAILY TASKS
+       ══════════════════════════════════════════ */
+    const TASKS = [
+      { text: '5 min meditation', done: false },
+      { text: 'Journal entry',    done: true  },
+      { text: 'Evening walk',     done: false },
+    ];
+
+    function buildTasks() {
+      const list = document.getElementById('task-list');
+      if (!list) return;
+      list.innerHTML = '';
+      TASKS.forEach((task, i) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; gap:12px; cursor:pointer;';
+        row.onclick = () => toggleTask(i, row);
+
+        const checkbox = document.createElement('div');
+        checkbox.style.cssText = `width:22px; height:22px; border-radius:6px; border:2px solid ${task.done ? 'var(--color-today)' : 'rgba(255,255,255,0.25)'}; background:${task.done ? 'rgba(67,233,123,0.25)' : 'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s;`;
+        if (task.done) {
+          checkbox.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path class="check-path" d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
         }
 
-        // Set initial active state on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const first = document.getElementById('nav-dashboard');
-            if (first) setActive(first);
-        });
-    </script>
+        const label = document.createElement('span');
+        label.textContent = task.text;
+        label.style.cssText = `font-size:14px; font-weight:500; color:${task.done ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)'}; position:relative; transition:color 0.2s;`;
+        if (task.done) label.classList.add('task-done');
 
+        row.append(checkbox, label);
+        list.appendChild(row);
+      });
+    }
+
+    function toggleTask(i, row) {
+      TASKS[i].done = !TASKS[i].done;
+      buildTasks();
+      if (TASKS[i].done) {
+        const rect = row.getBoundingClientRect();
+        spawnXPFloat(rect.left + 20, rect.top, 20);
+        const xpEl = document.getElementById('xp-count');
+        const cur = parseInt(xpEl.textContent.replace(/,/g,''));
+        tickNumber(xpEl, cur, cur + 20);
+      }
+    }
+
+    /* ══════════════════════════════════════════
+       INIT
+       ══════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set initial colour
+      setPageColor('home');
+
+      // Build dynamic components
+      buildWeeklyStrip();
+      buildGlasses();
+      buildTasks();
+
+      // Stagger initial home cards
+      setTimeout(() => staggerCards(document.getElementById('page-home')), 50);
+    });
+  </script>
 </body>
-
 </html>
