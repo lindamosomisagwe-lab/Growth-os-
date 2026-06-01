@@ -1061,9 +1061,23 @@
 
         <!-- HUD Top Bar -->
         <div class="hud-bar">
-          <div>
-            <h1 class="page-heading" id="page-heading">Good night.</h1>
-            <p class="page-subheading" id="page-subheading">Sunday, June 1</p>
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <!-- Greeting emoji — JS sets content based on hour -->
+              <span id="greeting-emoji"
+                    aria-hidden="true"
+                    style="font-size:28px; line-height:1;
+                           filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+                           transition: opacity 0.4s ease;"></span>
+              <h1 class="page-heading" id="page-heading">Good night.</h1>
+            </div>
+            <!-- Subheading: real date + live clock -->
+            <p class="page-subheading" id="page-subheading" style="display:flex; align-items:center; gap:8px;">
+              <span id="heading-date">Sunday, June 1</span>
+              <span style="color:rgba(255,255,255,0.2);">·</span>
+              <span id="live-clock"
+                    style="font-variant-numeric:tabular-nums; letter-spacing:0.02em;"></span>
+            </p>
           </div>
           <div class="hud-chips">
             <div class="hud-chip hud-streak">
@@ -1439,12 +1453,66 @@
     };
 
     const PAGE_HEADINGS = {
-      home:    { h: 'Good night.',     sub: 'Sunday, June 1' },
       balance: { h: 'Life Balance.',   sub: 'Wheel of Life Assessment' },
       goals:   { h: 'Goals Map.',      sub: 'Chapter 1 — Foundation' },
       today:   { h: "Today's Log.",    sub: 'Check in, track your day' },
       vault:   { h: 'Time Vault.',     sub: 'Letters to your future self' }
     };
+
+    /* ══════════════════════════════════════════
+       DYNAMIC GREETING — time-aware home heading
+       ══════════════════════════════════════════ */
+    function getDynamicHomeHeading() {
+      const now  = new Date();
+      const hour = now.getHours();
+
+      // Greeting + emoji based on time of day
+      let greeting, emoji;
+      if (hour >= 5 && hour < 12) {
+        greeting = 'Good morning.'; emoji = '☀️';
+      } else if (hour >= 12 && hour < 17) {
+        greeting = 'Good afternoon.'; emoji = '🌤️';
+      } else if (hour >= 17 && hour < 21) {
+        greeting = 'Good evening.'; emoji = '🌇';
+      } else {
+        greeting = 'Good night.'; emoji = '🌛';
+      }
+
+      // Real formatted date: "Monday, June 1"
+      const dateStr = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      return { h: greeting, sub: dateStr, emoji };
+    }
+
+    function applyHomeHeading() {
+      const { h, sub, emoji } = getDynamicHomeHeading();
+      const headingEl  = document.getElementById('page-heading');
+      const dateEl     = document.getElementById('heading-date');   // date span
+      const subEl      = document.getElementById('page-subheading');
+      const emojiEl    = document.getElementById('greeting-emoji');
+
+      if (headingEl) headingEl.textContent = h;
+      if (dateEl)    dateEl.textContent    = sub;   // only the date portion
+      if (emojiEl)   emojiEl.textContent   = emoji;
+
+      // On non-date subheadings (other pages) sub is just a plain element with textContent;
+      // only override when subEl has no children (i.e. other pages)
+    }
+
+    /* Live clock — ticks every second inside #live-clock */
+    function tickClock() {
+      const el = document.getElementById('live-clock');
+      if (!el) return;
+      const now = new Date();
+      const hh  = String(now.getHours()).padStart(2, '0');
+      const mm  = String(now.getMinutes()).padStart(2, '0');
+      const ss  = String(now.getSeconds()).padStart(2, '0');
+      el.textContent = `${hh}:${mm}:${ss}`;
+    }
 
     let currentPage = 'home';
 
@@ -1476,10 +1544,29 @@
       // Update page colour
       setPageColor(page);
 
-      // Update heading
-      const h = PAGE_HEADINGS[page];
-      document.getElementById('page-heading').textContent = h.h;
-      document.getElementById('page-subheading').textContent = h.sub;
+      // Update heading — home gets dynamic greeting, other pages use static labels
+      if (page === 'home') {
+        applyHomeHeading();
+        // Show the live clock on home
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) clockEl.style.display = '';
+        const dateEl  = document.getElementById('heading-date');
+        if (dateEl) dateEl.style.display = '';
+      } else {
+        const h = PAGE_HEADINGS[page];
+        const headingEl    = document.getElementById('page-heading');
+        const subheadingEl = document.getElementById('page-subheading');
+        const emojiEl      = document.getElementById('greeting-emoji');
+        if (headingEl)    headingEl.textContent    = h.h;
+        // For other pages write directly into page-subheading text
+        // (the inner spans remain but we just swap heading-date text)
+        const dateEl = document.getElementById('heading-date');
+        if (dateEl) dateEl.textContent = h.sub;
+        // Hide clock on non-home pages
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) clockEl.style.display = 'none';
+        if (emojiEl) emojiEl.textContent = ''; // clear emoji on non-home pages
+      }
 
       // Switch page view
       document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
@@ -1763,6 +1850,16 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Set initial colour
       setPageColor('home');
+
+      // Apply dynamic time-based greeting on load
+      applyHomeHeading();
+
+      // Start live clock
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      // Refresh greeting every minute (handles midnight/noon/5pm crossover)
+      setInterval(applyHomeHeading, 60_000);
 
       // Build dynamic components
       buildWeeklyStrip();
