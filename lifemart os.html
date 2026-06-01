@@ -66,8 +66,7 @@
     body {
       font-family: 'Inter', sans-serif;
       overflow: hidden;
-      background: var(--bg-page);
-      transition: background 0.6s ease;
+      background: #09080F;  /* deep fallback — actual gradient lives on .app-shell */
       color: var(--text-primary);
     }
 
@@ -87,6 +86,34 @@
       height: 100vh;
       width: 100vw;
       overflow: hidden;
+      position: relative;
+      /* The actual page background sits here so it's never clipped */
+      background: var(--bg-home);  /* initial value — JS overwrites via inline style */
+      transition: background 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Smooth background cross-fade overlay:
+       CSS gradients can't tween, so we overlay a second gradient that
+       fades in on each navigation, then becomes the new base. */
+    .app-shell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--bg-next, transparent);
+      opacity: 0;
+      transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-shell.transitioning::before {
+      opacity: 1;
+    }
+
+    /* All direct children of app-shell must sit above the ::before overlay */
+    .sidebar, .main-scroll {
+      position: relative;
+      z-index: 1;
     }
 
     /* ══════════════════════════════════════════
@@ -273,8 +300,8 @@
     }
 
     .hud-chapter {
-      background: linear-gradient(135deg, rgba(102,126,234,0.22), rgba(118,75,162,0.18));
-      border: 1px solid rgba(102,126,234,0.38);
+      background: linear-gradient(135deg, rgba(167,139,250,0.22), rgba(139,92,246,0.18));
+      border: 1px solid rgba(167,139,250,0.38);
     }
 
     .hud-chip-emoji { font-size: 15px; line-height: 1; }
@@ -300,15 +327,19 @@
 
     /* ══════════════════════════════════════════
        7. CARDS — GLASS SYSTEM
+       Dark glass panel — colour identity comes from border-top,
+       never from the background so it never overrides the page gradient.
        ══════════════════════════════════════════ */
     .card {
-      background: var(--glass-bg);
+      background: rgba(10, 8, 25, 0.58);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      border: 1px solid var(--glass-border);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-top: 3px solid var(--color-accent);
       border-radius: 24px;
-      box-shadow: var(--glass-shadow);
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
       position: relative;
       overflow: hidden;
       will-change: transform;
@@ -321,17 +352,29 @@
     .card-hero {
       background: linear-gradient(
         140deg,
-        rgba(15,12,40,0.72) 0%,
-        color-mix(in srgb, var(--color-accent) 14%, rgba(15,12,40,0.72)) 100%
+        rgba(10,8,25,0.72) 0%,
+        color-mix(in srgb, var(--color-accent) 14%, rgba(10,8,25,0.72)) 100%
       );
     }
 
-    /* Section overrides — card top border colour */
-    .card-home    { border-top-color: var(--color-home); }
+    /* Section overrides — card top border colour.
+       These are intentionally hardcoded per-section so the border
+       stays correct even when --color-accent changes on other pages.
+       A balance card on the home page should still look blue. */
+    .card-home    { border-top-color: var(--color-home);    }
     .card-balance { border-top-color: var(--color-balance); }
-    .card-goals   { border-top-color: var(--color-goals); }
-    .card-today   { border-top-color: var(--color-today); }
-    .card-vault   { border-top-color: var(--color-vault); }
+    .card-goals   { border-top-color: var(--color-goals);   }
+    .card-today   { border-top-color: var(--color-today);   }
+    .card-vault   { border-top-color: var(--color-vault);   }
+
+    /* Hero variant — same dark glass with an accent tint wash */
+    .card-hero {
+      background: linear-gradient(
+        140deg,
+        rgba(10, 8, 25, 0.72) 0%,
+        color-mix(in srgb, var(--color-accent) 12%, rgba(10, 8, 25, 0.72)) 100%
+      );
+    }
 
     /* ── TEXT HIERARCHY ── */
     .t-primary   { color: #FFFFFF; font-weight: 600; }
@@ -1517,20 +1560,39 @@
     let currentPage = 'home';
 
     function setPageColor(page) {
-      const c = PAGE_COLORS[page];
+      const c    = PAGE_COLORS[page];
       const root = document.documentElement;
+      const shell = document.querySelector('.app-shell');
+
+      // 1. Update CSS accent/gradient variables (buttons, cards, rings, etc.)
       root.style.setProperty('--color-accent', c.accent);
       root.style.setProperty('--grad-accent',  c.grad);
       root.style.setProperty('--bg-page',      c.bg);
-      document.body.style.background = c.bg;
 
-      // Logo mark gradient
-      document.getElementById('logo-mark').style.background = c.grad;
+      if (shell) {
+        // 2. Crossfade technique for smooth background transitions.
+        //    CSS gradients can't tween, so we set the new bg on the ::before
+        //    overlay and fade it in, then commit and reset.
+        shell.style.setProperty('--bg-next', c.bg);
+        shell.classList.add('transitioning');
+        clearTimeout(shell._bgTimer);
+        shell._bgTimer = setTimeout(() => {
+          shell.style.background = c.bg;
+          shell.classList.remove('transitioning');
+          shell.style.removeProperty('--bg-next');
+        }, 700);
+      }
 
-      // Page heading glow
-      document.getElementById('page-heading').style.textShadow =
+      // 3. Logo mark gradient
+      const logoMark = document.getElementById('logo-mark');
+      if (logoMark) logoMark.style.background = c.grad;
+
+      // 4. Page heading glow in section colour
+      const heading = document.getElementById('page-heading');
+      if (heading) heading.style.textShadow =
         `0 0 40px color-mix(in srgb, ${c.accent} 60%, transparent)`;
     }
+
 
     function navigateTo(page) {
       if (page === currentPage) return;
@@ -1848,8 +1910,14 @@
        INIT
        ══════════════════════════════════════════ */
     document.addEventListener('DOMContentLoaded', () => {
-      // Set initial colour
+      // Paint the app shell immediately with the home background
+      // (setPageColor uses a crossfade timer, so we seed the base directly here)
+      const shell = document.querySelector('.app-shell');
+      if (shell) shell.style.background = PAGE_COLORS.home.bg;
+
+      // Set initial CSS variable colour state
       setPageColor('home');
+
 
       // Apply dynamic time-based greeting on load
       applyHomeHeading();
