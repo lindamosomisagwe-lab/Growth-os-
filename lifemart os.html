@@ -254,7 +254,7 @@
     }
 
     .page-heading {
-      color: #FFFFFF;
+      color: var(--text-primary);
       font-weight: 700;
       font-size: 36px;
       line-height: 1.1;
@@ -321,9 +321,9 @@
       text-transform: uppercase;
     }
 
-    .hud-streak .hud-chip-label  { color: rgba(255,107,107,0.8); }
+    .hud-streak .hud-chip-label  { color: rgba(var(--color-streak-rgb),0.8); }
     .hud-xp     .hud-chip-label  { color: rgba(249,212,35,0.8); }
-    .hud-chapter .hud-chip-label { color: rgba(167,139,250,0.8); }
+    .hud-chapter .hud-chip-label { color: rgba(var(--color-chapter-rgb),0.8); }
 
     /* ══════════════════════════════════════════
        7. CARDS — GLASS SYSTEM
@@ -397,7 +397,7 @@
       justify-content: center;
       gap: 6px;
       background: var(--grad-accent);
-      color: #FFFFFF;
+      color: var(--text-primary);
       font-weight: 800;
       font-size: 14px;
       font-family: 'Inter', sans-serif;
@@ -517,11 +517,11 @@
     }
 
     .day-circle:hover { transform: scale(1.12); }
-    .day-circle.logged-happy   { background: #F5A623; border-color: #F5A623; box-shadow: 0 0 14px rgba(245,166,35,0.45); }
+    .day-circle.logged-happy   { background: var(--color-goals); border-color: var(--color-goals); box-shadow: 0 0 14px rgba(245,166,35,0.45); }
     .day-circle.logged-content { background: #43E97B; border-color: #43E97B; box-shadow: 0 0 14px rgba(67,233,123,0.4); }
-    .day-circle.logged-neutral { background: #4FACFE; border-color: #4FACFE; box-shadow: 0 0 14px rgba(79,172,254,0.4); }
+    .day-circle.logged-neutral { background: var(--color-balance); border-color: var(--color-balance); box-shadow: 0 0 14px rgba(79,172,254,0.4); }
     .day-circle.logged-sad     { background: #A78BFA; border-color: #A78BFA; box-shadow: 0 0 14px rgba(167,139,250,0.4); }
-    .day-circle.logged-angry   { background: #F05A7E; border-color: #F05A7E; box-shadow: 0 0 14px rgba(240,90,126,0.4); }
+    .day-circle.logged-angry   { background: var(--color-goals); border-color: var(--color-goals); box-shadow: 0 0 14px rgba(240,90,126,0.4); }
 
     .day-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); }
     .day-label.today { color: #FFFFFF; font-weight: 700; }
@@ -551,7 +551,7 @@
       position: absolute;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      color: #FFFFFF;
+      color: var(--text-primary);
       font-weight: 800;
       font-size: 13px;
       line-height: 1;
