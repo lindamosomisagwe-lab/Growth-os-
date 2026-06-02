@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip, Legend } from "recharts";
+import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from "recharts";
 import { useGamification } from "../contexts/GamificationContext";
 
 const defaultCategories = ["Health", "Work", "Relationships", "Money", "Personal Growth"];
@@ -102,12 +102,13 @@ export default function WheelOfLife() {
     if (active && payload && payload.length) {
       return (
         <div style={{
-          background: "rgba(26,21,53,0.92)", backdropFilter: "blur(8px)", padding: "0.6rem 1rem",
-          border: "1px solid rgba(167,139,250,0.3)", borderRadius: "8px", fontSize: "0.85rem", color: "var(--text-primary)"
+          background: "var(--page-white)", padding: "0.6rem 1rem",
+          border: "1px solid rgba(26,16,8,0.15)", borderRadius: "6px", fontSize: "0.85rem", color: "var(--ink-dark)",
+          boxShadow: "var(--shadow-raised)"
         }}>
           {payload.map((p, i) => (
             <div key={i}>
-              {p.name}: <strong style={{ color: "var(--accent)" }}>{p.value}</strong> / 10
+              {p.name}: <strong style={{ color: "var(--accent-steel)" }}>{p.value}</strong> / 10
             </div>
           ))}
         </div>
@@ -138,14 +139,14 @@ export default function WheelOfLife() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", color: "var(--text-primary)", fontFamily: "var(--font-sans)", maxWidth: "800px", margin: "0 auto", paddingBottom: "4rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", color: "var(--ink-dark)", maxWidth: "800px", margin: "0 auto", paddingBottom: "4rem" }}>
       
       <header style={{ marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "1rem" }}>
         <div>
-          <h2 style={{ margin: "0", fontSize: "2rem", fontWeight: "400", letterSpacing: "-0.02em", fontStyle: "normal" }}>
+          <h2 className="page-title">
             Life Balance
           </h2>
-          <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.95rem", color: "var(--text-secondary)", fontStyle: "italic" }}>
+          <p className="page-subtitle">
             Check in with where you are right now.
           </p>
         </div>
@@ -155,22 +156,22 @@ export default function WheelOfLife() {
               {compareMode ? "Hide past snapshot" : "Compare with past"}
             </button>
           )}
-          <button onClick={saveSnapshot} className="btn-primary" style={{ padding: "0.6rem 1.4rem", fontSize: "0.85rem" }}>
+          <button onClick={saveSnapshot} className="btn-steel" style={{ padding: "0.6rem 1.4rem", fontSize: "0.85rem" }}>
             Save this snapshot
           </button>
         </div>
       </header>
 
       {/* Radar chart */}
-      <div className="stationery-card" style={{ width: "100%", height: "350px", display: "flex", justifyContent: "center", alignItems: "center", padding: "1rem", boxSizing: "border-box", marginBottom: "1rem" }}>
+      <div className="nb-card balance" style={{ width: "100%", height: "350px", display: "flex", justifyContent: "center", alignItems: "center", padding: "1rem", boxSizing: "border-box", marginBottom: "1rem" }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-            <PolarGrid stroke="rgba(167,139,250,0.12)" strokeWidth={1} />
-            <PolarAngleAxis dataKey="subject" tick={{ fill: "#C4B8E8", fontWeight: "500", fontSize: "0.8rem", fontFamily: "var(--font-sans)" }} />
+            <PolarGrid stroke="rgba(26,16,8,0.08)" strokeWidth={1} />
+            <PolarAngleAxis dataKey="subject" tick={{ fill: "var(--ink-medium)", fontWeight: "600", fontSize: "0.8rem", fontFamily: "var(--font-sans)" }} />
             <PolarRadiusAxis angle={30} domain={[0, 10]} tick={false} axisLine={false} />
-            <Radar name="Right now" dataKey="current" stroke="#A78BFA" strokeWidth={2} fill="rgba(167,139,250,0.25)" style={{ animation: "radarDraw 0.6s ease-out" }} />
+            <Radar name="Right now" dataKey="current" stroke="#5c8fa8" strokeWidth={2} fill="rgba(92,143,168,0.15)" style={{ animation: "radarDraw 0.6s ease-out" }} />
             {compareMode && lastSnapshotData && (
-              <Radar name="Last time" dataKey="lastTime" stroke="rgba(255,255,255,0.4)" strokeWidth={1.5} fill="transparent" strokeDasharray="4 4" />
+              <Radar name="Last time" dataKey="lastTime" stroke="rgba(26,16,8,0.4)" strokeWidth={1.5} fill="transparent" strokeDasharray="4 4" />
             )}
             <Tooltip content={customTooltip} />
           </RadarChart>
@@ -178,22 +179,31 @@ export default function WheelOfLife() {
       </div>
       
       {/* Insight */}
-      <div style={{ textAlign: "center", marginBottom: "2rem", color: "var(--text-secondary)", fontSize: "0.95rem", fontStyle: "italic" }}>
+      <div style={{ textAlign: "center", marginBottom: "2rem", color: "var(--ink-medium)", fontSize: "0.95rem", fontStyle: "italic" }}>
         {insightText}
       </div>
 
       {/* Sliders */}
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {activeCategories.map((cat) => (
-          <div key={cat} className="stationery-card" style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div key={cat} className="nb-card balance" style={{ padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "600", fontSize: "1rem" }}>{cat}</span>
-              <span style={{ fontWeight: "700", color: "var(--text-primary)", fontSize: "1.1rem" }}>
-                {data.ratings[cat]} <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)", fontWeight: "normal" }}>/ 10</span>
+              <span className="card-title" style={{ fontSize: "16px", margin: 0 }}>{cat}</span>
+              <span style={{ fontWeight: "700", color: "var(--ink-dark)", fontSize: "1.1rem" }}>
+                {data.ratings[cat]} <span style={{ fontSize: "0.85rem", color: "var(--ink-light)", fontWeight: "normal" }}>/ 10</span>
               </span>
             </div>
             
-            <input type="range" min="1" max="10" value={data.ratings[cat] || 5} onChange={e => changeRating(cat, e.target.value)} />
+            <input 
+              type="range" 
+              min="1" 
+              max="10" 
+              value={data.ratings[cat] || 5} 
+              onChange={e => changeRating(cat, e.target.value)} 
+              style={{
+                accentColor: "var(--accent-steel)"
+              }}
+            />
             
             {expandedNotes[cat] ? (
               <textarea
@@ -205,7 +215,7 @@ export default function WheelOfLife() {
                 style={{ width: "100%", marginTop: "0.5rem" }}
               />
             ) : (
-              <button onClick={() => toggleNote(cat)} style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--text-secondary)", fontSize: "0.85rem", cursor: "pointer", padding: "0.25rem 0", fontStyle: "italic", opacity: 0.8 }}>
+              <button onClick={() => toggleNote(cat)} style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--ink-light)", fontSize: "0.85rem", cursor: "pointer", padding: "0.25rem 0", fontStyle: "italic" }}>
                 + Add a reflection
               </button>
             )}
