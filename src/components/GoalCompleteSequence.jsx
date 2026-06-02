@@ -71,7 +71,7 @@ export default function GoalCompleteSequence({ result, onClose }) {
       onClick={handleOverlayClick}
       style={{
         position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
-        background: step >= 4 ? "rgba(247,243,236,0.98)" : "rgba(247,243,236,0.92)",
+        background: step >= 4 ? "rgba(250,250,250,0.98)" : "rgba(250,250,250,0.92)",
         backdropFilter: "blur(4px)",
         zIndex: 9999, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         animation: "fadeInUp 0.3s ease-out", transition: "background 0.8s ease"
@@ -80,17 +80,17 @@ export default function GoalCompleteSequence({ result, onClose }) {
       {/* Step 1 & 2: Goal Title & XP */}
       {step < 3 && (
         <div style={{ textAlign: "center", animation: step === 1 ? "fadeInUp 0.5s ease-out" : "none" }}>
-          <h2 style={{ fontSize: "3rem", margin: "0 0 1rem 0", color: "#1a1008", fontFamily: "'Playfair Display', serif" }}>
+          <h2 style={{ fontSize: "3rem", margin: "0 0 1rem 0", color: "#18181b", fontFamily: "'Playfair Display', serif" }}>
             {goal.text}
           </h2>
-          <div style={{ textTransform: "uppercase", color: "rgba(26,16,8,0.5)", letterSpacing: "0.15em", fontSize: "0.9rem", fontWeight: "700" }}>
+          <div style={{ textTransform: "uppercase", color: "rgba(24,24,27,0.5)", letterSpacing: "0.15em", fontSize: "0.9rem", fontWeight: "700" }}>
             Goal Complete
           </div>
           
           {step === 2 && (
             <div style={{
               marginTop: "3rem", fontSize: "2.5rem", fontWeight: "800",
-              color: isBonus ? "#c9a96e" : "#5c7a5c",
+              color: isBonus ? "#d97706" : "#4d7c0f",
               animation: "floatUpAndFade 1.5s ease-out forwards",
               fontFamily: "'Playfair Display', serif"
             }}>
@@ -106,20 +106,20 @@ export default function GoalCompleteSequence({ result, onClose }) {
           <div style={{ fontSize: "5rem", animation: "bounceScale 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)" }}>
             {newChapter.emoji}
           </div>
-          <h2 style={{ fontSize: "2.5rem", margin: "1rem 0 0.5rem 0", color: "#1a1008", fontFamily: "'Playfair Display', serif" }}>
+          <h2 style={{ fontSize: "2.5rem", margin: "1rem 0 0.5rem 0", color: "#18181b", fontFamily: "'Playfair Display', serif" }}>
             Chapter {newChapter.level}: {newChapter.title}
           </h2>
-          <p style={{ color: "rgba(26,16,8,0.6)", fontSize: "1.1rem", fontFamily: "'Inter', sans-serif" }}>A new chapter of your story begins.</p>
+          <p style={{ color: "rgba(24,24,27,0.6)", fontSize: "1.1rem", fontFamily: "'Inter', sans-serif" }}>A new chapter of your story begins.</p>
         </div>
       )}
 
       {/* Step 4: Reflection */}
       {step === 4 && (
         <div style={{ width: "100%", maxWidth: "600px", padding: "2rem", animation: "fadeInUp 0.5s ease-out" }}>
-          <h2 style={{ fontSize: "2rem", margin: "0 0 0.5rem 0", color: "#1a1008", textAlign: "center", fontFamily: "'Playfair Display', serif" }}>
+          <h2 style={{ fontSize: "2rem", margin: "0 0 0.5rem 0", color: "#18181b", textAlign: "center", fontFamily: "'Playfair Display', serif" }}>
             Before you move on...
           </h2>
-          <p style={{ color: "rgba(26,16,8,0.6)", textAlign: "center", marginBottom: "2rem", fontFamily: "'Inter', sans-serif" }}>
+          <p style={{ color: "rgba(24,24,27,0.6)", textAlign: "center", marginBottom: "2rem", fontFamily: "'Inter', sans-serif" }}>
             What did completing this goal teach you?
           </p>
           <textarea
@@ -131,12 +131,12 @@ export default function GoalCompleteSequence({ result, onClose }) {
               width: "100%", 
               fontSize: "1.1rem", 
               marginBottom: "1.5rem",
-              background: "rgba(255,255,255,0.6)",
-              border: "1px solid rgba(26,16,8,0.15)",
+              background: "rgba(255,255,255,0.8)",
+              border: "1px solid rgba(24,24,27,0.15)",
               borderRadius: "4px",
               padding: "16px",
               fontFamily: "'Inter', sans-serif",
-              color: "#1a1008"
+              color: "#18181b"
             }}
             autoFocus
           />
@@ -150,7 +150,7 @@ export default function GoalCompleteSequence({ result, onClose }) {
       {/* Step 5: What's next */}
       {step === 5 && (
         <div style={{ textAlign: "center", animation: "fadeInUp 0.5s ease-out" }}>
-          <h2 style={{ fontSize: "2.5rem", margin: "0 0 2rem 0", color: "#1a1008", fontFamily: "'Playfair Display', serif" }}>
+          <h2 style={{ fontSize: "2.5rem", margin: "0 0 2rem 0", color: "#18181b", fontFamily: "'Playfair Display', serif" }}>
             Ready for your next chapter?
           </h2>
           <button className="btn-primary btn-goals" onClick={() => { onClose(); navigate("/goals"); }} style={{ padding: "1rem 2rem", fontSize: "1.2rem" }}>

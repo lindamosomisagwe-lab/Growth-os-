@@ -69,8 +69,8 @@ export default function Sidebar() {
         >
           <div style={{ fontSize: "18px" }}>🌸</div>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ color: "#f7f3ec", fontWeight: "600", fontSize: "12px" }}>Journal Profile</span>
-            <span style={{ color: "rgba(247,243,236,0.35)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.05em" }}>View Achievements</span>
+            <span style={{ color: "#fafafa", fontWeight: "600", fontSize: "12px" }}>Journal Profile</span>
+            <span style={{ color: "rgba(250,250,250,0.4)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.05em" }}>View Achievements</span>
           </div>
         </NavLink>
       </div>

@@ -77,7 +77,7 @@ export default function Splash({ onComplete }) {
         position: "fixed",
         inset: 0,
         zIndex: 99999,
-        background: "#f7f3ec", // Premium cream background
+        background: "#18181b", // High-contrast charcoal
         display: "grid", 
         placeContent: "center",
         opacity: fade === "in" ? 1 : 0, 
@@ -85,27 +85,28 @@ export default function Splash({ onComplete }) {
         pointerEvents: "none"
       }}
     >
-      <div style={{ width: "90vw", maxWidth: "600px", padding: "2rem", display: "flex", flexDirection: "column", gap: "1rem", textAlign: "center" }}>
-        <h1 style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: isMobile ? "2rem" : "3rem",
-          fontWeight: 700,
-          color: "#1a1008",
-          margin: 0,
-          animation: "fadeInUp 0.8s ease-out"
-        }}>
-          Growth OS
-        </h1>
-        <p style={{
-          fontFamily: "'Inter', sans-serif",
-          fontSize: isMobile ? "1rem" : "1.2rem",
-          fontWeight: 400,
-          color: "rgba(26,16,8,0.6)",
-          margin: 0,
-          animation: "fadeInUp 0.8s ease-out 0.3s both"
-        }}>
-          Ready to plan your life?
-        </p>
+      <div style={{ width: "90vw", maxWidth: "600px", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.5rem", textAlign: "center" }}>
+        <div style={{ width: "100%", height: "165px", display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
+          <VaporizeTextCycle
+            texts={["Growth OS", "Ready to", "plan your", "life?"]}
+            font={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize: isMobile ? "24px" : "36px",
+              fontWeight: 700
+            }}
+            color="#fafafa" // High contrast pure white text
+            spread={3.5}
+            density={6}
+            animation={{
+              vaporizeDuration: 1.0,
+              fadeInDuration: 0.5,
+              waitDuration: 0.6
+            }}
+            direction="left-to-right"
+            alignment="center"
+            tag={Tag.H1}
+          />
+        </div>
       </div>
     </div>
   );
