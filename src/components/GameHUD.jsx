@@ -6,28 +6,21 @@ export default function GameHUD() {
 
   if (!progress) return null;
 
+  // Format date nicely in "Tuesday, June 2" style
+  const formattedDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric'
+  });
+
   return (
-    <div className="game-hud-bar">
-      <div className="hud-chip">
-        <span className="icon">🔥</span>
-        <span className="val">{progress.streak_days}</span>
-        <span className="lbl">streak</span>
+    <div className="hud-container">
+      <div className="hud-chip chip-streak">🔥 {progress.streak_days} streak</div>
+      <div className="hud-chip chip-xp">⚡ {progress.total_xp} XP</div>
+      <div className="hud-chip chip-chapter">📖 Ch.{progress.current_chapter}</div>
+      <div style={{marginLeft:'auto', fontSize:'11px', fontWeight:'500', letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(26,16,8,0.3)', fontFamily: "var(--font-sans)"}}>
+        {formattedDate}
       </div>
-      <div className="hud-chip">
-        <span className="icon">⭐</span>
-        <span className="val">{progress.total_xp}</span>
-        <span className="lbl">XP</span>
-      </div>
-      <div className="hud-chip">
-        <span className="icon">🌸</span>
-        <span className="val">Ch.{progress.current_chapter}</span>
-      </div>
-      {progress.streak_shield_available && (
-        <div className="hud-chip">
-          <span className="icon">🛡️</span>
-          <span className="val" style={{ color: "#F9D423" }}>Ready</span>
-        </div>
-      )}
     </div>
   );
 }

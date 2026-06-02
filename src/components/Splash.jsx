@@ -54,16 +54,15 @@ export default function Splash({ onComplete }) {
     }
   }, []);
 
-  // Automatic cinematic transition timer
+  // Automatic cinematic transition timer adjusted for 4 short text cycles (8.4s total cycle)
   useEffect(() => {
-    // Let the text vaporize cycle complete elegantly (approx 6.0 seconds)
     const fadeTimer = setTimeout(() => {
       setFade("out");
-    }, 6000);
+    }, 8200);
 
     const completeTimer = setTimeout(() => {
       onComplete();
-    }, 6600);
+    }, 8800);
 
     return () => {
       clearTimeout(fadeTimer);
@@ -86,22 +85,23 @@ export default function Splash({ onComplete }) {
         pointerEvents: "none"
       }}
     >
-      <div style={{ maxWidth: "600px", width: "100%", padding: "2rem", display: "flex", flexDirection: "column", gap: "2rem", textAlign: "center" }}>
-        <div style={{ width: "100%", height: "140px", display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
+      <div style={{ width: "90vw", maxWidth: "600px", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.5rem", textAlign: "center" }}>
+        {/* Height increased to 165px to prevent particles cropping at the boundaries */}
+        <div style={{ width: "100%", height: "165px", display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
           <VaporizeTextCycle
-            texts={["Growth OS", "Ready to plan your life?"]}
+            texts={["Growth OS", "Ready to", "plan your", "life?"]}
             font={{
               fontFamily: "'Playfair Display', Georgia, serif",
-              fontSize: isMobile ? "28px" : "44px",
+              fontSize: isMobile ? "24px" : "36px", // Reduced sizing to prevent clipping
               fontWeight: 700
             }}
             color="rgb(247, 243, 236)" // Warm Moleskine cream text
-            spread={4}
+            spread={3.5}
             density={6}
             animation={{
-              vaporizeDuration: 2.0,
-              fadeInDuration: 1.0,
-              waitDuration: 1.0
+              vaporizeDuration: 1.0, // Snappier transitions for multiple word cycles
+              fadeInDuration: 0.5,
+              waitDuration: 0.6
             }}
             direction="left-to-right"
             alignment="center"

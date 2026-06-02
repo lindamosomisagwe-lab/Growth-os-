@@ -37,11 +37,11 @@ function DailyChest({ awardXP, triggerToast }) {
   if (opened) return null;
 
   return (
-    <div className="nb-card home" style={{ padding: "20px", textAlign: "center", cursor: "pointer", marginBottom: "1.5rem" }} onClick={openChest}>
-      <div style={{ fontSize: "3rem", animation: animating ? "chestShimmer 0.6s forwards" : "pulse 2s infinite" }}>
+    <div className="nb-card home daily-reward-card" style={{ cursor: "pointer" }} onClick={openChest}>
+      <span className="gift-emoji" style={{ animation: animating ? "chestShimmer 0.6s forwards" : "none" }}>
         {animating ? "✨" : "🎁"}
-      </div>
-      <h3 className="card-title" style={{ margin: "10px 0 4px", fontSize: "16px", fontWeight: "700" }}>Daily Reward Available</h3>
+      </span>
+      <h3 className="card-title" style={{ margin: "10px 0 4px", fontSize: "16px", fontWeight: "700" }}>Daily Reward</h3>
       <p className="card-body" style={{ margin: 0, fontSize: "13px" }}>Tap to claim your daily XP stamp</p>
       <div className="card-annotation">expires tonight</div>
     </div>
@@ -100,7 +100,6 @@ export default function Dashboard() {
   const wheelCategories = Object.keys(ratings);
   const averageRating = wheelCategories.length ? (wheelCategories.reduce((sum, cat) => sum + (ratings[cat] || 0), 0) / wheelCategories.length).toFixed(1) : "—";
   const wheelPercent = averageRating !== "—" ? Math.round((parseFloat(averageRating) / 10) * 100) : 0;
-  const wheelCirc = 125.6;
 
   const todayLog = (state.dailyLogs || []).find(l => l.date === todayRaw);
   const hasLoggedToday = !!todayLog;
@@ -189,8 +188,16 @@ export default function Dashboard() {
   }
   const daysSinceLastVault = lastVaultDate ? Math.floor((new Date() - lastVaultDate) / (1000 * 60 * 60 * 24)) : 0;
 
+  // Render Time period suffix for header
+  const getDayPeriodSuffix = () => {
+    if (hr >= 5 && hr < 12) return "Morning";
+    if (hr >= 12 && hr < 17) return "Afternoon";
+    if (hr >= 17 && hr < 21) return "Evening";
+    return "Night";
+  };
+
   return (
-    <div style={{ color: "var(--ink-dark)", maxWidth: "850px", margin: "0 auto", paddingBottom: "4rem" }}>
+    <div className="home-content" style={{ color: "var(--ink-dark)", paddingBottom: "4rem" }}>
       
       {/* Header Widget */}
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1rem", position: "relative" }}>
@@ -207,138 +214,133 @@ export default function Dashboard() {
         )}
       </div>
 
-      <DailyChest awardXP={awardXP} triggerToast={triggerToast} />
-
-      {/* Hero Greeting */}
-      <div style={{ padding: "1.5rem 0", marginBottom: "1rem" }}>
-        <div className="page-date">{todayStr}</div>
-        <h1 className="home-greeting">{finalGreeting}</h1>
+      {/* Greeting Heading (Positioned above the grid) */}
+      <div style={{ padding: "1rem 0", marginBottom: "0.5rem" }}>
+        <div className="page-date">{todayStr} · {getDayPeriodSuffix()}</div>
+        <h1 className="page-title page-greeting">{finalGreeting}</h1>
         <div className="page-rule" />
       </div>
 
       <WeeklyRecap />
 
-      {/* Home structured grid */}
-      <div className="home-grid" style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: "16px", padding: 0 }}>
-        {/* Row 1: Today's Focus (Full-width / Left side) */}
-        <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
-          <div className="nb-card home" style={{ padding: "24px", minHeight: "180px" }}>
-            <div className="card-eyebrow">⚔️ Today's Quest</div>
-            {pinnedTask ? (
-              <>
-                <h2 className="card-title" style={{ fontSize: "22px", marginBottom: "6px" }}>
-                  {pinnedTask.title}
-                </h2>
-                <p className="card-body" style={{ marginBottom: "18px", color: "var(--ink-light)" }}>
-                  Part of: {pinnedGoal.title}
-                </p>
-                <div style={{ display: "flex", gap: "10px", position: "relative" }}>
-                  {doneAnim && (
-                    <div className="xp-float" style={{ top: "-30px", left: "20px" }}>
-                      +10 XP
-                    </div>
-                  )}
-                  <button 
-                    onClick={() => handleTaskAction('done')} 
-                    className="btn-gold"
-                    style={{ border: "none", outline: "none" }}
-                    disabled={doneAnim}
-                  >
-                    {doneAnim ? "✓ Stamped" : "✓ Done"}
-                  </button>
-                  <button onClick={() => handleTaskAction('tomorrow')} className="btn-secondary">
-                    ↷ Tomorrow
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <h2 className="card-body" style={{ fontSize: "15px", fontStyle: "italic", marginBottom: "12px", color: "var(--ink-light)" }}>
-                  No active quests right now. Write one down on your goals map.
-                </h2>
-                <Link to="/goals" className="btn-secondary" style={{ display: "inline-block", textDecoration: "none" }}>
-                  View Goals Map →
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Row 2: Life Balance Card & Daily Reward Side by Side (or stacked on mobile) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <Link to="/wheel" className="nb-card balance" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "16px", flex: 1 }}>
-            <div style={{ position: "relative", width: "50px", height: "50px", flexShrink: 0 }}>
-              <svg width="50" height="50" className="progress-ring">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="var(--ink-faint)" strokeWidth="4" />
-                <circle cx="25" cy="25" r="20" fill="none" stroke="var(--accent-steel)" strokeWidth="4" strokeDasharray={`${(wheelPercent / 100) * 125.6} 125.6`} strokeLinecap="round" className="progress-ring__circle" />
-              </svg>
-              <div className="card-title" style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "14px", fontWeight: "800", margin: 0 }}>
-                {averageRating}
-              </div>
-            </div>
-            <div>
-              <div className="card-eyebrow" style={{ margin: 0 }}>Balance</div>
-              <div className="card-title" style={{ fontSize: "15px", margin: 0 }}>Wheel of Life</div>
-            </div>
-          </Link>
-        </div>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          <Link to="/log" className="nb-card today" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "16px", flex: 1 }}>
-            <div style={{ position: "relative", width: "50px", height: "50px", flexShrink: 0 }}>
-              <svg width="50" height="50" className="progress-ring">
-                <circle cx="25" cy="25" r="20" fill="none" stroke="var(--ink-faint)" strokeWidth="4" />
-                <circle cx="25" cy="25" r="20" fill="none" stroke={hasLoggedToday ? "var(--accent-sage)" : "var(--ink-faint)"} strokeWidth="4" strokeDasharray={hasLoggedToday ? "125.6 125.6" : "0 125.6"} strokeLinecap="round" className="progress-ring__circle" />
-              </svg>
-              <div className="card-title" style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "15px", margin: 0 }}>
-                {hasLoggedToday ? "✓" : "📋"}
-              </div>
-            </div>
-            <div>
-              <div className="card-eyebrow" style={{ margin: 0 }}>Today</div>
-              <div className="card-title" style={{ fontSize: "15px", margin: 0 }}>{hasLoggedToday ? "Logged" : "Not yet logged"}</div>
-            </div>
-          </Link>
-        </div>
-
-        {/* Row 3: Weekly mood strip (ruled style) */}
-        <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
-          <div className="nb-card today" style={{ padding: "20px" }}>
-            <div className="card-eyebrow">📅 Weekly mood strip</div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0" }}>
-              {weekLogs.map((day, i) => {
-                const isToday = day.date === todayRaw;
-                return (
-                  <div key={i} onClick={() => { if(day.log || isToday) navigate('/log') }} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", cursor: (day.log || isToday) ? "pointer" : "default" }}>
-                    <div style={{ fontSize: "11px", fontWeight: isToday ? "700" : "500", color: isToday ? "var(--ink-dark)" : "var(--ink-light)" }}>
-                      {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}
-                    </div>
-                    <div style={{ 
-                      width: "32px", height: "32px", borderRadius: "50%", 
-                      background: day.emoji ? "var(--page-cream)" : "transparent",
-                      border: day.emoji ? "1.5px solid var(--accent-sage)" : "1.5px solid var(--ink-faint)",
-                      display: "grid", placeContent: "center", fontSize: "16px",
-                    }}>
-                      {day.emoji ? day.emoji : "•"}
-                    </div>
+      {/* Home Page Grid Layout */}
+      <div className={isMobile ? "home-grid-mobile" : "home-grid"} style={isMobile ? { display: "flex", flexDirection: "column", gap: "16px" } : undefined}>
+        
+        {/* Card 1: Today's Quest (card-focus spans full-width) */}
+        <div className="nb-card home card-focus" style={{ minHeight: "180px" }}>
+          <div className="card-eyebrow">⚔️ Today's Quest</div>
+          {pinnedTask ? (
+            <>
+              <h2 className="card-title" style={{ fontSize: "22px", marginBottom: "6px" }}>
+                {pinnedTask.title}
+              </h2>
+              <p className="card-body" style={{ marginBottom: "18px", color: "var(--ink-light)" }}>
+                Part of: {pinnedGoal.title}
+              </p>
+              <div style={{ display: "flex", gap: "10px", position: "relative" }}>
+                {doneAnim && (
+                  <div className="xp-float" style={{ top: "-30px", left: "20px" }}>
+                    +10 XP
                   </div>
-                )
-              })}
+                )}
+                <button 
+                  onClick={() => handleTaskAction('done')} 
+                  className="btn-gold"
+                  style={{ border: "none", outline: "none" }}
+                  disabled={doneAnim}
+                >
+                  {doneAnim ? "✓ Stamped" : "✓ Done"}
+                </button>
+                <button onClick={() => handleTaskAction('tomorrow')} className="btn-secondary">
+                  ↷ Tomorrow
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="card-body" style={{ fontSize: "15px", fontStyle: "italic", marginBottom: "12px", color: "var(--ink-light)" }}>
+                No active quests right now. Write one down on your goals map.
+              </h2>
+              <Link to="/goals" className="btn-secondary" style={{ display: "inline-block", textDecoration: "none" }}>
+                View Goals Map →
+              </Link>
+            </>
+          )}
+        </div>
+
+        {/* Card 2: Life Balance (Wheel of Life Link) */}
+        <Link to="/wheel" className="nb-card balance" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ position: "relative", width: "50px", height: "50px", flexShrink: 0 }}>
+            <svg width="50" height="50" className="progress-ring">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="var(--ink-faint)" strokeWidth="4" />
+              <circle cx="25" cy="25" r="20" fill="none" stroke="var(--accent-steel)" strokeWidth="4" strokeDasharray={`${(wheelPercent / 100) * 125.6} 125.6`} strokeLinecap="round" className="progress-ring__circle" />
+            </svg>
+            <div className="card-title" style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "14px", fontWeight: "800", margin: 0 }}>
+              {averageRating}
             </div>
+          </div>
+          <div>
+            <div className="card-eyebrow" style={{ margin: 0 }}>Balance</div>
+            <div className="card-title" style={{ fontSize: "15px", margin: 0 }}>Wheel of Life</div>
+          </div>
+        </Link>
+
+        {/* Card 3: Today log check-in */}
+        <Link to="/log" className="nb-card today" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ position: "relative", width: "50px", height: "50px", flexShrink: 0 }}>
+            <svg width="50" height="50" className="progress-ring">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="var(--ink-faint)" strokeWidth="4" />
+              <circle cx="25" cy="25" r="20" fill="none" stroke={hasLoggedToday ? "var(--accent-sage)" : "var(--ink-faint)"} strokeWidth="4" strokeDasharray={hasLoggedToday ? "125.6 125.6" : "0 125.6"} strokeLinecap="round" className="progress-ring__circle" />
+            </svg>
+            <div className="card-title" style={{ position: "absolute", inset: 0, display: "grid", placeContent: "center", fontSize: "15px", margin: 0 }}>
+              {hasLoggedToday ? "✓" : "📋"}
+            </div>
+          </div>
+          <div>
+            <div className="card-eyebrow" style={{ margin: 0 }}>Today</div>
+            <div className="card-title" style={{ fontSize: "15px", margin: 0 }}>{hasLoggedToday ? "Logged Check-in" : "Not yet logged"}</div>
+          </div>
+        </Link>
+
+        {/* Card 4: Daily Chest Reward (Sits in grid as normal card) */}
+        <DailyChest awardXP={awardXP} triggerToast={triggerToast} />
+
+        {/* Card 5: Weekly mood strip (card-week spans full-width) */}
+        <div className="nb-card today card-week" style={{ padding: "20px" }}>
+          <div className="card-eyebrow">📅 Weekly mood strip</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0" }}>
+            {weekLogs.map((day, i) => {
+              const isToday = day.date === todayRaw;
+              return (
+                <div key={i} onClick={() => { if(day.log || isToday) navigate('/log') }} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", cursor: (day.log || isToday) ? "pointer" : "default" }}>
+                  <div style={{ fontSize: "11px", fontWeight: isToday ? "700" : "500", color: isToday ? "var(--ink-dark)" : "var(--ink-light)" }}>
+                    {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][i]}
+                  </div>
+                  <div style={{ 
+                    width: "32px", height: "32px", borderRadius: "50%", 
+                    background: day.emoji ? "var(--page-cream)" : "transparent",
+                    border: day.emoji ? "1.5px solid var(--accent-sage)" : "1.5px solid var(--ink-faint)",
+                    display: "grid", placeContent: "center", fontSize: "16px",
+                  }}>
+                    {day.emoji ? day.emoji : "•"}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
 
-        {/* Row 4: Vault nudge */}
-        <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
+        {/* Card 6: Vault nudge (spans full-width) */}
+        <div className={isMobile ? "" : "card-week"}>
           {daysUntilCapsule !== null && daysUntilCapsule <= 30 ? (
-            <Link to="/vault" className="nb-card vault" style={{ padding: "16px", textDecoration: "none", display: "flex", alignItems: "center", gap: "12px" }}>
+            <Link to="/vault" className="nb-card vault" style={{ padding: "16px", textDecoration: "none", display: "flex", alignItems: "center", gap: "12px", width: "100%" }}>
               <span style={{ fontSize: "24px" }}>💌</span>
               <p className="card-body" style={{ margin: 0 }}>
                 A letter from your past self unlocks in <strong style={{ color: "var(--accent-plum)" }}>{daysUntilCapsule} days</strong>.
               </p>
             </Link>
           ) : (
-            <Link to="/vault" className="nb-card vault" style={{ padding: "16px", textDecoration: "none", display: "flex", alignItems: "center", gap: "12px" }}>
+            <Link to="/vault" className="nb-card vault" style={{ padding: "16px", textDecoration: "none", display: "flex", alignItems: "center", gap: "12px", width: "100%" }}>
               <span style={{ fontSize: "24px" }}>💌</span>
               <p className="card-body" style={{ margin: 0, fontStyle: "normal" }}>
                 It's been {daysSinceLastVault} days since your last letter. Write to your future self?
@@ -346,6 +348,7 @@ export default function Dashboard() {
             </Link>
           )}
         </div>
+
       </div>
       {toast.show && <div className="toast-notification">{toast.message}</div>}
     </div>
