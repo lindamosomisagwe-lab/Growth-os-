@@ -13,8 +13,6 @@ const coreLinks = [
 export default function Sidebar() {
   const { progress } = useGamification();
   
-  if (!progress) return <aside className="sidebar"></aside>;
-
   return (
     <aside className="sidebar">
       {/* Brand Header */}
@@ -39,17 +37,19 @@ export default function Sidebar() {
 
       {/* Cursive Stats & Profile Link at bottom */}
       <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
-        <div className="sidebar-stats">
-          <div className="sidebar-stat">
-            📖 Chapter <strong>{progress.current_chapter}</strong>
+        {progress && (
+          <div className="sidebar-stats">
+            <div className="sidebar-stat">
+              📖 Chapter <strong>{progress.current_chapter}</strong>
+            </div>
+            <div className="sidebar-stat">
+              ⚡ Stamped <strong>{progress.total_xp} XP</strong>
+            </div>
+            <div className="sidebar-stat">
+              🔥 Day Streak: <strong>{progress.streak_days} days</strong>
+            </div>
           </div>
-          <div className="sidebar-stat">
-            ⚡ Stamped <strong>{progress.total_xp} XP</strong>
-          </div>
-          <div className="sidebar-stat">
-            🔥 Day Streak: <strong>{progress.streak_days} days</strong>
-          </div>
-        </div>
+        )}
 
         <NavLink 
           to="/profile" 
