@@ -115,6 +115,346 @@ const LIFE_AREA_STYLES = {
 
 function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
 
+function GoalHierarchy({ 
+  goal, 
+  activeAreaStyle, 
+  toggleSubgoalDone, 
+  toggleTaskDone, 
+  addSubgoal, 
+  addTask 
+}) {
+  const [expandedSubgoals, setExpandedSubgoals] = useState({});
+  const [addingSubgoal, setAddingSubgoal] = useState(false);
+  const [addingTaskFor, setAddingTaskFor] = useState(null);
+  const [newSubgoalTitle, setNewSubgoalTitle] = useState('');
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+
+  const toggleSubgoal = (id) => {
+    setExpandedSubgoals(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const accentColor = activeAreaStyle.borderColor || '#8b3a2a';
+  const rgbValues = activeAreaStyle.rgbValues || '139,58,42';
+
+  return (
+    <div style={{ marginBottom: '20px' }}>
+      {/* Section header */}
+      <div style={{
+        fontFamily: "'Inter', sans-serif",
+        fontSize: '10px',
+        fontWeight: '600',
+        letterSpacing: '0.1em',
+        textTransform: 'uppercase',
+        color: 'rgba(26,16,8,0.35)',
+        marginBottom: '12px'
+      }}>
+        Sub-goals & Tasks
+      </div>
+
+      {/* Sub-goals list */}
+      {(goal.subgoals || goal.steps || []).length === 0 && !addingSubgoal ? (
+        <div style={{ fontSize: '13px', color: 'rgba(26,16,8,0.35)', fontStyle: 'italic', padding: '4px 0', marginBottom: '10px' }}>
+          No outline added yet. Append one below.
+        </div>
+      ) : (
+        (goal.subgoals || goal.steps || []).map((subgoal) => (
+          <div key={subgoal.id} style={{ marginBottom: '6px' }}>
+            {/* Sub-goal row */}
+            <div
+              onClick={() => toggleSubgoal(subgoal.id)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '10px 12px',
+                background: expandedSubgoals[subgoal.id]
+                  ? `rgba(${rgbValues}, 0.06)`
+                  : 'rgba(26,16,8,0.02)',
+                borderRadius: '6px',
+                border: '1px solid rgba(26,16,8,0.07)',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+                userSelect: 'none'
+              }}
+            >
+              {/* Subgoal completion circle */}
+              <div style={{
+                width: '18px', height: '18px',
+                borderRadius: '50%',
+                border: `2px solid ${(subgoal.done || subgoal.completed) ? accentColor : 'rgba(26,16,8,0.2)'}`,
+                background: (subgoal.done || subgoal.completed) ? accentColor : 'transparent',
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+                color: 'white',
+                fontWeight: '700'
+              }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleSubgoalDone(goal.id, subgoal.id);
+                }}
+              >
+                {(subgoal.done || subgoal.completed) ? '✓' : ''}
+              </div>
+
+              {/* Subgoal title */}
+              <span style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '13px',
+                fontWeight: '500',
+                color: (subgoal.done || subgoal.completed) ? 'rgba(26,16,8,0.3)' : 'rgba(26,16,8,0.8)',
+                textDecoration: (subgoal.done || subgoal.completed) ? 'line-through' : 'none',
+                flex: 1
+              }}>
+                {subgoal.title}
+              </span>
+
+              {/* Task count badge */}
+              <span style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '10px',
+                fontWeight: '600',
+                color: 'rgba(26,16,8,0.35)',
+                background: 'rgba(26,16,8,0.06)',
+                padding: '2px 7px',
+                borderRadius: '999px'
+              }}>
+                {(subgoal.tasks || []).filter(t => t.done || t.completed).length || 0}/{(subgoal.tasks || []).length || 0}
+              </span>
+
+              {/* Expand chevron */}
+              <span style={{
+                fontSize: '12px',
+                color: 'rgba(26,16,8,0.3)',
+                transform: expandedSubgoals[subgoal.id] ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }}>▾</span>
+            </div>
+
+            {/* Tasks — shown when subgoal is expanded */}
+            {expandedSubgoals[subgoal.id] && (
+              <div style={{
+                marginLeft: '28px',
+                marginTop: '4px',
+                borderLeft: `2px solid rgba(${rgbValues}, 0.2)`,
+                paddingLeft: '12px',
+                paddingBottom: '4px'
+              }}>
+                {(subgoal.tasks || []).map(task => (
+                  <div
+                    key={task.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px 0',
+                      borderBottom: '1px solid rgba(26,16,8,0.05)'
+                    }}
+                  >
+                    {/* Task checkbox */}
+                    <div
+                      onClick={() => toggleTaskDone(goal.id, subgoal.id, task.id)}
+                      style={{
+                        width: '16px', height: '16px',
+                        borderRadius: '3px',
+                        border: `1.5px solid ${(task.done || task.completed) ? accentColor : 'rgba(26,16,8,0.2)'}`,
+                        background: (task.done || task.completed) ? accentColor : 'transparent',
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '9px',
+                        color: 'white',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {(task.done || task.completed) ? '✓' : ''}
+                    </div>
+
+                    {/* Task title */}
+                    <span style={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: '13px',
+                      color: (task.done || task.completed) ? 'rgba(26,16,8,0.3)' : 'rgba(26,16,8,0.7)',
+                      textDecoration: (task.done || task.completed) ? 'line-through' : 'none',
+                      flex: 1
+                    }}>
+                      {task.title}
+                    </span>
+
+                    {/* XP reward preview */}
+                    <span style={{
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: '10px',
+                      color: '#c9a96e',
+                      fontWeight: '600'
+                    }}>
+                      +10 XP
+                    </span>
+                  </div>
+                ))}
+
+                {/* Add task input */}
+                {addingTaskFor === subgoal.id ? (
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    paddingTop: '8px',
+                    alignItems: 'center'
+                  }}>
+                    <input
+                      autoFocus
+                      value={newTaskTitle}
+                      onChange={e => setNewTaskTitle(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && newTaskTitle.trim()) {
+                          addTask(goal.id, subgoal.id, newTaskTitle.trim());
+                          setNewTaskTitle('');
+                          setAddingTaskFor(null);
+                        }
+                        if (e.key === 'Escape') {
+                          setAddingTaskFor(null);
+                          setNewTaskTitle('');
+                        }
+                      }}
+                      placeholder="Task name... (Enter to save)"
+                      style={{
+                        flex: 1,
+                        fontFamily: "'Inter', sans-serif",
+                        fontSize: '13px',
+                        padding: '6px 10px',
+                        border: `1.5px solid ${accentColor}`,
+                        borderRadius: '4px',
+                        outline: 'none',
+                        background: 'white',
+                        color: '#1a1008'
+                      }}
+                    />
+                    <button
+                      onClick={() => setAddingTaskFor(null)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'rgba(26,16,8,0.35)',
+                        fontSize: '16px'
+                      }}
+                    >✕</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setAddingTaskFor(subgoal.id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginTop: '6px',
+                      padding: '6px 0',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      color: accentColor,
+                      opacity: 0.7
+                    }}
+                  >
+                    + Add task
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ))
+      )}
+
+      {/* Add sub-goal */}
+      {addingSubgoal ? (
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          marginTop: '8px',
+          alignItems: 'center'
+        }}>
+          <input
+            autoFocus
+            value={newSubgoalTitle}
+            onChange={e => setNewSubgoalTitle(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && newSubgoalTitle.trim()) {
+                addSubgoal(goal.id, newSubgoalTitle.trim());
+                setNewSubgoalTitle('');
+                setAddingSubgoal(false);
+              }
+              if (e.key === 'Escape') {
+                setAddingSubgoal(false);
+                setNewSubgoalTitle('');
+              }
+            }}
+            placeholder="Sub-goal name... (Enter to save)"
+            style={{
+              flex: 1,
+              fontFamily: "'Inter', sans-serif",
+              fontSize: '13px',
+              padding: '8px 12px',
+              border: `1.5px solid ${accentColor}`,
+              borderRadius: '6px',
+              outline: 'none',
+              background: 'white',
+              color: '#1a1008'
+            }}
+          />
+          <button
+            onClick={() => setAddingSubgoal(false)}
+            style={{
+              background: 'none', border: 'none',
+              cursor: 'pointer',
+              color: 'rgba(26,16,8,0.35)',
+              fontSize: '18px'
+            }}
+          >✕</button>
+        </div>
+      ) : (
+        <button
+          onClick={() => setAddingSubgoal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginTop: '10px',
+            padding: '10px 14px',
+            width: '100%',
+            background: 'rgba(26,16,8,0.02)',
+            border: '1.5px dashed rgba(26,16,8,0.15)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: '13px',
+            fontWeight: '500',
+            color: 'rgba(26,16,8,0.45)',
+            transition: 'all 0.15s ease'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = accentColor;
+            e.currentTarget.style.color = accentColor;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'rgba(26,16,8,0.15)';
+            e.currentTarget.style.color = 'rgba(26,16,8,0.45)';
+          }}
+        >
+          + Add sub-goal
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function Goals() {
   const { awardXP } = useGamification();
   const [epicSequence, setEpicSequence] = useState(null);
@@ -211,14 +551,38 @@ export default function Goals() {
 
   const triggerToast = (msg) => setToast({ show: true, message: msg });
 
-  // Add step to active goal
-  const addStep = (goalId) => {
-    const title = prompt("Enter step title:");
+  // Add sub-goal to a goal
+  const addSubgoal = (goalId, title) => {
     if (!title || !title.trim()) return;
     setGoals(prev => prev.map(g => g.id === goalId ? {
       ...g,
-      subgoals: [...(g.subgoals || []), { id: Date.now(), title: title.trim(), completed: false, tasks: [] }]
+      subgoals: [...(g.subgoals || []), {
+        id: Date.now(),
+        title: title.trim(),
+        completed: false,
+        done: false,
+        tasks: []
+      }]
     } : g));
+    triggerToast(`Sub-goal '${title}' added.`);
+  };
+
+  // Add task to a sub-goal
+  const addTask = (goalId, subgoalId, title) => {
+    if (!title || !title.trim()) return;
+    setGoals(prev => prev.map(g => g.id === goalId ? {
+      ...g,
+      subgoals: (g.subgoals || []).map(s => s.id === subgoalId ? {
+        ...s,
+        tasks: [...(s.tasks || []), {
+          id: Date.now(),
+          title: title.trim(),
+          completed: false,
+          done: false
+        }]
+      } : s)
+    } : g));
+    triggerToast(`Task '${title}' added.`);
   };
 
   // Toggle overall goal completion
@@ -240,26 +604,60 @@ export default function Goals() {
     }
   };
   
-  // Toggle step completion
-  const toggleStep = async (goalId, stepId) => {
+  // Toggle sub-goal completion
+  const toggleSubgoalDone = async (goalId, subgoalId) => {
     let isCompleting = false;
-    let targetStep;
+    let targetSubgoal;
     setGoals(prev => prev.map(g => g.id === goalId ? {
       ...g,
       subgoals: g.subgoals.map(s => {
-        if (s.id === stepId) {
+        if (s.id === subgoalId) {
           isCompleting = !s.completed;
-          targetStep = s;
-          return { ...s, completed: !s.completed };
+          targetSubgoal = s;
+          const newDone = !s.completed;
+          return { ...s, completed: newDone, done: newDone };
         }
         return s;
       })
     } : g));
 
     if (isCompleting) {
-      const res = await awardXP(`step_complete_${stepId}`);
+      const res = await awardXP(`subgoal_complete_${subgoalId}`);
       if (res && res.xpAwarded > 0) {
-        triggerToast(`🎯 Step complete — ${targetStep?.title} (+${res.xpAwarded} XP)`);
+        triggerToast(`🎯 Sub-goal complete — ${targetSubgoal?.title} (+${res.xpAwarded} XP)`);
+      }
+    }
+  };
+
+  // Toggle task completion
+  const toggleTaskDone = async (goalId, subgoalId, taskId) => {
+    let isCompleting = false;
+    let targetTask;
+    setGoals(prev => prev.map(g => g.id === goalId ? {
+      ...g,
+      subgoals: g.subgoals.map(s => {
+        if (s.id === subgoalId) {
+          return {
+            ...s,
+            tasks: (s.tasks || []).map(t => {
+              if (t.id === taskId) {
+                isCompleting = !t.completed;
+                targetTask = t;
+                const newDone = !t.completed;
+                return { ...t, completed: newDone, done: newDone };
+              }
+              return t;
+            })
+          };
+        }
+        return s;
+      })
+    } : g));
+
+    if (isCompleting) {
+      const res = await awardXP(`task_complete_${taskId}`);
+      if (res && res.xpAwarded > 0) {
+        triggerToast(`✓ Task complete — ${targetTask?.title} (+${res.xpAwarded} XP)`);
       }
     }
   };
@@ -419,6 +817,14 @@ export default function Goals() {
         @keyframes fadeUp {
           from { transform: translate(-50%, 15px); opacity: 0; }
           to   { transform: translate(-50%, 0); opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to   { transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 0.4; }
+          50%       { transform: scale(1.1); opacity: 0.2; }
         }
         .goals-page-bg {
           background-color: #f8f3f1;
@@ -602,60 +1008,116 @@ export default function Goals() {
                     transition: "transform 0.1s linear, opacity 0.3s ease"
                   }}
                 >
-                  {/* Ink stamp element */}
+                  {/* Planet Node */}
                   <div
-                    className={`rounded-full flex items-center justify-center transition-all duration-300 ${isExpanded ? 'scale-125 planet-ring-anim' : ''}`}
                     style={{
-                      width: `${nodeSize}px`,
-                      height: `${nodeSize}px`,
-                      background: isExpanded 
-                        ? areaStyle.color 
-                        : (isRelated ? `rgba(${areaStyle.rgbValues}, 0.18)` : '#ffffff'),
-                      border: `2px solid ${isExpanded ? '#1a1008' : areaStyle.color}`,
-                      boxShadow: isExpanded 
-                        ? '0 4px 14px rgba(26,16,8,0.18)' 
-                        : '0 2px 6px rgba(26,16,8,0.06)',
-                      opacity: opacity,
-                      position: 'relative'
+                      width: item.status === 'completed' ? '72px' : '64px',
+                      height: item.status === 'completed' ? '72px' : '64px',
+                      borderRadius: '50%',
+                      background: item.status === 'completed'
+                        ? areaStyle.borderColor || '#8b3a2a'
+                        : '#f7f3ec',
+                      border: `2px solid ${areaStyle.borderColor || '#8b3a2a'}`,
+                      boxShadow: isExpanded
+                        ? `0 0 0 4px rgba(${areaStyle.rgbValues || '139,58,42'}, 0.15), 0 8px 24px rgba(0,0,0,0.12)`
+                        : `0 2px 8px rgba(0,0,0,0.1)`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+                      transform: isExpanded ? 'scale(1.15)' : 'scale(1)',
+                      position: 'relative',
+                      opacity: opacity
                     }}
                   >
-                    <span style={{ 
-                      fontSize: isExpanded ? '24px' : '20px', 
-                      transition: 'font-size 0.3s',
-                      filter: isExpanded ? 'none' : 'grayscale(0.15)'
-                    }}>
-                      {item.icon}
-                    </span>
+                    {/* Life area emoji */}
+                    <div style={{ fontSize: '22px', lineHeight: 1 }}>
+                      {areaStyle.icon || '🎯'}
+                    </div>
+
+                    {/* Completion tick for completed goals */}
+                    {item.status === 'completed' && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '-4px', right: '-4px',
+                        width: '18px', height: '18px',
+                        borderRadius: '50%',
+                        background: '#5c7a5c',
+                        border: '2px solid #f7f3ec',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '10px',
+                        color: 'white',
+                        fontWeight: '700'
+                      }}>✓</div>
+                    )}
+
+                    {/* Active pulse ring */}
+                    {item.status === 'in-progress' && (
+                      <div style={{
+                        position: 'absolute',
+                        inset: '-6px',
+                        borderRadius: '50%',
+                        border: `1.5px solid ${areaStyle.borderColor || '#8b3a2a'}`,
+                        opacity: 0.4,
+                        animation: 'pulse 2s ease infinite'
+                      }}/>
+                    )}
                   </div>
 
-                  {/* Serif title underneath */}
+                  {/* Goal title below node — always visible */}
                   <div style={{
-                    color: isExpanded ? 'var(--ink-dark)' : 'var(--ink-medium)',
-                    fontFamily: 'var(--font-serif)',
-                    fontSize: '12px',
-                    fontWeight: isExpanded ? '700' : '600',
-                    marginTop: '10px',
+                    position: 'absolute',
+                    top: '100%',
+                    marginTop: '8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    whiteSpace: 'nowrap',
+                    fontFamily: "'Inter', sans-serif",
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#1a1008',
+                    letterSpacing: '0.02em',
+                    textShadow: '0 1px 3px rgba(247,243,236,0.9), 0 0 8px rgba(247,243,236,1)',
+                    maxWidth: '90px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
                     textAlign: 'center',
-                    maxWidth: '96px',
-                    letterSpacing: '0.01em',
-                    opacity: opacity,
-                    transition: 'all 0.3s ease'
+                    opacity: opacity
                   }}>
                     {item.title}
                   </div>
 
-                  {/* Cursive progress percentage */}
-                  <div style={{
-                    color: areaStyle.color,
-                    fontFamily: "var(--font-cursive)",
-                    fontSize: '14px',
-                    marginTop: '-2px',
-                    textAlign: 'center',
-                    opacity: opacity,
-                    transition: 'all 0.3s ease'
+                  {/* Progress arc — thin ring around node */}
+                  <svg style={{
+                    position: 'absolute',
+                    inset: '-6px',
+                    width: 'calc(100% + 12px)',
+                    height: 'calc(100% + 12px)',
+                    transform: 'rotate(-90deg)',
+                    pointerEvents: 'none'
                   }}>
-                    {item.energy}%
-                  </div>
+                    <circle
+                      cx="50%" cy="50%"
+                      r="45%"
+                      fill="none"
+                      stroke="rgba(26,16,8,0.08)"
+                      strokeWidth="3"
+                    />
+                    <circle
+                      cx="50%" cy="50%"
+                      r="45%"
+                      fill="none"
+                      stroke={areaStyle.borderColor || '#8b3a2a'}
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray={`${item.energy * 2.83} 283`}
+                      opacity="0.7"
+                    />
+                  </svg>
                 </div>
               );
             })}
@@ -687,125 +1149,207 @@ export default function Goals() {
         +
       </button>
 
-      {/* ── Popup Details Notebook Card ── */}
+      {/* Backdrop when card is open */}
+      {activeNodeId && (
+        <div
+          onClick={() => {
+            setActiveNodeId(null);
+            setAutoRotate(true);
+          }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(26,16,8,0.3)',
+            zIndex: 499,
+            backdropFilter: 'blur(2px)',
+            WebkitBackdropFilter: 'blur(2px)'
+          }}
+        />
+      )}
+
+      {/* ── Expanded Bottom Sheet Details Card ── */}
       {activeNodeId && activeItem && activeAreaStyle && (
         <div style={{
-          position: isMobile ? 'fixed' : 'absolute',
-          top: isMobile ? 'auto' : '80px',
-          bottom: isMobile ? '0' : 'auto',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: isMobile ? '100%' : '330px',
-          maxWidth: '420px',
+          position: 'fixed',
+          bottom: 0,
+          left: isMobile ? 0 : '220px', /* account for sidebar */
+          right: 0,
           background: '#ffffff',
-          border: `1px solid var(--ink-faint)`,
-          borderTop: `4px solid ${activeAreaStyle.borderColor}`,
-          borderRadius: isMobile ? '16px 16px 0 0' : '6px',
-          padding: '22px',
-          boxShadow: `0 16px 36px rgba(26,16,8,0.12), 0 0 15px rgba(${activeAreaStyle.rgbValues}, 0.08)`,
-          zIndex: 300,
-          animation: 'fadeUp 0.25s cubic-bezier(0.34,1.56,0.64,1) both'
+          borderRadius: '20px 20px 0 0',
+          borderTop: `3px solid ${activeAreaStyle.borderColor || '#8b3a2a'}`,
+          boxShadow: '0 -8px 40px rgba(26,16,8,0.12)',
+          padding: '24px 28px 32px',
+          zIndex: 500,
+          maxHeight: '70vh',
+          overflowY: 'auto',
+          animation: 'slideUp 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards'
         }}>
+          {/* Drag handle */}
+          <div style={{
+            width: '36px', height: '4px',
+            background: 'rgba(26,16,8,0.12)',
+            borderRadius: '2px',
+            margin: '0 auto 20px',
+            cursor: 'pointer'
+          }} onClick={() => {
+            setActiveNodeId(null);
+            setAutoRotate(true);
+          }} />
+
           {/* Header Row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            {/* Status stamp badge */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: '16px'
+          }}>
+            <div style={{ flex: 1 }}>
+              {/* Status stamp badge */}
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '3px 10px',
+                borderRadius: '4px',
+                fontSize: '10px',
+                fontWeight: '600',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                marginBottom: '8px',
+                background: activeItem.status === 'completed' 
+                  ? 'rgba(92,122,92,0.1)' 
+                  : `rgba(${activeAreaStyle.rgbValues}, 0.1)`,
+                color: activeItem.status === 'completed' ? '#5c7a5c' : activeAreaStyle.borderColor,
+                border: `1px solid ${activeItem.status === 'completed' ? 'rgba(92,122,92,0.2)' : 'rgba(26,16,8,0.06)'}`
+              }}>
+                {activeItem.status === 'completed' ? '✓ Complete' : '● In Progress'}
+              </div>
+
+              {/* Goal title */}
+              <h2 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: '20px',
+                fontWeight: '700',
+                color: '#1a1008',
+                lineHeight: 1.25,
+                margin: 0
+              }}>
+                {activeItem.title}
+              </h2>
+
+              {/* Description */}
+              {activeItem.content && (
+                <p style={{
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: '13px',
+                  color: 'rgba(26,16,8,0.5)',
+                  marginTop: '6px',
+                  lineHeight: 1.6,
+                  fontStyle: 'italic'
+                }}>
+                  {activeItem.content}
+                </p>
+              )}
+            </div>
+
+            {/* Date + Close button */}
+            <div style={{ textAlign: 'right', marginLeft: '16px' }}>
+              <div style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '11px',
+                color: 'rgba(26,16,8,0.35)',
+                letterSpacing: '0.06em',
+                marginBottom: '8px'
+              }}>
+                {activeItem.date}
+              </div>
+              <button
+                onClick={() => {
+                  setActiveNodeId(null);
+                  setAutoRotate(true);
+                }}
+                style={{
+                  width: '28px', height: '28px',
+                  borderRadius: '50%',
+                  background: 'rgba(26,16,8,0.06)',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  color: 'rgba(26,16,8,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >✕</button>
+            </div>
+          </div>
+
+          {/* Progress section */}
+          <div style={{
+            padding: '12px 0',
+            borderTop: '1px solid rgba(26,16,8,0.07)',
+            borderBottom: '1px solid rgba(26,16,8,0.07)',
+            marginBottom: '16px'
+          }}>
             <div style={{
-              padding: '3px 10px',
-              borderRadius: '4px',
-              fontSize: '10px',
-              fontWeight: '700',
-              letterSpacing: '0.04em',
-              background: activeItem.status === 'completed' 
-                ? 'rgba(92,122,92,0.1)' 
-                : `rgba(${activeAreaStyle.rgbValues}, 0.1)`,
-              color: activeItem.status === 'completed' 
-                ? '#5c7a5c' 
-                : activeAreaStyle.borderColor,
-              border: `1px solid ${activeItem.status === 'completed' ? 'rgba(92,122,92,0.15)' : 'rgba(26,16,8,0.06)'}`
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '8px'
             }}>
-              {activeItem.status === 'completed' ? '✓ COMPLETE' : activeItem.status === 'in-progress' ? '● IN PROGRESS' : '○ PENDING'}
+              <span style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '11px',
+                fontWeight: '600',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'rgba(26,16,8,0.35)'
+              }}>Progress</span>
+              <span style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: '18px',
+                fontWeight: '700',
+                color: activeAreaStyle.borderColor || '#8b3a2a'
+              }}>{activeItem.energy}%</span>
             </div>
-            
-            {/* Date */}
-            <span style={{ fontSize: '11px', color: 'var(--ink-medium)', fontFamily: 'monospace' }}>
-              {activeItem.date}
-            </span>
-          </div>
-
-          {/* Goal title (serif) */}
-          <div style={{ color: 'var(--ink-dark)', fontSize: '18px', fontFamily: 'var(--font-serif)', fontWeight: '700', marginBottom: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span>{activeItem.icon}</span>
-            <span>{activeItem.title}</span>
-          </div>
-
-          {/* Description */}
-          <div style={{ color: 'var(--ink-medium)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px' }}>
-            {activeItem.content}
-          </div>
-
-          {/* Progress Row */}
-          <div style={{ padding: '12px 0', borderTop: '1px solid var(--ink-faint)', marginBottom: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--ink-medium)' }}>Progress Stamp</span>
-              <span style={{ fontSize: '12px', color: activeAreaStyle.borderColor, fontWeight: '700' }}>{activeItem.energy}%</span>
-            </div>
-            <div style={{ height: '6px', background: 'var(--ink-faint)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{
+              height: '4px',
+              background: 'rgba(26,16,8,0.07)',
+              borderRadius: '2px',
+              overflow: 'hidden'
+            }}>
               <div style={{
                 height: '100%',
                 width: `${activeItem.energy}%`,
-                background: activeAreaStyle.borderColor,
-                borderRadius: '3px',
-                transition: 'width 0.6s ease'
+                background: activeAreaStyle.borderColor || '#8b3a2a',
+                borderRadius: '2px',
+                transition: 'width 0.8s cubic-bezier(0.34,1.56,0.64,1)'
               }}/>
             </div>
           </div>
 
-          {/* Subgoals checklists */}
-          <div style={{ borderTop: '1px solid var(--ink-faint)', paddingTop: '12px' }}>
-            <div style={{ fontSize: '10px', color: 'var(--ink-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', fontWeight: '700' }}>
-              Subgoal Checklist
-            </div>
-            
-            {activeItem.steps.length === 0 ? (
-              <div style={{ fontSize: '12px', color: 'var(--ink-light)', fontStyle: 'italic', padding: '4px 0' }}>
-                No outline added yet. Append one below.
-              </div>
-            ) : (
-              activeItem.steps.map(step => (
-                <div key={step.id} style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '8px 0',
-                  borderBottom: '1px solid var(--ink-faint)'
-                }}>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); toggleStep(activeItem.id, step.id); }}
-                    style={{
-                      width: '18px', height: '18px', borderRadius: '4px',
-                      border: step.completed ? 'none' : '1.5px solid var(--ink-medium)',
-                      background: step.completed ? activeAreaStyle.borderColor : 'transparent',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '11px', flexShrink: 0, color: '#fff', cursor: 'pointer', outline: 'none',
-                      padding: 0
-                    }}
-                  >
-                    {step.completed ? '✓' : ''}
-                  </button>
-                  <span style={{
-                    fontSize: '13px',
-                    color: step.completed ? 'var(--ink-light)' : 'var(--ink-dark)',
-                    textDecoration: step.completed ? 'line-through' : 'none'
-                  }}>
-                    {step.title}
-                  </span>
-                </div>
-              ))
-            )}
-          </div>
+          {/* Sub-goals and Tasks Hierarchy */}
+          <GoalHierarchy
+            goal={activeItem}
+            activeAreaStyle={activeAreaStyle}
+            toggleSubgoalDone={toggleSubgoalDone}
+            toggleTaskDone={toggleTaskDone}
+            addSubgoal={addSubgoal}
+            addTask={addTask}
+          />
 
           {/* Connected Goals Section */}
           {activeItem.relatedIds && activeItem.relatedIds.length > 0 && (
-            <div style={{ borderTop: '1px solid var(--ink-faint)', paddingTop: '12px', marginTop: '12px' }}>
-              <div style={{ fontSize: '10px', color: 'var(--ink-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px', fontWeight: '700' }}>
+            <div style={{ borderTop: '1px solid rgba(26,16,8,0.05)', paddingTop: '12px', marginBottom: '20px' }}>
+              <div style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '10px',
+                fontWeight: '600',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+                color: 'rgba(26,16,8,0.35)',
+                marginBottom: '10px'
+              }}>
                 🔗 Connected Goals
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -839,28 +1383,49 @@ export default function Goals() {
           )}
 
           {/* Action Row */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '18px' }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
             <button 
-              className="btn-primary"
-              style={{
-                flex: 1, 
-                padding: '10px 14px', 
-                background: activeAreaStyle.borderColor + ' !important', 
-                color: '#ffffff !important', 
-                border: 'none', 
-                boxShadow: `0 3px 0 ${activeAreaStyle.shadowColor} !important`
+              onClick={() => {
+                if (activeItem.status === 'completed') {
+                  toggleGoal(activeItem.id);
+                } else {
+                  addStep(activeItem.id);
+                }
               }}
-              onClick={() => toggleGoal(activeItem.id)}
+              style={{
+                flex: 1,
+                padding: '12px',
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '13px',
+                fontWeight: '600',
+                letterSpacing: '0.03em',
+                background: '#1a1008',
+                color: '#f7f3ec',
+                border: 'none',
+                borderRadius: '6px',
+                boxShadow: '0 3px 0 rgba(0,0,0,0.35)',
+                cursor: 'pointer'
+              }}
             >
-              {activeItem.status === 'completed' ? 'Mark Incomplete' : 'Complete Goal'}
+              {activeItem.status === 'completed' ? 'Mark incomplete' : '+ Add step'}
             </button>
-            <button 
-              onClick={() => addStep(activeItem.id)}
-              className="btn-secondary"
-              style={{ padding: '10px 12px' }}
-            >
-              + Step
-            </button>
+            {activeItem.status !== 'completed' && (
+              <button
+                onClick={() => toggleGoal(activeItem.id)}
+                style={{
+                  padding: '12px 16px',
+                  background: 'transparent',
+                  border: '1.5px solid rgba(26,16,8,0.15)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  color: 'rgba(26,16,8,0.8)'
+                }}
+              >
+                ✓ Complete
+              </button>
+            )}
             <button 
               onClick={() => {
                 const newTitle = prompt("Edit Goal Title:", activeItem.title);
@@ -868,8 +1433,15 @@ export default function Goals() {
                   setGoals(prev => prev.map(g => g.id === activeItem.id ? { ...g, title: newTitle.trim() } : g));
                 }
               }}
-              className="btn-secondary"
-              style={{ padding: '10px 12px' }}
+              style={{
+                padding: '12px 16px',
+                background: 'transparent',
+                border: '1.5px solid rgba(26,16,8,0.15)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+              title="Edit Goal"
             >
               ✏️
             </button>
@@ -881,8 +1453,15 @@ export default function Goals() {
                   setAutoRotate(true);
                 }
               }}
-              className="btn-secondary"
-              style={{ padding: '10px 12px', color: 'var(--accent-rust) !important' }}
+              style={{
+                padding: '12px 16px',
+                background: 'transparent',
+                border: '1.5px solid rgba(26,16,8,0.15)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+              title="Delete Goal"
             >
               🗑️
             </button>
