@@ -1,8 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import VaporizeTextCycle, { Tag } from "./ui/vapour-text-effect";
 
 export default function Splash({ onComplete }) {
   const [step, setStep] = useState(0);
   const [fade, setFade] = useState("in");
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const [responses, setResponses] = useState({
     area: "",
@@ -66,20 +74,46 @@ export default function Splash({ onComplete }) {
       <div style={{ maxWidth: "600px", width: "100%", padding: "2rem", display: "flex", flexDirection: "column", gap: "2rem", opacity: fade === "in" ? 1 : 0, transition: "opacity 0.4s ease", textAlign: "center", position: "relative" }}>
         
         {step === 0 && (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2.5rem", width: "100%", minHeight: "280px" }}>
+            <div style={{ width: "100%", height: "140px", display: "flex", justifyContent: "center", alignItems: "center", position: "relative" }}>
+              <VaporizeTextCycle
+                texts={["Growth OS", "Ready to plan your life?"]}
+                font={{
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: isMobile ? "32px" : "46px",
+                  fontWeight: 800
+                }}
+                color="rgb(255, 255, 255)"
+                spread={4}
+                density={6}
+                animation={{
+                  vaporizeDuration: 2.5,
+                  fadeInDuration: 1.2,
+                  waitDuration: 1.5
+                }}
+                direction="left-to-right"
+                alignment="center"
+                tag={Tag.H1}
+              />
+            </div>
+
             <div 
               onClick={advanceStep}
               className="anim-pulse-ring"
               style={{ 
-                width: "80px", height: "80px", borderRadius: "50%", background: "var(--accent)", cursor: "pointer", display: "grid", placeContent: "center",
-                boxShadow: "0 0 40px rgba(167,139,250,0.6)"
+                width: "80px", height: "80px", borderRadius: "50%", background: "linear-gradient(135deg, #F05A7E, #E83B6A)", cursor: "pointer", display: "grid", placeContent: "center",
+                boxShadow: "0 0 40px rgba(240,90,126,0.6)",
+                border: "none",
+                transition: "transform 0.2s"
               }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.12)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
               <span style={{ fontSize: "2rem", color: "#FFF" }}>✨</span>
             </div>
             <div>
-              <h1 style={{ fontSize: "2rem", fontWeight: "800", color: "#FFF", margin: "0 0 0.5rem" }}>Tap to begin</h1>
-              <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>You are here. Let's find out where you're going.</p>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#FFF", margin: "0 0 0.5rem" }}>Tap to begin</h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: "1rem" }}>You are here. Let's find out where you're going.</p>
             </div>
           </div>
         )}
@@ -154,3 +188,4 @@ export default function Splash({ onComplete }) {
     </div>
   );
 }
+
