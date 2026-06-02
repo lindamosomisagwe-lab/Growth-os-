@@ -104,14 +104,6 @@ function RouteColorController() {
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
 
-  // Check if first time
-  useEffect(() => {
-    const isFirstTime = localStorage.getItem("growth_os_onboarded");
-    if (isFirstTime === "true") {
-      setShowSplash(false);
-    }
-  }, []);
-
   return (
     <GamificationProvider>
       <OmbreBackgroundController />
