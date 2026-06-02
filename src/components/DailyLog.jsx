@@ -40,7 +40,7 @@ export default function DailyLog() {
     setTimeout(() => {
       const newLog = {
         id: Date.now(),
-        date: new Date().toLocaleDateString(),
+        date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
         mood,
         win: win.trim(),
         intention: intention.trim(),
@@ -73,163 +73,260 @@ export default function DailyLog() {
   };
 
   return (
-    <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)", maxWidth: "800px", margin: "0 auto", paddingBottom: "4rem" }}>
+    <div style={{ color: "var(--ink-dark)", fontFamily: "var(--font-sans)", maxWidth: "100%", margin: "0 auto", paddingBottom: "4rem" }}>
       
-      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid var(--ink-faint)", paddingBottom: "16px" }}>
         <div>
-          <h2 style={{ margin: "0", fontSize: "2rem", fontWeight: "400", letterSpacing: "-0.02em" }}>Today</h2>
-          <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.95rem", color: "var(--text-secondary)", fontStyle: "italic" }}>
-            The 60-second ritual.
+          <h2 className="page-title">Today</h2>
+          <p className="page-subtitle" style={{ margin: "4px 0 0 0" }}>
+            The 60-second journal ritual.
           </p>
         </div>
       </header>
 
-      <div className="stationery-card" style={{ 
-        padding: "2rem", display: "flex", flexDirection: "column", gap: "2.5rem", marginBottom: "3rem",
-        boxShadow: flashAnim ? "0 0 30px rgba(167,139,250,0.6)" : "none",
-        borderColor: flashAnim ? "rgba(167,139,250,0.8)" : "rgba(255,255,255,0.08)",
-        transition: "box-shadow 0.3s ease, border-color 0.3s ease"
-      }}>
+      {/* Main Journal Card */}
+      <div 
+        className="journal-entry" 
+        style={{ 
+          marginBottom: "3rem",
+          boxShadow: flashAnim ? "0 0 24px rgba(92,122,92,0.25)" : "var(--shadow-raised)",
+          transition: "box-shadow 0.3s ease"
+        }}
+      >
+        {/* Elegant handwriting date header */}
+        <div className="journal-date">
+          {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
         
-        {/* Mood */}
-        <section>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1rem", fontWeight: "600" }}>How's today going?</h3>
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+        {/* Mood Section */}
+        <section style={{ marginBottom: "2rem" }}>
+          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: "600", margin: "0 0 10px 0" }}>How is today going?</h3>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
             {moods.map(m => {
               const active = mood === m.id;
               return (
                 <button
                   key={m.id}
                   onClick={() => setMood(m.id)}
-                  style={{
-                    flex: 1, minWidth: "60px", padding: "1rem 0.5rem",
-                    background: active ? "rgba(167,139,250,0.15)" : "transparent",
-                    border: active ? "1px solid rgba(167,139,250,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem",
-                    cursor: "pointer", transition: "all 0.2s"
-                  }}
+                  className={`mood-btn ${active ? "selected" : ""}`}
+                  style={{ flex: 1, minWidth: "90px" }}
                 >
-                  <span style={{ fontSize: "1.8rem" }}>{m.emoji}</span>
-                  <span style={{ fontSize: "0.8rem", color: active ? "var(--text-primary)" : "var(--text-secondary)" }}>
-                    {m.label}
-                  </span>
+                  <span style={{ fontSize: "1.2rem" }}>{m.emoji}</span>
+                  <span>{m.label}</span>
                 </button>
               );
             })}
           </div>
         </section>
 
-        {/* Win & Intention */}
-        <section style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+        {/* Win & Intention Inputs */}
+        <section style={{ display: "flex", flexDirection: "column", gap: "1.75rem", marginBottom: "1.75rem" }}>
           <div>
-            <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1rem", fontWeight: "600" }}>What's one thing that went well today?</h3>
-            <p style={{ margin: "0 0 0.75rem 0", fontSize: "0.85rem", color: "var(--text-secondary)", fontStyle: "italic" }}>Even something small.</p>
+            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: "600", margin: "0 0 4px 0" }}>What went well today?</h3>
+            <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-light)", fontStyle: "italic" }}>Even the smallest highlight counts.</p>
             <textarea
-              placeholder="e.g. I actually drank enough water today..."
-              value={win} onChange={e => setWin(e.target.value)}
-              rows={2} style={{ width: "100%", fontSize: "0.95rem" }}
+              placeholder="e.g. Cleared my desk and made a perfect cup of tea..."
+              value={win} 
+              onChange={e => setWin(e.target.value)}
+              rows={2} 
             />
           </div>
           
           <div>
-            <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1rem", fontWeight: "600" }}>What's the one thing you want to do tomorrow?</h3>
+            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: "600", margin: "0 0 4px 0" }}>Your core focus for tomorrow?</h3>
+            <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-light)", fontStyle: "italic" }}>Name one single high-impact intention.</p>
             <textarea
-              placeholder="e.g. Read for 15 minutes before bed."
-              value={intention} onChange={e => setIntention(e.target.value)}
-              rows={2} style={{ width: "100%", fontSize: "0.95rem" }}
+              placeholder="e.g. Finalize the project roadmap outline."
+              value={intention} 
+              onChange={e => setIntention(e.target.value)}
+              rows={2} 
             />
           </div>
         </section>
 
-        {/* Expander */}
+        {/* Expander to track hydration / sleep / energy */}
         {!showMore ? (
-          <button onClick={() => setShowMore(true)} style={{ alignSelf: "flex-start", background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontStyle: "italic", fontSize: "0.9rem", padding: "0" }}>
-            + Track more details (energy, sleep, hydration)
+          <button 
+            onClick={() => setShowMore(true)} 
+            style={{ 
+              alignSelf: "flex-start", 
+              background: "none", 
+              border: "none", 
+              color: "var(--accent-sage)", 
+              cursor: "pointer", 
+              fontStyle: "italic", 
+              fontSize: "13px", 
+              fontWeight: "600",
+              padding: "4px 0",
+              display: "flex",
+              alignItems: "center",
+              gap: "4px"
+            }}
+          >
+            ✦ Track hydration, sleep & energy
           </button>
         ) : (
-          <section style={{ padding: "1.5rem", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "12px", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <section style={{ padding: "1.5rem", border: "1px dashed var(--ink-faint)", borderRadius: "6px", display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "1.5rem" }}>
             
+            {/* Hydration Hollow Circle Dots */}
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <span style={{ fontSize: "0.9rem", fontWeight: "600" }}>Hydration</span>
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{hydration} / 8</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600" }}>Hydration</span>
+                <span style={{ fontSize: "12px", color: "var(--ink-medium)", fontFamily: "monospace" }}>{hydration} / 8 glasses</span>
               </div>
-              <div style={{ display: "flex", gap: "0.5rem" }}>
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                 {[...Array(8)].map((_, i) => (
-                  <button key={i} onClick={() => setHydration(i + 1 === hydration ? i : i + 1)} style={{ flex: 1, height: "40px", borderRadius: "8px", background: i < hydration ? "rgba(96,165,250,0.2)" : "rgba(255,255,255,0.03)", border: i < hydration ? "1px solid rgba(96,165,250,0.5)" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer", fontSize: "1.2rem", display: "grid", placeContent: "center" }}>
-                    <span style={{ opacity: i < hydration ? 1 : 0.3 }}>💧</span>
+                  <button 
+                    key={i} 
+                    onClick={() => setHydration(i + 1 === hydration ? i : i + 1)} 
+                    className={`hydration-dot ${i < hydration ? "filled" : ""}`}
+                    style={{ flex: "1 0 30px", height: "30px", display: "grid", placeContent: "center", padding: 0 }}
+                  >
+                    {/* Faint dot in the center of hollow circles */}
+                    {i >= hydration && <span style={{ fontSize: "6px", color: "var(--accent-steel)", opacity: 0.35 }}>●</span>}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Sleep Slider */}
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <span style={{ fontSize: "0.9rem", fontWeight: "600" }}>Sleep Quality</span>
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{sleep} / 10</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600" }}>Sleep Quality</span>
+                <span style={{ fontSize: "12px", color: "var(--ink-medium)" }}>{sleep} / 10 hours</span>
               </div>
-              <input type="range" min="1" max="10" value={sleep} onChange={e => setSleep(parseInt(e.target.value))} style={{ width: "100%" }} />
+              <input 
+                type="range" 
+                min="1" 
+                max="10" 
+                value={sleep} 
+                onChange={e => setSleep(parseInt(e.target.value))} 
+                style={{ accentColor: "var(--accent-sage)" }}
+              />
             </div>
 
+            {/* Energy Slider */}
             <div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
-                <span style={{ fontSize: "0.9rem", fontWeight: "600" }}>Energy Levels</span>
-                <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>{energy} / 10</span>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600" }}>Energy Level</span>
+                <span style={{ fontSize: "12px", color: "var(--ink-medium)" }}>{energy} / 10 rating</span>
               </div>
-              <input type="range" min="1" max="10" value={energy} onChange={e => setEnergy(parseInt(e.target.value))} style={{ width: "100%" }} />
+              <input 
+                type="range" 
+                min="1" 
+                max="10" 
+                value={energy} 
+                onChange={e => setEnergy(parseInt(e.target.value))} 
+                style={{ accentColor: "var(--accent-sage)" }}
+              />
             </div>
 
+            {/* Extra notes */}
             <div>
-              <span style={{ display: "block", fontSize: "0.9rem", fontWeight: "600", marginBottom: "0.5rem" }}>Extra Notes</span>
-              <textarea placeholder="Anything else on your mind?" value={note} onChange={e => setNote(e.target.value)} rows={3} style={{ width: "100%" }} />
+              <span style={{ display: "block", fontSize: "13px", fontWeight: "600", marginBottom: "6px" }}>Additional Reflections</span>
+              <textarea 
+                placeholder="Write down any physical or mental notes..." 
+                value={note} 
+                onChange={e => setNote(e.target.value)} 
+                rows={3} 
+              />
             </div>
 
           </section>
         )}
 
-        <button onClick={saveLog} disabled={!mood} className={mood ? "btn-primary" : "btn-secondary"} style={{ padding: "1rem", fontSize: "1rem", width: "100%", opacity: mood ? 1 : 0.5 }}>
-          Save Today
+        <button 
+          onClick={saveLog} 
+          disabled={!mood} 
+          className="btn-primary"
+          style={{ 
+            padding: "12px", 
+            fontSize: "13px", 
+            width: "100%", 
+            opacity: mood ? 1 : 0.5,
+            background: "var(--accent-sage) !important",
+            color: "#ffffff !important",
+            boxShadow: "0 3px 0 #3a5a3a !important",
+            marginTop: "1.25rem"
+          }}
+        >
+          Save Today's Journal Entry
         </button>
       </div>
 
-      {/* Archive */}
+      {/* Archive List of Past Days */}
       {logs.length > 0 && (
-        <div>
-          <h3 style={{ margin: "0 0 1rem 0", fontSize: "1.2rem", fontWeight: "400" }}>Past Days</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div style={{ marginTop: "3rem" }}>
+          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: "600", marginBottom: "1.25rem" }}>Past Journal Logs</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             {logs.map(log => {
               const isExpanded = expandedLogId === log.id;
               const logMood = moods.find(m => m.id === log.mood) || moods[2];
               
               return (
-                <div key={log.id} className="stationery-card" onClick={() => setExpandedLogId(isExpanded ? null : log.id)} style={{ padding: "1.25rem", cursor: "pointer", transition: "all 0.2s" }}>
+                <div 
+                  key={log.id} 
+                  className="nb-card today" 
+                  onClick={() => setExpandedLogId(isExpanded ? null : log.id)} 
+                  style={{ 
+                    padding: "1.25rem 1.5rem", 
+                    cursor: "pointer",
+                    borderLeft: "3px solid var(--accent-sage)"
+                  }}
+                >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <span style={{ fontSize: "1.8rem" }}>{logMood.emoji}</span>
+                      <span style={{ fontSize: "1.4rem" }}>{logMood.emoji}</span>
                       <div>
-                        <div style={{ fontWeight: "600", fontSize: "1rem" }}>{log.date}</div>
-                        {log.win && <div style={{ fontSize: "0.9rem", color: "var(--text-secondary)" }}>Win: {log.win}</div>}
+                        <div style={{ fontFamily: "var(--font-serif)", fontWeight: "700", fontSize: "15px", color: "var(--ink-dark)" }}>{log.date}</div>
+                        {log.win && (
+                          <div style={{ fontSize: "13px", color: "var(--ink-medium)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "450px" }}>
+                            {log.win}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div style={{ color: "var(--text-secondary)" }}>
-                      {isExpanded ? '▲' : '▼'}
+                    <div style={{ color: "var(--ink-medium)", fontSize: "11px", fontWeight: "bold" }}>
+                      {isExpanded ? '▲ CLOSE' : '▼ OPEN'}
                     </div>
                   </div>
                   
                   {isExpanded && (
-                    <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid rgba(255,255,255,0.06)", fontSize: "0.9rem", color: "var(--text-secondary)" }}>
-                      {log.intention && <div style={{ marginBottom: "0.75rem" }}><strong>Tomorrow's Intention:</strong> {log.intention}</div>}
+                    <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid var(--ink-faint)", fontSize: "13px", color: "var(--ink-medium)" }}>
                       
-                      {(log.sleep !== null || log.energy !== null || log.hydration > 0) && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "0.75rem", background: "rgba(255,255,255,0.02)", padding: "0.75rem", borderRadius: "8px" }}>
-                          {log.sleep !== null && <div>💤 {log.sleep}/10</div>}
-                          {log.energy !== null && <div>⚡ {log.energy}/10</div>}
-                          {log.hydration > 0 && <div>💧 {log.hydration}/8</div>}
+                      {log.win && (
+                        <div style={{ marginBottom: "1rem" }}>
+                          <strong style={{ color: "var(--ink-dark)", display: "block", marginBottom: "2px" }}>Highlight of the Day:</strong>
+                          <div style={{ fontFamily: "var(--font-cursive)", fontSize: "18px", color: "#2a4a35", lineHeight: "1.4" }}>
+                            {log.win}
+                          </div>
+                        </div>
+                      )}
+
+                      {log.intention && (
+                        <div style={{ marginBottom: "1rem" }}>
+                          <strong style={{ color: "var(--ink-dark)", display: "block", marginBottom: "2px" }}>Intention Set:</strong>
+                          <div style={{ fontFamily: "var(--font-cursive)", fontSize: "18px", color: "#2a4a35", lineHeight: "1.4" }}>
+                            {log.intention}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {(log.sleep !== null || log.energy !== null || (log.hydration && log.hydration > 0)) && (
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "1rem", background: "var(--page-warm)", padding: "0.75rem", borderRadius: "4px", border: "1px solid var(--ink-faint)" }}>
+                          {log.sleep !== null && <div style={{ fontSize: "12px" }}>💤 <strong>{log.sleep}</strong> hrs sleep</div>}
+                          {log.energy !== null && <div style={{ fontSize: "12px" }}>⚡ <strong>{log.energy}</strong>/10 energy</div>}
+                          {log.hydration > 0 && <div style={{ fontSize: "12px" }}>💧 <strong>{log.hydration}</strong>/8 glasses</div>}
                         </div>
                       )}
                       
                       {log.note && (
-                        <div style={{ fontStyle: "italic" }}>"{log.note}"</div>
+                        <div>
+                          <strong style={{ color: "var(--ink-dark)", display: "block", marginBottom: "2px" }}>Margin Annotations:</strong>
+                          <div style={{ fontFamily: "var(--font-cursive)", fontSize: "18px", color: "#665040", fontStyle: "italic", lineHeight: "1.4" }}>
+                            "{log.note}"
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}

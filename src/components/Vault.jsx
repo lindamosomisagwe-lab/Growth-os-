@@ -49,7 +49,7 @@ export default function Vault() {
       title: capTitle.trim(),
       message: capMessage.trim(),
       revealDate,
-      createdAt: new Date().toLocaleDateString()
+      createdAt: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
     };
     setCapsules(prev => [...prev, newCapsule]);
     setCapTitle(""); setCapMessage(""); setRevealDate("");
@@ -61,7 +61,7 @@ export default function Vault() {
     const newChapter = {
       id: Date.now(),
       title: chapTitle.trim(),
-      phase: chapPhase.trim() || new Date().toLocaleDateString(),
+      phase: chapPhase.trim() || new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
       note: chapNote.trim()
     };
     setChapters(prev => [newChapter, ...prev]);
@@ -74,41 +74,49 @@ export default function Vault() {
   };
 
   return (
-    <div style={{ color: "var(--text-primary)", fontFamily: "var(--font-sans)", maxWidth: "800px", margin: "0 auto", paddingBottom: "4rem" }}>
-      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+    <div style={{ color: "var(--ink-dark)", fontFamily: "var(--font-sans)", maxWidth: "100%", margin: "0 auto", paddingBottom: "4rem" }}>
+      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid var(--ink-faint)", paddingBottom: "16px" }}>
         <div>
-          <h2 style={{ margin: "0", fontSize: "2rem", fontWeight: "400", letterSpacing: "-0.02em" }}>The Vault</h2>
-          <p style={{ margin: "0.25rem 0 0 0", fontSize: "0.95rem", color: "var(--text-secondary)", fontStyle: "italic" }}>
-            A safe place for your thoughts and memories.
+          <h2 className="page-title">The Vault</h2>
+          <p className="page-subtitle" style={{ margin: "4px 0 0 0" }}>
+            A secure archive for deep thoughts and personal records.
           </p>
         </div>
       </header>
 
-      {/* Tabs */}
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2.5rem" }}>
+      {/* Elegant Sub-navigation Tabs */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "2.5rem" }}>
         <button
           onClick={() => setActiveTab("letters")}
           style={{
-            padding: "0.8rem 1.5rem", borderRadius: "12px", fontSize: "0.95rem",
-            background: activeTab === "letters" ? "rgba(167,139,250,0.15)" : "transparent",
-            color: activeTab === "letters" ? "var(--text-primary)" : "var(--text-secondary)",
-            border: activeTab === "letters" ? "1px solid rgba(167,139,250,0.4)" : "1px solid transparent",
-            cursor: "pointer", transition: "all 0.2s"
+            padding: "8px 18px", 
+            borderRadius: "4px", 
+            fontSize: "13px",
+            fontWeight: "600",
+            background: activeTab === "letters" ? "rgba(122,92,139,0.12)" : "transparent",
+            color: activeTab === "letters" ? "var(--accent-plum)" : "var(--ink-medium)",
+            border: `1.5px solid ${activeTab === "letters" ? "var(--accent-plum)" : "transparent"}`,
+            cursor: "pointer", 
+            transition: "all 0.15s ease"
           }}
         >
-          Letters to Myself
+          ✉️ Letters to Myself
         </button>
         <button
           onClick={() => setActiveTab("story")}
           style={{
-            padding: "0.8rem 1.5rem", borderRadius: "12px", fontSize: "0.95rem",
-            background: activeTab === "story" ? "rgba(167,139,250,0.15)" : "transparent",
-            color: activeTab === "story" ? "var(--text-primary)" : "var(--text-secondary)",
-            border: activeTab === "story" ? "1px solid rgba(167,139,250,0.4)" : "1px solid transparent",
-            cursor: "pointer", transition: "all 0.2s"
+            padding: "8px 18px", 
+            borderRadius: "4px", 
+            fontSize: "13px",
+            fontWeight: "600",
+            background: activeTab === "story" ? "rgba(122,92,139,0.12)" : "transparent",
+            color: activeTab === "story" ? "var(--accent-plum)" : "var(--ink-medium)",
+            border: `1.5px solid ${activeTab === "story" ? "var(--accent-plum)" : "transparent"}`,
+            cursor: "pointer", 
+            transition: "all 0.15s ease"
           }}
         >
-          My Story
+          📖 My Life Story
         </button>
       </div>
 
@@ -116,60 +124,128 @@ export default function Vault() {
 
         {activeTab === "letters" && (
           <>
-            <div className="stationery-card" style={{ padding: "2rem" }}>
-              <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.2rem", fontWeight: "600" }}>Write to your future self</h3>
-              <p style={{ margin: "0 0 1.5rem 0", fontSize: "0.9rem", color: "var(--text-secondary)", fontStyle: "italic" }}>Lock away a thought or hope, and read it when the time is right.</p>
+            {/* Writing Ruled Parchment Card */}
+            <div className="letter-card" style={{ width: "100%" }}>
+              <h3 style={{ fontFamily: "var(--font-serif)", margin: "0 0 4px 0", fontSize: "20px", fontWeight: "700" }}>Write to your future self</h3>
+              <p style={{ margin: "0 0 24px 0", fontSize: "12px", color: "var(--ink-medium)", fontStyle: "italic" }}>Seal away a thought or hope, and read it when the time is right.</p>
               
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>Subject</label>
-                  <input type="text" placeholder="e.g. A reminder about today..." value={capTitle} onChange={e => setCapTitle(e.target.value)} style={{ width: "100%" }} />
+                  <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink-medium)", marginBottom: "6px", fontWeight: "700" }}>Subject Title</label>
+                  <input type="text" placeholder="e.g. A reminder about today's mindset..." value={capTitle} onChange={e => setCapTitle(e.target.value)} style={{ width: "100%" }} />
                 </div>
+                
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>Your Letter</label>
-                  <textarea placeholder="Dear future me..." value={capMessage} onChange={e => setCapMessage(e.target.value)} rows={5} style={{ width: "100%", fontSize: "0.95rem", resize: "vertical" }} />
+                  <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink-medium)", marginBottom: "6px", fontWeight: "700" }}>Your Correspondence</label>
+                  <textarea 
+                    placeholder="Dear future me, write down what you are feeling..." 
+                    value={capMessage} 
+                    onChange={e => setCapMessage(e.target.value)} 
+                    rows={5} 
+                    style={{ 
+                      width: "100%", 
+                      resize: "vertical",
+                      fontFamily: "var(--font-cursive)",
+                      fontSize: "18px",
+                      lineHeight: "27px",
+                      color: "#2a1c40",
+                      background: "transparent !important"
+                    }} 
+                  />
                 </div>
+                
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>When should this unlock?</label>
+                  <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink-medium)", marginBottom: "6px", fontWeight: "700" }}>When should this letter unlock?</label>
                   <input type="date" value={revealDate} onChange={e => setRevealDate(e.target.value)} style={{ width: "100%" }} />
                 </div>
-                <button onClick={addCapsule} className="btn-primary" style={{ marginTop: "0.5rem", padding: "1rem" }}>
-                  Seal this letter
+                
+                <button 
+                  onClick={addCapsule} 
+                  className="btn-primary" 
+                  style={{ 
+                    marginTop: "0.5rem", 
+                    padding: "12px",
+                    background: "var(--accent-plum) !important",
+                    color: "#ffffff !important",
+                    boxShadow: "0 3px 0 #4a2a6a !important"
+                  }}
+                >
+                  Seal with Wax
                 </button>
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.1rem", fontWeight: "400" }}>Past Letters</h3>
+            {/* List of Past Sealed/Unlocked Letters */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              <h3 style={{ fontFamily: "var(--font-serif)", margin: "0 0 4px 0", fontSize: "18px", fontWeight: "600" }}>Private Correspondence</h3>
               
               {capsules.length === 0 ? (
-                <div style={{ padding: "2rem", border: "1px dashed rgba(255,255,255,0.1)", textAlign: "center", color: "var(--text-secondary)", borderRadius: "16px", fontStyle: "italic" }}>
-                  You haven't written any letters yet.
+                <div style={{ padding: "3rem", border: "1px dashed var(--ink-faint)", textAlign: "center", color: "var(--ink-light)", borderRadius: "6px", fontStyle: "italic" }}>
+                  No letters sealed in the vault yet.
                 </div>
               ) : (
                 capsules.map(c => {
                   const unlocked = isUnlocked(c.revealDate);
                   return (
-                    <div key={c.id} className="stationery-card" style={{ borderLeft: `3px solid ${unlocked ? "var(--accent)" : "rgba(255,255,255,0.1)"}`, padding: "1.5rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                        <div>
-                          <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", fontWeight: "600", color: "var(--text-primary)" }}>
-                            {unlocked ? "🔓" : "🔒"} {c.title}
-                          </h4>
-                          <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
-                            Written {c.createdAt} • {unlocked ? `Unlocked on ${c.revealDate}` : `Unlocks on ${c.revealDate}`}
-                          </span>
-                        </div>
-                        <button onClick={() => setCapsules(prev => prev.filter(item => item.id !== c.id))} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "1.2rem" }}>✕</button>
-                      </div>
-                      
+                    <div key={c.id}>
                       {unlocked ? (
-                        <div style={{ marginTop: "1.5rem", background: "rgba(255,255,255,0.02)", padding: "1.25rem", fontSize: "0.95rem", lineHeight: "1.6", whiteSpace: "pre-wrap", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.05)" }}>
-                          {c.message}
+                        /* Unlocked letter cards styled as beautiful ruled letter sheets */
+                        <div className="letter-card" style={{ width: "100%", position: "relative", marginBottom: "1rem" }}>
+                          <button 
+                            onClick={() => setCapsules(prev => prev.filter(item => item.id !== c.id))} 
+                            style={{ position: "absolute", top: "16px", right: "20px", background: "none", border: "none", color: "var(--ink-light)", cursor: "pointer", fontSize: "15px" }}
+                          >
+                            ✕
+                          </button>
+                          
+                          <div className="letter-salutation">Dear Future Self,</div>
+                          
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "1.5rem" }}>
+                            <div>
+                              <h4 style={{ fontFamily: "var(--font-serif)", margin: "0 0 2px 0", fontSize: "16px", fontWeight: "700", color: "var(--ink-dark)" }}>
+                                Unlocked: {c.title}
+                              </h4>
+                              <span style={{ fontSize: "11px", color: "var(--ink-light)" }}>
+                                Penned {c.createdAt} • Unlocked on {c.revealDate}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div style={{ 
+                            fontFamily: "var(--font-cursive)", 
+                            fontSize: "18px", 
+                            lineHeight: "27px", 
+                            whiteSpace: "pre-wrap", 
+                            color: "#2a1c40", 
+                            background: "transparent", 
+                            padding: "0.25rem 0" 
+                          }}>
+                            {c.message}
+                          </div>
                         </div>
                       ) : (
-                        <div style={{ marginTop: "1rem", padding: "1rem", fontSize: "0.9rem", textAlign: "center", color: "var(--text-secondary)", background: "rgba(255,255,255,0.02)", borderRadius: "8px", fontStyle: "italic" }}>
-                          This letter is sealed until {new Date(c.revealDate).toLocaleDateString()}.
+                        /* Locked letter styled as sealed envelopes with wax-seal stamp indicators */
+                        <div className="sealed-letter" style={{ width: "100%", justifyContent: "space-between", position: "relative" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                            {/* Real beautiful wax-seal element */}
+                            <div className="wax-seal">
+                              <span style={{ color: "#ffffff", fontWeight: "bold" }}>⚜️</span>
+                            </div>
+                            <div>
+                              <h4 style={{ fontFamily: "var(--font-serif)", margin: "0 0 2px 0", fontSize: "15px", fontWeight: "700", color: "var(--ink-dark)" }}>
+                                Locked: {c.title}
+                              </h4>
+                              <span style={{ fontSize: "11px", color: "var(--ink-light)" }}>
+                                Sealed {c.createdAt} • Opens {new Date(c.revealDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => setCapsules(prev => prev.filter(item => item.id !== c.id))} 
+                            style={{ background: "none", border: "none", color: "var(--ink-light)", cursor: "pointer", fontSize: "14px", marginRight: "4px" }}
+                          >
+                            ✕
+                          </button>
                         </div>
                       )}
                     </div>
@@ -182,57 +258,105 @@ export default function Vault() {
 
         {activeTab === "story" && (
           <>
-            <div className="stationery-card" style={{ padding: "2rem" }}>
-              <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1.2rem", fontWeight: "600" }}>Add to your story</h3>
-              <p style={{ margin: "0 0 1.5rem 0", fontSize: "0.9rem", color: "var(--text-secondary)", fontStyle: "italic" }}>Jot down a milestone or a memory you want to keep.</p>
+            {/* Adding Chapter to Story */}
+            <div className="nb-card vault" style={{ width: "100%", padding: "2rem" }}>
+              <h3 style={{ fontFamily: "var(--font-serif)", margin: "0 0 4px 0", fontSize: "20px", fontWeight: "700" }}>Add to your story</h3>
+              <p style={{ margin: "0 0 24px 0", fontSize: "12px", color: "var(--ink-medium)", fontStyle: "italic" }}>Jot down a milestone or a memory you want to keep forever.</p>
               
               <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>Chapter Title</label>
-                  <input type="text" placeholder="e.g. Started a new job..." value={chapTitle} onChange={e => setChapTitle(e.target.value)} style={{ width: "100%" }} />
+                  <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink-medium)", marginBottom: "6px", fontWeight: "700" }}>Chapter Title</label>
+                  <input type="text" placeholder="e.g. Completed my first notebook chapter..." value={chapTitle} onChange={e => setChapTitle(e.target.value)} style={{ width: "100%" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>When did this happen?</label>
+                  <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink-medium)", marginBottom: "6px", fontWeight: "700" }}>Phase of Life / Date</label>
                   <input type="text" placeholder="e.g. Summer 2026, or today's date" value={chapPhase} onChange={e => setChapPhase(e.target.value)} style={{ width: "100%" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "0.4rem" }}>The Memory</label>
-                  <textarea placeholder="What made this moment special?" value={chapNote} onChange={e => setChapNote(e.target.value)} rows={4} style={{ width: "100%", fontSize: "0.95rem", resize: "vertical" }} />
+                  <label style={{ display: "block", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink-medium)", marginBottom: "6px", fontWeight: "700" }}>The Memory</label>
+                  <textarea placeholder="Describe the lesson or memory of this key highlight..." value={chapNote} onChange={e => setChapNote(e.target.value)} rows={4} style={{ width: "100%", resize: "vertical" }} />
                 </div>
-                <button onClick={addChapter} className="btn-primary" style={{ marginTop: "0.5rem", padding: "1rem" }}>
+                <button 
+                  onClick={addChapter} 
+                  className="btn-primary" 
+                  style={{ 
+                    marginTop: "0.5rem", 
+                    padding: "12px",
+                    background: "var(--accent-plum) !important",
+                    color: "#ffffff !important",
+                    boxShadow: "0 3px 0 #4a2a6a !important"
+                  }}
+                >
                   Save to your story
                 </button>
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", borderLeft: "2px solid rgba(255,255,255,0.06)", paddingLeft: "2rem", marginLeft: "1rem", position: "relative" }}>
+            {/* Chapters Vertical Timeline list */}
+            <div style={{ 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: "1.5rem", 
+              borderLeft: "2px solid var(--ink-faint)", 
+              paddingLeft: "2rem", 
+              marginLeft: "1rem", 
+              position: "relative",
+              marginTop: "1.5rem"
+            }}>
               
-              <h3 style={{ margin: "0", fontSize: "1.1rem", fontWeight: "400", position: "relative", left: "-0.5rem" }}>
+              <h3 style={{ 
+                fontFamily: "var(--font-serif)", 
+                fontSize: "18px", 
+                fontWeight: "600", 
+                margin: "0", 
+                position: "relative", 
+                left: "-0.5rem",
+                marginBottom: "0.5rem"
+              }}>
                 Your story so far
               </h3>
               
               {chapters.length === 0 ? (
-                <div style={{ padding: "2rem", border: "1px dashed rgba(255,255,255,0.1)", textAlign: "center", color: "var(--text-secondary)", borderRadius: "16px", fontStyle: "italic" }}>
-                  Your story is waiting to be written.
+                <div style={{ padding: "3rem", border: "1px dashed var(--ink-faint)", textAlign: "center", color: "var(--ink-light)", borderRadius: "6px", fontStyle: "italic", marginLeft: "-1rem" }}>
+                  Your personal history is waiting to be penned.
                 </div>
               ) : (
                 chapters.map((c) => (
-                  <div key={c.id} className="stationery-card" style={{ padding: "1.5rem", position: "relative" }}>
-                    {/* Timeline dot */}
-                    <div style={{ position: "absolute", left: "-2.35rem", top: "1.75rem", width: "12px", height: "12px", borderRadius: "50%", background: "var(--accent)", border: "2px solid var(--bg-page)" }} />
+                  <div key={c.id} className="nb-card vault" style={{ padding: "1.5rem", position: "relative", width: "100%" }}>
+                    {/* Real timeline dot positioned on the timeline vector */}
+                    <div style={{ 
+                      position: "absolute", 
+                      left: "-2.35rem", 
+                      top: "1.75rem", 
+                      width: "10px", 
+                      height: "10px", 
+                      borderRadius: "50%", 
+                      background: "var(--accent-plum)", 
+                      border: "2px solid #f4f2f6" 
+                    }} />
                     
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
                       <div>
-                        <h4 style={{ margin: "0 0 0.25rem 0", fontSize: "1.1rem", fontWeight: "600", color: "var(--text-primary)" }}>
+                        <h4 style={{ fontFamily: "var(--font-serif)", margin: "0 0 2px 0", fontSize: "16px", fontWeight: "700", color: "var(--ink-dark)" }}>
                           {c.title}
                         </h4>
-                        <span style={{ fontSize: "0.85rem", color: "var(--text-secondary)" }}>
+                        <span style={{ fontSize: "11px", color: "var(--ink-light)", fontWeight: "600" }}>
                           {c.phase}
                         </span>
                       </div>
-                      <button onClick={() => setChapters(prev => prev.filter(item => item.id !== c.id))} style={{ background: "none", border: "none", color: "var(--text-secondary)", cursor: "pointer", fontSize: "1.2rem" }}>✕</button>
+                      <button onClick={() => setChapters(prev => prev.filter(item => item.id !== c.id))} style={{ background: "none", border: "none", color: "var(--ink-light)", cursor: "pointer", fontSize: "14px" }}>✕</button>
                     </div>
-                    <div style={{ marginTop: "1rem", color: "rgba(255,255,255,0.8)", fontSize: "0.95rem", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+                    
+                    <div style={{ 
+                      fontFamily: "var(--font-cursive)", 
+                      fontSize: "18px", 
+                      lineHeight: "1.4", 
+                      color: "#2a1c40", 
+                      whiteSpace: "pre-wrap",
+                      marginTop: "12px",
+                      borderTop: "1px solid var(--ink-faint)",
+                      paddingTop: "10px"
+                    }}>
                       {c.note}
                     </div>
                   </div>
