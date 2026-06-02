@@ -234,76 +234,91 @@ export default function WheelOfLife() {
           width="100%"
           style={{ maxWidth: '440px', display: 'block', margin: '0 auto', overflow: 'visible' }}
         >
-          {/* Inner background scale rings */}
+          {/* Background rings — KEEP AS CIRCLES */}
           {rings.map(ring => (
             <circle
               key={ring}
               cx={cx} cy={cy}
               r={(ring / 10) * maxR}
               fill="none"
-              stroke="rgba(26,16,8,0.06)"
+              stroke="rgba(26,16,8,0.07)"
               strokeWidth="1"
             />
           ))}
 
-          {/* Solid Outer border ring */}
-          <circle
-            cx={cx} cy={cy} r={maxR}
+          {/* Outer ring border — KEEP */}
+          <circle cx={cx} cy={cy} r={maxR}
             fill="none"
             stroke="rgba(26,16,8,0.15)"
             strokeWidth="1.5"
           />
 
-          {/* Filled Pizza slices segments */}
-          {DIMENSIONS.map((dim, i) => {
-            const score = data.ratings[dim.key] ?? 5;
-            const fillR = (score / 10) * maxR;
-            return (
-              <path
-                key={dim.key}
-                d={slicePath(i, fillR)}
-                fill={dim.color}
-                fillOpacity={0.2}
-                stroke={dim.color}
-                strokeWidth="1.5"
-                strokeOpacity={0.8}
-                style={{ transition: 'd 0.3s ease, fill 0.3s ease' }}
-              />
-            );
-          })}
-
-          {/* Optional dashed comparison arc overlays from past snapshots */}
-          {compareMode && snapshots.length > 0 && DIMENSIONS.map((dim, i) => {
-            const lastSnap = snapshots.find(s => s.timestamp !== snapshots[0].timestamp) || snapshots[snapshots.length - 1];
-            if (!lastSnap) return null;
-            const lastScore = lastSnap.ratings[dim.key] !== undefined
-              ? lastSnap.ratings[dim.key]
-              : (lastSnap.ratings[dim.label] !== undefined ? lastSnap.ratings[dim.label] : 5);
-            const compareR = (lastScore / 10) * maxR;
-            return (
-              <path
-                key={`compare-${dim.key}`}
-                d={comparisonArcPath(i, compareR)}
-                fill="none"
-                stroke="rgba(26, 16, 8, 0.45)"
-                strokeWidth="2"
-                strokeDasharray="4 4"
-                style={{ transition: 'd 0.3s ease' }}
-              />
-            );
-          })}
-
-          {/* Division spokes lines */}
+          {/* Spoke lines — KEEP */}
           {DIMENSIONS.map((_, i) => {
-            const sp = spokeLine(i);
+            const angle = i * angleStep - Math.PI / 2;
             return (
-              <line
-                key={i}
+              <line key={i}
                 x1={cx} y1={cy}
-                x2={sp.x2} y2={sp.y2}
+                x2={cx + maxR * Math.cos(angle)}
+                y2={cy + maxR * Math.sin(angle)}
                 stroke="rgba(26,16,8,0.08)"
                 strokeWidth="1"
               />
+            );
+          })}
+
+          {/* Polygon connecting all dots */}
+          <polygon
+            points={DIMENSIONS.map((dim, i) => {
+              const score = data.ratings[dim.key] ?? 5;
+              const angle = i * angleStep - Math.PI / 2;
+              const r = (score / 10) * maxR;
+              return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+            }).join(' ')}
+            fill="rgba(92,143,168,0.08)"
+            stroke="#5c8fa8"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+            style={{ transition: 'points 0.3s ease' }}
+          />
+
+          {/* Optional dashed comparison polygon from past snapshots */}
+          {compareMode && snapshots.length > 0 && (
+            <polygon
+              points={DIMENSIONS.map((dim, i) => {
+                const lastSnap = snapshots.find(s => s.timestamp !== snapshots[0].timestamp) || snapshots[snapshots.length - 1];
+                const lastScore = lastSnap ? (lastSnap.ratings[dim.key] ?? 5) : 5;
+                const angle = i * angleStep - Math.PI / 2;
+                const r = (lastScore / 10) * maxR;
+                return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+              }).join(' ')}
+              fill="none"
+              stroke="rgba(26, 16, 8, 0.4)"
+              strokeWidth="1.5"
+              strokeDasharray="4 4"
+              strokeLinejoin="round"
+              style={{ transition: 'points 0.3s ease' }}
+            />
+          )}
+
+          {/* Dots — one per spoke at score position */}
+          {DIMENSIONS.map((dim, i) => {
+            const score = data.ratings[dim.key] ?? 5;
+            const angle = i * angleStep - Math.PI / 2;
+            const r = (score / 10) * maxR;
+            const x = cx + r * Math.cos(angle);
+            const y = cy + r * Math.sin(angle);
+            return (
+              <g key={dim.key} style={{ transition: 'transform 0.3s ease' }}>
+                <circle cx={x} cy={y} r={6}
+                  fill="white"
+                  stroke={dim.color}
+                  strokeWidth="2"
+                />
+                <circle cx={x} cy={y} r={3}
+                  fill={dim.color}
+                />
+              </g>
             );
           })}
 
