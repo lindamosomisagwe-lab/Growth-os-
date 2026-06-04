@@ -1,5 +1,5 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/lifemart%20os.html" }
+    { "source": "/", "destination": "/app.html" }
   ]
 }
