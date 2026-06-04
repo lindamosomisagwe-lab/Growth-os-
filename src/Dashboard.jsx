@@ -657,7 +657,6 @@ const Dashboard = ({ user }) => {
     /* ══════════════════════════════════════════
        INIT
        ══════════════════════════════════════════ */
-    document.addEventListener('DOMContentLoaded', () => {
       // Paint the app shell immediately with the home background
       // (setPageColor uses a crossfade timer, so we seed the base directly here)
       const shell = document.querySelector('.app-shell');
