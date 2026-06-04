@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LifeSmart OS — Personal Growth Dashboard</title>
+  <meta name="description" content="Your personal growth OS. Track mood, goals, life balance, and daily quests in one beautiful dashboard.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Firebase v10 compat SDKs — work in plain HTML with no bundler -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+  <style>
+    /* ══════════════════════════════════════════
+       1. CSS VARIABLE SYSTEM — SINGLE SOURCE OF TRUTH
+       ══════════════════════════════════════════ */
+    :root {
+      /* Section accent colours */
+      --color-home:    #7C5CFC;
+      --color-balance: #4FACFE;
+      --color-goals:   #F05A7E;
+      --color-today:   #43E97B;
+      --color-vault:   #A78BFA;
+
+      /* Section gradient pairs */
+      --grad-home:    linear-gradient(135deg, #7C5CFC, #5B3FD4);
+      --grad-balance: linear-gradient(135deg, #4FACFE, #00C6FF);
+      --grad-goals:   linear-gradient(135deg, #F05A7E, #E83B6A);
+      --grad-today:   linear-gradient(135deg, #43E97B, #38F9D7);
+      --grad-vault:   linear-gradient(135deg, #A78BFA, #8B5CF6);
+
+      /* Section dark backgrounds */
+      --bg-home:    linear-gradient(160deg, #1a0533 0%, #2d0f55 40%, #09080F 100%);
+      --bg-balance: linear-gradient(160deg, #0c2a4a 0%, #0f3d6e 40%, #09080F 100%);
+      --bg-goals:   linear-gradient(160deg, #2d0a1e 0%, #5c1035 40%, #09080F 100%);
+      --bg-today:   linear-gradient(160deg, #052e16 0%, #0a4a26 40%, #09080F 100%);
+      --bg-vault:   linear-gradient(160deg, #1a0c2e 0%, #2e1555 40%, #09080F 100%);
+
+      /* Gamification colours */
+      --color-xp:      #F9D423;
+      --color-streak:  #FF6B6B;
+      --color-chapter: #667EEA;
+
+      /* RGB equivalents for rgba() usage in HUD chip labels */
+      --color-streak-rgb:  255, 107, 107;
+      --color-chapter-rgb: 167, 139, 250;
+
+      /* Dynamic page accent — JS updates these */
+      --color-accent: #7C5CFC;
+      --grad-accent:  linear-gradient(135deg, #7C5CFC, #5B3FD4);
+      --bg-page:      linear-gradient(160deg, #1a0533 0%, #2d0f55 40%, #09080F 100%);
+
+      /* Glass system */
+      --glass-bg:     rgba(15, 12, 40, 0.58);
+      --glass-border: rgba(255, 255, 255, 0.11);
+      --glass-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.07);
+
+      /* Text hierarchy */
+      --text-primary:   #FFFFFF;
+      --text-secondary: rgba(255,255,255,0.75);
+      --text-tertiary:  rgba(255,255,255,0.45);
+      --text-label:     rgba(255,255,255,0.6);
+    }
+
+    /* ══════════════════════════════════════════
+       2. BASE
+       ══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      background: #09080F;  /* deep fallback — actual gradient lives on .app-shell */
+      color: var(--text-primary);
+    }
+
+    /* View-transition timing */
+    ::view-transition-group(*),
+    ::view-transition-old(*),
+    ::view-transition-new(*) {
+      animation-duration: 0.25s;
+      animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    /* ══════════════════════════════════════════
+       3. LAYOUT
+       ══════════════════════════════════════════ */
+    .app-shell {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      position: relative;
+      /* The actual page background sits here so it's never clipped */
+      background: var(--bg-home);  /* initial value — JS overwrites via inline style */
+      transition: background 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Smooth background cross-fade overlay:
+       CSS gradients can't tween, so we overlay a second gradient that
+       fades in on each navigation, then becomes the new base. */
+    .app-shell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--bg-next, transparent);
+      opacity: 0;
+      transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app-shell.transitioning::before {
+      opacity: 1;
+    }
+
+    /* All direct children of app-shell must sit above the ::before overlay */
+    .sidebar, .main-scroll {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       4. SIDEBAR
+       ══════════════════════════════════════════ */
+    .sidebar {
+      width: 68px;
+      flex-shrink: 0;
+      background: rgba(6, 4, 20, 0.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 0 16px;
+      gap: 4px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--grad-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      transition: background 0.5s ease;
+      flex-shrink: 0;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: 100%;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    /* Each nav item has a --nav-color set inline */
+    .nav-item {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.18s ease, background 0.18s ease;
+      flex-shrink: 0;
+    }
+
+    /* Colour bar on the left */
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 0;
+      background: var(--nav-color, #7C5CFC);
+      border-radius: 0 3px 3px 0;
+      transition: height 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .nav-item:hover {
+      color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .nav-item.active {
+      color: #FFFFFF;
+      background: color-mix(in srgb, var(--nav-color, #7C5CFC) 20%, transparent);
+    }
+
+    .nav-item.active::before { height: 60%; }
+
+    .nav-item svg { width: 20px; height: 20px; }
+
+    .sidebar-spacer { flex: 1; }
+
+    .sidebar-settings {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255,255,255,0.35);
+      cursor: pointer;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .sidebar-settings:hover {
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.07);
+    }
+
+    /* ══════════════════════════════════════════
+       5. MAIN CONTENT
+       ══════════════════════════════════════════ */
+    .main-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .main-scroll::-webkit-scrollbar { width: 5px; }
+    .main-scroll::-webkit-scrollbar-track { background: transparent; }
+    .main-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+    .main-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+    .content-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 28px 28px 48px;
+    }
+
+    /* ══════════════════════════════════════════
+       6. HUD TOP BAR
+       ══════════════════════════════════════════ */
+    .hud-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-heading {
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 36px;
+      line-height: 1.1;
+      text-shadow: 0 0 40px color-mix(in srgb, var(--color-accent) 60%, transparent);
+      transition: text-shadow 0.5s ease;
+    }
+
+    .page-subheading {
+      color: var(--text-tertiary);
+      font-size: 14px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+
+    .hud-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    /* Colour-coded chips */
+    .hud-chip {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 999px;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .hud-streak {
+      background: linear-gradient(135deg, rgba(255,107,107,0.22), rgba(255,142,83,0.18));
+      border: 1px solid rgba(255,107,107,0.38);
+    }
+
+    .hud-xp {
+      background: linear-gradient(135deg, rgba(249,212,35,0.22), rgba(248,54,0,0.15));
+      border: 1px solid rgba(249,212,35,0.38);
+    }
+
+    .hud-chapter {
+      background: linear-gradient(135deg, rgba(167,139,250,0.22), rgba(139,92,246,0.18));
+      border: 1px solid rgba(167,139,250,0.38);
+    }
+
+    .hud-chip-emoji { font-size: 15px; line-height: 1; }
+
+    .hud-chip-number {
+      color: #FFFFFF;
+      font-weight: 800;
+      font-size: 14px;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-chip-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .hud-streak .hud-chip-label  { color: rgba(var(--color-streak-rgb),0.8); }
+    .hud-xp     .hud-chip-label  { color: rgba(249,212,35,0.8); }
+    .hud-chapter .hud-chip-label { color: rgba(var(--color-chapter-rgb),0.8); }
+
+    /* ══════════════════════════════════════════
+       7. CARDS — GLASS SYSTEM
+       Dark glass panel — colour identity comes from border-top,
+       never from the background so it never overrides the page gradient.
+       ══════════════════════════════════════════ */
+    .card {
+      background: rgba(10, 8, 25, 0.58);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-top: 3px solid var(--color-accent);
+      border-radius: 24px;
+      box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      position: relative;
+      overflow: hidden;
+      will-change: transform;
+      /* Stagger entrance */
+      opacity: 0;
+      transform: translateY(14px);
+    }
+
+
+    /* Section overrides — card top border colour.
+       These are intentionally hardcoded per-section so the border
+       stays correct even when --color-accent changes on other pages.
+       A balance card on the home page should still look blue. */
+    .card-home    { border-top-color: var(--color-home);    }
+    .card-balance { border-top-color: var(--color-balance); }
+    .card-goals   { border-top-color: var(--color-goals);   }
+    .card-today   { border-top-color: var(--color-today);   }
+    .card-vault   { border-top-color: var(--color-vault);   }
+
+    /* Hero variant — same dark glass with an accent tint wash */
+    .card-hero {
+      background: linear-gradient(
+        140deg,
+        rgba(10, 8, 25, 0.72) 0%,
+        color-mix(in srgb, var(--color-accent) 12%, rgba(10, 8, 25, 0.72)) 100%
+      );
+    }
+
+    /* ── TEXT HIERARCHY ── */
+    .t-primary   { color: #FFFFFF; font-weight: 600; }
+    .t-secondary { color: rgba(255,255,255,0.75); font-weight: 500; }
+    .t-tertiary  { color: rgba(255,255,255,0.45); }
+    .t-label {
+      color: rgba(255,255,255,0.6);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════════════════
+       8. BUTTONS
+       ══════════════════════════════════════════ */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: var(--grad-accent);
+      color: var(--text-primary);
+      font-weight: 800;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 24px;
+      border-bottom: 4px solid color-mix(in srgb, var(--color-accent) 60%, #000);
+      box-shadow: 0 4px 16px color-mix(in srgb, var(--color-accent) 35%, transparent);
+      cursor: pointer;
+      transform: translateY(0);
+      transition: transform 0.08s ease,
+                  border-bottom-width 0.08s ease,
+                  box-shadow 0.08s ease,
+                  filter 0.15s ease,
+                  background 0.5s ease,
+                  border-bottom-color 0.5s ease;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.1);
+      box-shadow: 0 6px 24px color-mix(in srgb, var(--color-accent) 50%, transparent);
+    }
+
+    .btn-primary:active {
+      transform: translateY(3px);
+      border-bottom-width: 1px;
+      box-shadow: 0 1px 4px color-mix(in srgb, var(--color-accent) 20%, transparent);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.3);
+      color: rgba(255,255,255,0.9);
+      font-weight: 600;
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      border: 1px solid rgba(255,255,255,0.22);
+      border-bottom: 4px solid rgba(0,0,0,0.4);
+      border-radius: 14px;
+      padding: 12px 24px;
+      cursor: pointer;
+      transform: translateY(0);
+      transition: transform 0.08s ease, border-bottom-width 0.08s ease, background 0.15s ease;
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.35); }
+    .btn-secondary:active { transform: translateY(3px); border-bottom-width: 1px; }
+
+    /* ══════════════════════════════════════════
+       9. GRID
+       ══════════════════════════════════════════ */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .col-span-2 { grid-column: 1 / -1; }
+
+    @media (max-width: 680px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .col-span-2 { grid-column: 1; }
+      .content-wrap { padding: 20px 16px 48px; }
+      .hud-bar { flex-direction: column; gap: 12px; }
+      .hud-chips { justify-content: flex-start; }
+      .page-heading { font-size: 28px; }
+    }
+
+    /* ══════════════════════════════════════════
+       10. CARD INTERNALS
+       ══════════════════════════════════════════ */
+
+    /* ── Quest progress bar ── */
+    .quest-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 999px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .quest-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--grad-accent);
+      transition: width 0.5s cubic-bezier(0.34,1.56,0.64,1), background 0.5s ease;
+    }
+
+    /* ── Countdown badge ── */
+    .countdown-badge {
+      background: rgba(240,90,126,0.18);
+      border: 1px solid rgba(240,90,126,0.42);
+      color: rgba(240,90,126,0.95);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      display: inline-block;
+    }
+
+    /* ── Weekly strip ── */
+    .day-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+    .day-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), background 0.2s ease;
+    }
+
+    .day-circle:hover { transform: scale(1.12); }
+    .day-circle.logged-happy   { background: var(--color-goals); border-color: var(--color-goals); box-shadow: 0 0 14px rgba(245,166,35,0.45); }
+    .day-circle.logged-content { background: #43E97B; border-color: #43E97B; box-shadow: 0 0 14px rgba(67,233,123,0.4); }
+    .day-circle.logged-neutral { background: var(--color-balance); border-color: var(--color-balance); box-shadow: 0 0 14px rgba(79,172,254,0.4); }
+    .day-circle.logged-sad     { background: #A78BFA; border-color: #A78BFA; box-shadow: 0 0 14px rgba(167,139,250,0.4); }
+    .day-circle.logged-angry   { background: var(--color-goals); border-color: var(--color-goals); box-shadow: 0 0 14px rgba(240,90,126,0.4); }
+
+    .day-label { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.5); }
+    .day-label.today { color: #FFFFFF; font-weight: 700; }
+
+    .today-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      transition: background 0.5s ease;
+    }
+
+    /* ── Balance ring ── */
+    .balance-ring-wrap {
+      position: relative;
+      width: 58px;
+      height: 58px;
+      flex-shrink: 0;
+    }
+
+    .balance-ring-wrap svg {
+      width: 58px;
+      height: 58px;
+      transform: rotate(-90deg);
+    }
+
+    .balance-ring-label {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-primary);
+      font-weight: 800;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    /* ── Vault glow ── */
+    .vault-icon-wrap {
+      font-size: 36px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 14px rgba(167,139,250,0.45));
+    }
+
+    /* ── Gift shimmer ── */
+    .gift-shimmer {
+      display: inline-block;
+      font-size: 56px;
+      line-height: 1;
+    }
+
+    /* ══════════════════════════════════════════
+       11. TOAST SYSTEM
+       ══════════════════════════════════════════ */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(15,12,40,0.92);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-left: 4px solid var(--color-accent);
+      border-radius: 14px;
+      padding: 12px 20px;
+      color: #FFFFFF;
+      font-weight: 600;
+      font-size: 14px;
+      pointer-events: all;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 240px;
+      max-width: 340px;
+    }
+
+    /* ══════════════════════════════════════════
+       12. PAGE VIEWS
+       ══════════════════════════════════════════ */
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    /* ══════════════════════════════════════════
+       13. SECTION-SPECIFIC CARD INTERNALS
+       ══════════════════════════════════════════ */
+
+    /* Goals map node */
+    .goal-node {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .goal-node.completed {
+      background: color-mix(in srgb, var(--color-goals) 25%, transparent);
+      border: 2px solid var(--color-goals);
+      box-shadow: 0 0 20px rgba(240,90,126,0.5);
+    }
+
+    .goal-node.active {
+      background: color-mix(in srgb, var(--color-goals) 20%, transparent);
+      border: 2px solid var(--color-goals);
+    }
+
+    .goal-node .pulse-ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 2px solid rgba(240,90,126,0.4);
+    }
+
+    .goal-node.locked {
+      background: rgba(255,255,255,0.06);
+      border: 2px dashed rgba(255,255,255,0.18);
+    }
+
+    /* Today mood buttons */
+    .mood-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      opacity: 0.7;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .mood-btn:hover { opacity: 0.9; transform: scale(1.04); }
+
+    .mood-btn.selected {
+      transform: scale(1.1);
+      opacity: 1;
+    }
+
+    .mood-btn:not(.selected) { opacity: 0.45; filter: grayscale(0.25); }
+
+    .mood-emoji { display: inline-block; font-size: 28px; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    .mood-btn.selected .mood-emoji { transform: scale(1.35); }
+
+    .mood-label { font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.7); }
+
+    /* Specific mood selected states */
+    .mood-btn[data-mood="happy"].selected    { background: rgba(254,214,35,0.18);  border-color: #FED623; box-shadow: 0 0 20px rgba(254,214,35,0.3); }
+    .mood-btn[data-mood="content"].selected  { background: rgba(67,233,123,0.18);  border-color: #43E97B; box-shadow: 0 0 20px rgba(67,233,123,0.3); }
+    .mood-btn[data-mood="neutral"].selected  { background: rgba(79,172,254,0.18);  border-color: #4FACFE; box-shadow: 0 0 20px rgba(79,172,254,0.3); }
+    .mood-btn[data-mood="sad"].selected      { background: rgba(167,139,250,0.18); border-color: #A78BFA; box-shadow: 0 0 20px rgba(167,139,250,0.3); }
+    .mood-btn[data-mood="angry"].selected    { background: rgba(240,90,126,0.18);  border-color: #F05A7E; box-shadow: 0 0 20px rgba(240,90,126,0.3); }
+
+    /* Hydration glasses */
+    .glass-container { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .water-glass {
+      width: 36px;
+      height: 48px;
+      border-radius: 4px 4px 8px 8px;
+      border: 2px solid rgba(79,172,254,0.35);
+      background: rgba(79,172,254,0.1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s ease;
+    }
+
+    .water-glass.filled {
+      border-color: #4FACFE;
+    }
+
+    .water-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(180deg, rgba(79,172,254,0.85), rgba(0,198,255,0.65));
+      height: 0;
+      transition: height 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .water-glass.filled .water-fill { height: 100%; }
+
+    /* Life Balance sliders */
+    .balance-slider-wrap { display: flex; flex-direction: column; gap: 14px; }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-label { font-size: 13px; font-weight: 500; color: var(--text-secondary); width: 80px; flex-shrink: 0; }
+    .slider-score { font-size: 14px; font-weight: 800; color: var(--color-balance); width: 24px; text-align: right; flex-shrink: 0; }
+
+    input[type=range].balance-range {
+      -webkit-appearance: none;
+      flex: 1;
+      height: 6px;
+      background: rgba(79,172,254,0.15);
+      border-radius: 3px;
+      border: 1px solid rgba(79,172,254,0.25);
+      outline: none;
+    }
+
+    input[type=range].balance-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #4FACFE;
+      cursor: pointer;
+      border: 3px solid rgba(79,172,254,0.4);
+      box-shadow: 0 0 10px rgba(79,172,254,0.5);
+      transition: transform 0.15s ease;
+    }
+
+    input[type=range].balance-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* Vault letter cards */
+    .letter-card {
+      background: rgba(167,139,250,0.1);
+      border: 1px solid rgba(167,139,250,0.22);
+      border-top: 3px solid var(--color-vault);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 0 20px rgba(167,139,250,0.12);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .letter-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(167,139,250,0.25);
+    }
+
+    .letter-sealed {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(167,139,250,0.18);
+      border: 1px solid rgba(167,139,250,0.4);
+      color: #A78BFA;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ══════════════════════════════════════════
+       14. ANIMATIONS — wrapped in prefers-reduced-motion
+       ══════════════════════════════════════════ */
+    @media (prefers-reduced-motion: no-preference) {
+
+      /* Card entrance stagger */
+      @keyframes cardEntrance {
+        from { opacity: 0; transform: translateY(14px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .card.entering {
+        animation: cardEntrance 0.42s cubic-bezier(0.22,1,0.36,1) forwards;
+      }
+
+      /* Card hover spring */
+      .card {
+        transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1),
+                    box-shadow 0.3s ease,
+                    border-color 0.5s ease;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 16px 48px rgba(0,0,0,0.55),
+                    0 0 0 1px var(--color-accent) inset,
+                    inset 0 1px 0 rgba(255,255,255,0.1);
+      }
+
+      /* Gift shimmer float */
+      @keyframes giftFloat {
+        0%,100% { transform: translateY(0)   scale(1);    filter: drop-shadow(0 0 10px rgba(167,139,250,0.5)); }
+        50%      { transform: translateY(-8px) scale(1.06); filter: drop-shadow(0 0 24px rgba(167,139,250,0.85)); }
+      }
+
+      .gift-shimmer { animation: giftFloat 2.6s ease-in-out infinite; }
+
+      /* Streak bounce */
+      @keyframes streakBounce {
+        0%   { transform: scale(1) rotate(0); }
+        35%  { transform: scale(1.5) rotate(-12deg); }
+        65%  { transform: scale(0.92) rotate(6deg); }
+        100% { transform: scale(1) rotate(0); }
+      }
+
+      .streak-bounce { animation: streakBounce 0.42s cubic-bezier(0.34,1.56,0.64,1); }
+
+      /* XP float */
+      @keyframes xpFloat {
+        0%   { opacity: 1; transform: translateY(0) scale(1); }
+        20%  { opacity: 1; transform: translateY(-10px) scale(1.12); }
+        100% { opacity: 0; transform: translateY(-44px) scale(0.88); }
+      }
+
+      .xp-float-el {
+        position: fixed;
+        color: var(--color-xp);
+        font-weight: 900;
+        font-size: 18px;
+        pointer-events: none;
+        z-index: 9998;
+        text-shadow: 0 0 12px rgba(249,212,35,0.7);
+        animation: xpFloat 0.95s ease forwards;
+      }
+
+      /* Check draw */
+      @keyframes checkDraw {
+        from { stroke-dashoffset: 30; }
+        to   { stroke-dashoffset: 0; }
+      }
+
+      .check-path {
+        stroke: var(--color-today);
+        stroke-width: 2.5;
+        stroke-dasharray: 30;
+        stroke-dashoffset: 30;
+        fill: none;
+        animation: checkDraw 0.35s ease forwards;
+      }
+
+      /* Strikethrough */
+      @keyframes strikeSlide {
+        from { width: 0; }
+        to   { width: 100%; }
+      }
+
+      .task-done {
+        position: relative;
+        color: rgba(255,255,255,0.45);
+      }
+
+      .task-done::after {
+        content: '';
+        position: absolute;
+        height: 2px;
+        background: rgba(255,255,255,0.45);
+        top: 50%; left: 0;
+        animation: strikeSlide 0.28s ease 0.18s forwards;
+        width: 0;
+      }
+
+      /* Goals path draw */
+      @keyframes pathDraw {
+        from { stroke-dashoffset: var(--path-length, 400); }
+        to   { stroke-dashoffset: 0; }
+      }
+
+      .goals-path {
+        stroke-dasharray: var(--path-length, 400);
+        stroke-dashoffset: var(--path-length, 400);
+        animation: pathDraw 1.6s cubic-bezier(0.22,1,0.36,1) forwards;
+      }
+
+      /* Active node pulse ring */
+      @keyframes nodePulse {
+        0%,100% { transform: scale(1); opacity: 0.5; }
+        50%      { transform: scale(1.22); opacity: 0.18; }
+      }
+
+      .pulse-ring { animation: nodePulse 2.1s ease infinite; }
+
+      /* Toast in/out */
+      @keyframes toastIn  {
+        from { transform: translateX(120%); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
+      }
+      @keyframes toastOut {
+        from { transform: translateX(0);    opacity: 1; }
+        to   { transform: translateX(120%); opacity: 0; }
+      }
+
+      .toast { animation: toastIn 0.32s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+      .toast.dismissing { animation: toastOut 0.26s ease forwards; }
+
+      /* Chest lid fly + light burst */
+      @keyframes lidFly {
+        to { transform: translateY(-100px) rotate(18deg); opacity: 0; }
+      }
+      @keyframes lightBurst {
+        0%   { opacity: 0; transform: scale(0.5); }
+        45%  { opacity: 0.85; transform: scale(1.6); }
+        100% { opacity: 0; transform: scale(2.2); }
+      }
+    }
+
+    /* Reduced motion fallback */
+    @media (prefers-reduced-motion: reduce) {
+      .card { opacity: 1; transform: none; transition: none; }
+      .gift-shimmer { animation: none; }
+      .pulse-ring { animation: none; }
+    }
+
+    /* ══════════════════════════════════════════
+       15. EMOJI VISIBILITY SYSTEM
+       Core rule: no emoji ever sits naked on a same-tone background.
+       Every emoji gets at minimum a drop-shadow baseline. Prominent
+       emoji get a dark-glass container that works on all backgrounds.
+       ══════════════════════════════════════════ */
+
+    /* Baseline drop-shadow on every emoji — lightweight universal protection */
+    .emoji,
+    .hud-chip-emoji,
+    .mood-emoji,
+    .gift-shimmer,
+    .vault-icon-wrap {
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.55));
+    }
+
+    /* Dark-glass pill — use on any emoji over a coloured surface */
+    .emoji-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.28);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      flex-shrink: 0;
+    }
+
+    /* Card header icon tile — 44 × 44 dark pill for section icons */
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 4px rgba(0,0,0,0.5));
+    }
+
+    /* Nav emoji badge — per-section colour tile */
+    .nav-emoji-wrap {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: color-mix(in srgb, var(--nav-color, #7C5CFC) 20%, rgba(0,0,0,0.25));
+      border: 1px solid color-mix(in srgb, var(--nav-color, #7C5CFC) 30%, transparent);
+      font-size: 16px;
+      flex-shrink: 0;
+      filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5));
+    }
+
+    /* Gift shimmer gets an enhanced glow shadow instead of plain drop-shadow */
+    .gift-shimmer {
+      filter: drop-shadow(0 2px 10px rgba(0,0,0,0.6));
+    }
+
+    /* Vault icon — existing glow kept, add base shadow too */
+    .vault-icon-wrap {
+      filter: drop-shadow(0 0 14px rgba(167,139,250,0.45)) drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+    }
+
+    /* Goal node emoji — always inside a coloured node circle so they're fine,
+       but add a subtle shadow for depth */
+    .goal-node { text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+
+    /* ══════════════════════════════════════════
+       16. MODAL SYSTEM
+       ══════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: rgba(10, 8, 25, 0.96);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-top: 3px solid var(--color-accent);
+      border-radius: 24px; padding: 28px;
+      width: min(460px, calc(100vw - 40px));
+      display: flex; flex-direction: column; gap: 18px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.75);
+      transform: translateY(22px) scale(0.97);
+      transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), border-color 0.5s ease;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; }
+    .modal-close {
+      width:30px; height:30px; border-radius:8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.65);
+      font-family:'Inter',sans-serif;
+      font-size:18px; line-height:1;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.14); color:#fff; }
+    .modal-field { display:flex; flex-direction:column; gap:7px; }
+    .modal-input {
+      width:100%; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15); border-radius:12px;
+      padding: 11px 14px; color:#fff;
+      font-family:'Inter',sans-serif; font-size:14px; font-weight:500;
+      outline:none; resize:vertical;
+      transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent); }
+    .modal-input::placeholder { color:rgba(255,255,255,0.3); }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:2px; }
+    .settings-row {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius:14px; padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <!-- ═══ SETTINGS MODAL ═══ -->
+  <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">⚙️ Settings</p>
+        <button class="modal-close" onclick="closeModal('settings-modal')" aria-label="Close">×</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Dark Mode</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Always active in LifeSmart OS</p>
+          </div>
+          <span style="color:var(--color-today); font-weight:700; font-size:12px;">✓ Active</span>
+        </div>
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Reduced Motion</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Follows system preference</p>
+          </div>
+          <span style="color:rgba(255,255,255,0.4); font-weight:700; font-size:12px;">Auto</span>
+        </div>
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Export Data</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Download your progress as JSON</p>
+          </div>
+          <button class="btn-secondary" style="padding:7px 16px; font-size:12px;" onclick="exportData()">Export</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Cloud Sync</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Sync across devices</p>
+          </div>
+          <span id="cloud-sync-status" style="color:rgba(255,255,255,0.4); font-weight:700; font-size:12px;">Connecting…</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('settings-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD GOAL MODAL ═══ -->
+  <div class="modal-overlay" id="goal-modal" role="dialog" aria-modal="true" aria-label="Add Goal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">🎯 Add New Goal</p>
+        <button class="modal-close" onclick="closeModal('goal-modal')" aria-label="Close">×</button>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Goal Title</span>
+        <input type="text" id="goal-title-input" class="modal-input" placeholder="e.g. Read 12 books this year" maxlength="60">
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Description <span style="color:rgba(255,255,255,0.3); font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></span>
+        <textarea id="goal-desc-input" class="modal-input" placeholder="What does achieving this look like?" rows="3" maxlength="200"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('goal-modal')">Cancel</button>
+        <button class="btn-primary" onclick="submitGoal()">🎯 Add Goal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ WRITE LETTER MODAL ═══ -->
+  <div class="modal-overlay" id="letter-modal" role="dialog" aria-modal="true" aria-label="Write Letter">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">✉️ Write to Future You</p>
+        <button class="modal-close" onclick="closeModal('letter-modal')" aria-label="Close">×</button>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Open this letter in</span>
+        <select id="letter-open-select" class="modal-input" style="cursor:pointer;">
+          <option value="30">30 days</option>
+          <option value="90">3 months</option>
+          <option value="180">6 months</option>
+          <option value="365" selected>1 year</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Your letter</span>
+        <textarea id="letter-body-input" class="modal-input" placeholder="Dear future me..." rows="6" maxlength="1000"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('letter-modal')">Cancel</button>
+        <button class="btn-primary" onclick="submitLetter()">✉️ Seal Letter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD TASK MODAL ═══ -->
+  <div class="modal-overlay" id="task-modal" role="dialog" aria-modal="true" aria-label="Add Task">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">✅ Add Task</p>
+        <button class="modal-close" onclick="closeModal('task-modal')" aria-label="Close">×</button>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Task name</span>
+        <input type="text" id="task-title-input" class="modal-input" placeholder="e.g. 10 min meditation" maxlength="80"
+               onkeydown="if(event.key==='Enter') submitTask()">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('task-modal')">Cancel</button>
+        <button class="btn-primary" onclick="submitTask()">Add Task</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+
+    <!-- ═══════════════════════════ SIDEBAR ═══════════════════════════ -->
+    <aside class="sidebar">
+      <div class="logo-mark" id="logo-mark">G</div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-item active"
+             id="nav-home"
+             data-page="home"
+             style="--nav-color: var(--color-home)"
+             title="Home"
+             onclick="navigateTo('home')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-balance"
+             data-page="balance"
+             style="--nav-color: var(--color-balance)"
+             title="Life Balance"
+             onclick="navigateTo('balance')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" d="M12 3v9m0 0l6 6m-6-6l-6 6"/>
+            <circle cx="12" cy="12" r="9"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-goals"
+             data-page="goals"
+             style="--nav-color: var(--color-goals)"
+             title="Goals Map"
+             onclick="navigateTo('goals')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="5"/>
+            <circle cx="12" cy="12" r="1" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-today"
+             data-page="today"
+             style="--nav-color: var(--color-today)"
+             title="Today"
+             onclick="navigateTo('today')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="17" rx="2"/>
+            <path stroke-linecap="round" d="M8 2v3M16 2v3M3 9h18"/>
+          </svg>
+        </div>
+
+        <div class="nav-item"
+             id="nav-vault"
+             data-page="vault"
+             style="--nav-color: var(--color-vault)"
+             title="Vault"
+             onclick="navigateTo('vault')">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="7" width="18" height="14" rx="2"/>
+            <path stroke-linecap="round" d="M16 7V5a2 2 0 0 0-4 0v2"/>
+            <circle cx="12" cy="14" r="2"/>
+          </svg>
+        </div>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+
+      <div class="sidebar-settings" title="Settings" onclick="showSettings()" role="button" tabindex="0">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      </div>
+    </aside>
+    <!-- ═══════════════════════ END SIDEBAR ═══════════════════════ -->
+
+    <!-- ═══════════════════════ MAIN ═══════════════════════ -->
+    <main class="main-scroll">
+      <div class="content-wrap">
+
+        <!-- HUD Top Bar -->
+        <div class="hud-bar">
+          <div style="display:flex; flex-direction:column; gap:2px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <!-- Greeting emoji — JS sets content based on hour -->
+              <span id="greeting-emoji"
+                    aria-hidden="true"
+                    style="font-size:28px; line-height:1;
+                           filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+                           transition: opacity 0.4s ease;"></span>
+              <h1 class="page-heading" id="page-heading">Good night.</h1>
+            </div>
+            <!-- Subheading: real date + live clock -->
+            <p class="page-subheading" id="page-subheading" style="display:flex; align-items:center; gap:8px;">
+              <span id="heading-date">Sunday, June 1</span>
+              <span style="color:rgba(255,255,255,0.2);">·</span>
+              <span id="live-clock"
+                    style="font-variant-numeric:tabular-nums; letter-spacing:0.02em;"></span>
+            </p>
+          </div>
+          <div class="hud-chips">
+            <div class="hud-chip hud-streak">
+              <span class="hud-chip-emoji" id="streak-emoji">🔥</span>
+              <span class="hud-chip-number" id="streak-count">7</span>
+              <span class="hud-chip-label">Streak</span>
+            </div>
+            <div class="hud-chip hud-xp">
+              <span class="hud-chip-emoji">⚡</span>
+              <span class="hud-chip-number" id="xp-count">1240</span>
+              <span class="hud-chip-label">XP</span>
+            </div>
+            <div class="hud-chip hud-chapter">
+              <span class="hud-chip-emoji">📖</span>
+              <span class="hud-chip-number">Ch.1</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ PAGE: HOME ══ -->
+        <div id="page-home" class="page-view active">
+          <div class="dashboard-grid" id="home-grid">
+
+            <!-- Daily Reward -->
+            <div class="card card-home card-hero" style="padding: 24px; display:flex; flex-direction:column; gap:12px;">
+              <div class="t-label">Daily Reward Available</div>
+              <div style="display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:12px;">
+                <!-- 🎁 sits in a dark pill so it never blends into the purple card gradient -->
+                <div style="background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.14); border-radius:20px; padding:12px 16px; display:inline-flex;">
+                  <span class="gift-shimmer" id="gift-box">🎁</span>
+                </div>
+                <div style="text-align:center;">
+                  <p class="t-primary" style="font-weight:700; font-size:18px; margin:0 0 4px;">Claim Your Reward</p>
+                  <p class="t-secondary" style="font-size:14px; margin:0;">Tap to claim your XP bonus</p>
+                </div>
+                <span class="countdown-badge">⏱ Expires tonight · 11:59 PM</span>
+              </div>
+              <button class="btn-primary" style="width:100%;" id="claim-btn" onclick="claimReward(event)">🎁 Claim +150 XP</button>
+            </div>
+
+            <!-- Today's Quest -->
+            <div class="card card-today card-hero" style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <!-- 🎯 in dark pill — green card could wash out a green emoji -->
+                <div class="emoji-container" style="width:28px; height:28px; border-radius:8px; font-size:14px;">🎯</div>
+                <span class="t-label">Today's Quest</span>
+              </div>
+              <div>
+                <p class="t-primary" style="font-weight:700; font-size:18px; margin:0 0 6px;">Less Stressed</p>
+                <p class="t-secondary" style="font-size:14px; margin:0 0 4px;">Part of: <span style="color:rgba(255,255,255,0.85);">Emotional Wellness</span></p>
+                <p class="t-tertiary" style="font-size:13px; margin:0;">3 of 5 steps completed</p>
+              </div>
+              <div>
+                <div class="quest-track">
+                  <div class="quest-fill" style="width:60%;"></div>
+                </div>
+                <p class="t-tertiary" style="font-size:12px; margin-top:6px;">60% complete</p>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn-primary" style="flex:1;" onclick="completeQuest(event, this)">Done ✓</button>
+                <button class="btn-secondary" style="flex:1;">Tomorrow</button>
+              </div>
+            </div>
+
+            <!-- Weekly Mood Strip -->
+            <div class="card card-home col-span-2" style="padding: 24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span class="t-label">This Week's Mood</span>
+                <span style="background:rgba(124,92,252,0.22); border:1px solid rgba(124,92,252,0.45); color:#A78BFA; font-size:12px; font-weight:700; padding:4px 12px; border-radius:999px;">Weekly log</span>
+              </div>
+              <div id="weekly-strip" style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;"></div>
+            </div>
+
+            <!-- Life Balance Stat Card -->
+            <div class="card card-balance" style="padding: 20px; display:flex; align-items:center; gap:16px;">
+              <div class="balance-ring-wrap">
+                <svg viewBox="0 0 58 58">
+                  <circle cx="29" cy="29" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
+                  <circle id="balance-ring-circle" cx="29" cy="29" r="22" fill="none" stroke="#4FACFE" stroke-width="8"
+                          stroke-dasharray="138.2" stroke-dashoffset="55.3" stroke-linecap="round"
+                          style="transition: stroke-dashoffset 0.8s cubic-bezier(0.34,1.56,0.64,1)"/>
+                </svg>
+                <div class="balance-ring-label" id="balance-ring-label">5.8</div>
+              </div>
+              <div>
+                <div class="t-label" style="margin-bottom:4px;">Balance</div>
+                <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 3px;">Wheel of Life</p>
+                <p class="t-tertiary" style="font-size:12px; margin:0;">Last updated today</p>
+              </div>
+              <!-- ⚖️ in dark pill — blue card could wash out lighter emoji -->
+              <div class="card-icon" style="margin-left:auto; font-size:24px;">⚖️</div>
+            </div>
+
+            <!-- Today Stat Card -->
+            <div class="card card-today" style="padding: 20px; display:flex; align-items:center; gap:16px;">
+              <!-- 📋 in a dark circle — mint green card background could clash with green-tinted emoji -->
+              <div class="card-icon" style="border-radius:50%; width:52px; height:52px; font-size:24px;">📋</div>
+              <div>
+                <div class="t-label" style="margin-bottom:4px;">Today</div>
+                <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 3px;">Not yet logged</p>
+                <p class="t-tertiary" style="font-size:12px; margin:0;">Tap to start your check-in</p>
+              </div>
+              <div style="margin-left:auto;">
+                <button class="btn-primary" style="padding:9px 18px; font-size:13px;" onclick="navigateTo('today')">Log</button>
+              </div>
+            </div>
+
+            <!-- Vault Nudge -->
+            <div class="card card-vault col-span-2" style="padding: 24px; display:flex; align-items:center; gap:20px;">
+              <!-- 🔒 in dark pill — lavender vault card; lock emoji can blend into purple tones -->
+              <div class="card-icon" style="width:52px; height:52px; font-size:28px; border-radius:16px; background:rgba(0,0,0,0.35); box-shadow:0 0 16px rgba(167,139,250,0.3);">🔒</div>
+              <div style="flex:1;">
+                <div class="t-label" style="margin-bottom:6px;">Vault</div>
+                <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 5px;">Time Vault — Your Letters</p>
+                <p style="color:rgba(255,255,255,0.8); font-size:14px; font-weight:500; margin:0; line-height:1.5;">
+                  It's been <strong id="vault-days" style="color:var(--color-vault);">0 days</strong> since your last letter to your future self. Write one tonight?
+                </p>
+              </div>
+              <button class="btn-primary" style="white-space:nowrap; flex-shrink:0;" onclick="navigateTo('vault')">Open Vault</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: LIFE BALANCE ══ -->
+        <div id="page-balance" class="page-view">
+          <div class="dashboard-grid" id="balance-grid">
+
+            <div class="card card-balance col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div class="t-label" style="margin-bottom:4px;">Life Balance</div>
+                  <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Wheel of Life</p>
+                </div>
+                <button class="btn-primary" onclick="showToast('✅ Balance saved!', 'balance')">💾 Save Balance</button>
+              </div>
+
+              <div class="balance-slider-wrap">
+                <div class="slider-row">
+                  <span class="slider-label">Health</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="7" oninput="updateSlider(this)">
+                  <span class="slider-score">7</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Career</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="5" oninput="updateSlider(this)">
+                  <span class="slider-score">5</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Finance</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="4" oninput="updateSlider(this)">
+                  <span class="slider-score">4</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Family</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="8" oninput="updateSlider(this)">
+                  <span class="slider-score">8</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Growth</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="6" oninput="updateSlider(this)">
+                  <span class="slider-score">6</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Social</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="3" oninput="updateSlider(this)">
+                  <span class="slider-score">3</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Fun</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="6" oninput="updateSlider(this)">
+                  <span class="slider-score">6</span>
+                </div>
+                <div class="slider-row">
+                  <span class="slider-label">Purpose</span>
+                  <input type="range" class="balance-range" min="1" max="10" value="7" oninput="updateSlider(this)">
+                  <span class="slider-score">7</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: GOALS MAP ══ -->
+        <div id="page-goals" class="page-view">
+          <div class="dashboard-grid" id="goals-grid">
+
+            <div class="card card-goals col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div class="t-label" style="margin-bottom:4px;">Goals Map</div>
+                  <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Chapter 1: Foundation</p>
+                </div>
+                <button class="btn-primary" onclick="addGoal()">🎯 Add Goal</button>
+              </div>
+
+              <!-- Goals path SVG -->
+              <div style="position:relative; display:flex; flex-direction:column; gap:16px; padding: 8px 0;">
+                <svg style="position:absolute; left:25px; top:0; height:100%; width:4px; overflow:visible;" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="pathGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#F05A7E"/>
+                      <stop offset="100%" stop-color="#E83B6A"/>
+                    </linearGradient>
+                  </defs>
+                  <line x1="2" y1="26" x2="2" y2="95%" stroke="url(#pathGrad)" stroke-width="3" stroke-linecap="round" class="goals-path" style="--path-length:400;"/>
+                </svg>
+
+                <!-- Goal nodes —
+                     ✅ is high-contrast on any background.
+                     🎯 is inside a coral coloured node so it's fine.
+                     🔐 is dark on dark; swap to ⛔ which has a red ring for contrast.
+                -->
+                <div style="display:flex; align-items:center; gap:16px; padding-left:8px;">
+                  <div class="goal-node completed">✅</div>
+                  <div>
+                    <p class="t-primary" style="font-weight:700; font-size:15px; margin:0 0 3px;">Morning Routine</p>
+                    <p class="t-tertiary" style="font-size:12px; margin:0;">Completed · 7 days streak</p>
+                  </div>
+                  <div style="margin-left:auto; background:rgba(240,90,126,0.18); border:1px solid rgba(240,90,126,0.4); color:#F05A7E; font-size:12px; font-weight:700; padding:3px 10px; border-radius:999px;">+200 XP</div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:16px; padding-left:8px;">
+                  <div class="goal-node active">
+                    <div class="pulse-ring"></div>
+                    🎯
+                  </div>
+                  <div>
+                    <p class="t-primary" style="font-weight:700; font-size:15px; margin:0 0 3px;">Less Stressed</p>
+                    <p class="t-tertiary" style="font-size:12px; margin:0;">In progress · 3 of 5 steps</p>
+                  </div>
+                </div>
+
+                <div style="display:flex; align-items:center; gap:16px; padding-left:8px;">
+                  <!-- 🔐 dark on dark → swap to ⛔ (red ring, high contrast) -->
+                  <div class="goal-node locked">⛔</div>
+                  <div>
+                    <p style="color:rgba(255,255,255,0.4); font-weight:600; font-size:15px; margin:0 0 3px;">Read 12 Books</p>
+                    <p class="t-tertiary" style="font-size:12px; margin:0;">Locked — complete above first</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: TODAY ══ -->
+        <div id="page-today" class="page-view">
+          <div class="dashboard-grid" id="today-grid">
+
+            <!-- Mood check-in -->
+            <!-- Note: mood emoji (😄😊😐😢😤) are all inherently
+                 high-contrast multi-colour glyphs — safe on any dark bg.
+                 They sit in their own coloured mood-btn containers.
+                 The dark overlay on the card is enough separation. -->
+            <div class="card card-today col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div>
+                <div class="t-label" style="margin-bottom:4px;">Today's Check-in</div>
+                <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">How are you feeling?</p>
+              </div>
+
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="mood-btn" data-mood="happy" onclick="selectMood(this)">
+                  <span class="mood-emoji">😄</span>
+                  <span class="mood-label">Happy</span>
+                </button>
+                <button class="mood-btn" data-mood="content" onclick="selectMood(this)">
+                  <span class="mood-emoji">😊</span>
+                  <span class="mood-label">Content</span>
+                </button>
+                <button class="mood-btn" data-mood="neutral" onclick="selectMood(this)">
+                  <span class="mood-emoji">😐</span>
+                  <span class="mood-label">Neutral</span>
+                </button>
+                <button class="mood-btn" data-mood="sad" onclick="selectMood(this)">
+                  <span class="mood-emoji">😢</span>
+                  <span class="mood-label">Sad</span>
+                </button>
+                <button class="mood-btn" data-mood="angry" onclick="selectMood(this)">
+                  <span class="mood-emoji">😤</span>
+                  <span class="mood-label">Stressed</span>
+                </button>
+              </div>
+
+              <button class="btn-primary" style="align-self:flex-start;" onclick="logMood(event, this)">Log Mood +30 XP</button>
+            </div>
+
+            <!-- Hydration -->
+            <div class="card card-today" style="padding:24px; display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <!-- 💧 in dark pill — green card bg can wash out blue-tinted emoji -->
+                <div class="card-icon" style="width:36px; height:36px; border-radius:10px; font-size:18px;">💧</div>
+                <div>
+                  <div class="t-label" style="margin-bottom:2px;">Hydration</div>
+                  <p class="t-primary" style="font-weight:700; font-size:16px; margin:0;">Water intake</p>
+                </div>
+              </div>
+              <div class="glass-container" id="water-glasses"></div>
+              <p class="t-tertiary" style="font-size:12px;" id="water-label">0 of 8 glasses</p>
+            </div>
+
+            <!-- Daily tasks -->
+            <div class="card card-today" style="padding:24px; display:flex; flex-direction:column; gap:14px;">
+              <!-- ✅ checkmark emoji in tasks is high-contrast (white+green). Safe. -->
+              <div class="t-label">Daily Tasks</div>
+              <div id="task-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+              <button class="btn-secondary" style="align-self:flex-start; padding:8px 16px; font-size:13px;" onclick="addTask()">+ Add task</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ══ PAGE: VAULT ══ -->
+        <div id="page-vault" class="page-view">
+          <div class="dashboard-grid" id="vault-grid">
+
+            <div class="card card-vault col-span-2" style="padding:28px; display:flex; flex-direction:column; gap:20px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div>
+                  <div class="t-label" style="margin-bottom:4px;">Time Vault</div>
+                  <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Letters to Future You</p>
+                </div>
+                <!-- ✉️ is high-contrast white/cream envelope — safe on purple vault bg.
+                     Replaces 💌 (pink on purple would clash). -->
+                <button class="btn-primary" onclick="writeLetter()">✉️ Write Letter</button>
+              </div>
+
+              <!-- Letter cards -->
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div class="letter-card">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <p class="t-primary" style="font-weight:700; margin:0;">To future me in 1 year</p>
+                    <!-- 🔒 dark emoji on lavender pill → swap to text + icon for clarity -->
+                    <span class="letter-sealed">📬 Sealed</span>
+                  </div>
+                  <p style="color:rgba(255,255,255,0.55); font-size:13px; margin:0;">Opens on June 1, 2027</p>
+                </div>
+
+                <div class="letter-card">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+                    <p class="t-primary" style="font-weight:700; margin:0;">My 30-day reflection</p>
+                    <!-- 🔓 is fine on green — open lock has good contrast -->
+                    <span class="letter-sealed" style="background:rgba(67,233,123,0.15); border-color:rgba(67,233,123,0.4); color:#43E97B;">🔓 Open</span>
+                  </div>
+                  <p style="color:rgba(255,255,255,0.7); font-size:13px; margin:0; line-height:1.6;">"I committed to showing up every day no matter how small the step..."</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </main>
+    <!-- ═══════════════════════ END MAIN ═══════════════════════ -->
+
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════════
+       FIREBASE INITIALIZATION
+       ══════════════════════════════════════════ */
+    const firebaseConfig = {
+      apiKey:            'AIzaSyBdxjq14Ky6a3n9IMj4LdO_lagVggqKnRY',
+      authDomain:        'growth-os-c892b.firebaseapp.com',
+      projectId:         'growth-os-c892b',
+      storageBucket:     'growth-os-c892b.firebasestorage.app',
+      messagingSenderId: '903565722912',
+      appId:             '1:903565722912:web:a72984814f4fc7f4820345',
+      measurementId:     'G-GYE4W6HVS5'
+    };
+
+    const fbApp     = firebase.initializeApp(firebaseConfig);
+    const analytics = firebase.analytics();
+    const db        = firebase.firestore();
+    const auth      = firebase.auth();
+    let firestoreUserId = null;   // set after anonymous sign-in
+
+    /* ══════════════════════════════════════════
+       PAGE COLOUR SYSTEM
+       ══════════════════════════════════════════ */
+    const PAGE_COLORS = {
+      home:    { accent: '#7C5CFC', grad: 'linear-gradient(135deg,#7C5CFC,#5B3FD4)', bg: 'linear-gradient(160deg,#1a0533 0%,#2d0f55 40%,#09080F 100%)' },
+      balance: { accent: '#4FACFE', grad: 'linear-gradient(135deg,#4FACFE,#00C6FF)', bg: 'linear-gradient(160deg,#0c2a4a 0%,#0f3d6e 40%,#09080F 100%)' },
+      goals:   { accent: '#F05A7E', grad: 'linear-gradient(135deg,#F05A7E,#E83B6A)', bg: 'linear-gradient(160deg,#2d0a1e 0%,#5c1035 40%,#09080F 100%)' },
+      today:   { accent: '#43E97B', grad: 'linear-gradient(135deg,#43E97B,#38F9D7)', bg: 'linear-gradient(160deg,#052e16 0%,#0a4a26 40%,#09080F 100%)' },
+      vault:   { accent: '#A78BFA', grad: 'linear-gradient(135deg,#A78BFA,#8B5CF6)', bg: 'linear-gradient(160deg,#1a0c2e 0%,#2e1555 40%,#09080F 100%)' }
+    };
+
+    const PAGE_HEADINGS = {
+      home:    { h: 'Home.',           sub: 'Your personal growth dashboard' }, // actual greeting set by applyHomeHeading()
+      balance: { h: 'Life Balance.',   sub: 'Wheel of Life Assessment' },
+      goals:   { h: 'Goals Map.',      sub: 'Chapter 1 — Foundation' },
+      today:   { h: "Today's Log.",    sub: 'Check in, track your day' },
+      vault:   { h: 'Time Vault.',     sub: 'Letters to your future self' }
+    };
+
+    /* ══════════════════════════════════════════
+       DYNAMIC GREETING — time-aware home heading
+       ══════════════════════════════════════════ */
+    function getDynamicHomeHeading() {
+      const now  = new Date();
+      const hour = now.getHours();
+
+      // Greeting + emoji based on time of day
+      let greeting, emoji;
+      if (hour >= 5 && hour < 12) {
+        greeting = 'Good morning.'; emoji = '☀️';
+      } else if (hour >= 12 && hour < 17) {
+        greeting = 'Good afternoon.'; emoji = '🌤️';
+      } else if (hour >= 17 && hour < 21) {
+        greeting = 'Good evening.'; emoji = '🌇';
+      } else {
+        greeting = 'Good night.'; emoji = '🌛';
+      }
+
+      // Real formatted date: "Monday, June 1"
+      const dateStr = now.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      return { h: greeting, sub: dateStr, emoji };
+    }
+
+    function applyHomeHeading() {
+      const { h, sub, emoji } = getDynamicHomeHeading();
+      const headingEl  = document.getElementById('page-heading');
+      const dateEl     = document.getElementById('heading-date');   // date span
+      const subEl      = document.getElementById('page-subheading');
+      const emojiEl    = document.getElementById('greeting-emoji');
+
+      if (headingEl) headingEl.textContent = h;
+      if (dateEl)    dateEl.textContent    = sub;   // only the date portion
+      if (emojiEl)   emojiEl.textContent   = emoji;
+
+      // On non-date subheadings (other pages) sub is just a plain element with textContent;
+      // only override when subEl has no children (i.e. other pages)
+    }
+
+    /* Live clock — ticks every second inside #live-clock */
+    function tickClock() {
+      const el = document.getElementById('live-clock');
+      if (!el) return;
+      const now = new Date();
+      const hh  = String(now.getHours()).padStart(2, '0');
+      const mm  = String(now.getMinutes()).padStart(2, '0');
+      const ss  = String(now.getSeconds()).padStart(2, '0');
+      el.textContent = `${hh}:${mm}:${ss}`;
+    }
+
+    let currentPage = 'home';
+
+    function setPageColor(page) {
+      const c    = PAGE_COLORS[page];
+      const root = document.documentElement;
+      const shell = document.querySelector('.app-shell');
+
+      // 1. Update CSS accent/gradient variables (buttons, cards, rings, etc.)
+      root.style.setProperty('--color-accent', c.accent);
+      root.style.setProperty('--grad-accent',  c.grad);
+      root.style.setProperty('--bg-page',      c.bg);
+
+      if (shell) {
+        // 2. Crossfade technique for smooth background transitions.
+        //    CSS gradients can't tween, so we set the new bg on the ::before
+        //    overlay and fade it in, then commit and reset.
+        shell.style.setProperty('--bg-next', c.bg);
+        shell.classList.add('transitioning');
+        clearTimeout(shell._bgTimer);
+        shell._bgTimer = setTimeout(() => {
+          shell.style.background = c.bg;
+          shell.classList.remove('transitioning');
+          shell.style.removeProperty('--bg-next');
+        }, 700);
+      }
+
+      // 3. Logo mark gradient
+      const logoMark = document.getElementById('logo-mark');
+      if (logoMark) logoMark.style.background = c.grad;
+
+      // 4. Page heading glow in section colour
+      const heading = document.getElementById('page-heading');
+      if (heading) heading.style.textShadow =
+        `0 0 40px color-mix(in srgb, ${c.accent} 60%, transparent)`;
+    }
+
+
+    function navigateTo(page) {
+      if (page === currentPage) return;
+      currentPage = page;
+
+      // Switch nav active state
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      const navEl = document.getElementById('nav-' + page);
+      if (navEl) navEl.classList.add('active');
+
+      // Update page colour
+      setPageColor(page);
+
+      // Update heading — home gets dynamic greeting, other pages use static labels
+      if (page === 'home') {
+        applyHomeHeading();
+        // Show the live clock on home
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) clockEl.style.display = '';
+        const dateEl  = document.getElementById('heading-date');
+        if (dateEl) dateEl.style.display = '';
+      } else {
+        const h = PAGE_HEADINGS[page];
+        const headingEl    = document.getElementById('page-heading');
+        const subheadingEl = document.getElementById('page-subheading');
+        const emojiEl      = document.getElementById('greeting-emoji');
+        if (headingEl)    headingEl.textContent    = h.h;
+        // For other pages write directly into page-subheading text
+        // (the inner spans remain but we just swap heading-date text)
+        const dateEl = document.getElementById('heading-date');
+        if (dateEl) dateEl.textContent = h.sub;
+        // Hide clock on non-home pages
+        const clockEl = document.getElementById('live-clock');
+        if (clockEl) clockEl.style.display = 'none';
+        if (emojiEl) emojiEl.textContent = ''; // clear emoji on non-home pages
+      }
+
+      // Switch page view
+      document.querySelectorAll('.page-view').forEach(v => v.classList.remove('active'));
+      const targetPage = document.getElementById('page-' + page);
+      if (targetPage) targetPage.classList.add('active');
+
+      // Stagger card entrances
+      staggerCards(targetPage);
+    }
+
+    function staggerCards(container) {
+      if (!container) return;
+      const cards = container.querySelectorAll('.card');
+      cards.forEach((card, i) => {
+        card.style.animation = 'none';
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(14px)';
+        // Force reflow
+        void card.offsetWidth;
+        card.style.animation = '';
+        card.classList.remove('entering');
+        setTimeout(() => {
+          card.classList.add('entering');
+        }, i * 75);
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       NUMBER TICKER
+       ══════════════════════════════════════════ */
+    function tickNumber(element, from, to, duration = 620) {
+      const start = performance.now();
+      function update(time) {
+        const progress = Math.min((time - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        element.textContent = Math.round(from + (to - from) * eased).toLocaleString();
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    /* ══════════════════════════════════════════
+       XP FLOAT
+       ══════════════════════════════════════════ */
+    function spawnXPFloat(x, y, amount) {
+      const el = document.createElement('div');
+      el.className = 'xp-float-el';
+      el.textContent = '+' + amount + ' XP';
+      el.style.left = (x - 30) + 'px';
+      el.style.top  = (y - 20) + 'px';
+      document.body.appendChild(el);
+      el.addEventListener('animationend', () => el.remove());
+    }
+
+    /* ══════════════════════════════════════════
+       STREAK BOUNCE
+       ══════════════════════════════════════════ */
+    function bounceStreak() {
+      const el = document.getElementById('streak-emoji');
+      el.classList.remove('streak-bounce');
+      void el.offsetWidth;
+      el.classList.add('streak-bounce');
+      el.addEventListener('animationend', () => el.classList.remove('streak-bounce'), { once: true });
+    }
+
+    /* ══════════════════════════════════════════
+       TOAST
+       ══════════════════════════════════════════ */
+    function showToast(message, page) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      const pageColor = page ? PAGE_COLORS[page]?.accent : PAGE_COLORS[currentPage]?.accent;
+      toast.style.borderLeftColor = pageColor || 'var(--color-accent)';
+      toast.innerHTML = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('dismissing');
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+      }, 2800);
+    }
+
+    /* ══════════════════════════════════════════
+       CLAIM REWARD
+       ══════════════════════════════════════════ */
+    function claimReward(e) {
+      const btn = document.getElementById('claim-btn');
+      if (btn.disabled) return;
+      btn.disabled = true;
+
+      // XP float
+      spawnXPFloat(e.clientX, e.clientY, 150);
+
+      // Streak bounce
+      bounceStreak();
+
+      // Tick XP
+      const xpEl = document.getElementById('xp-count');
+      tickNumber(xpEl, 1240, 1390);
+
+      // Gift animation stop
+      const gift = document.getElementById('gift-box');
+      gift.style.animation = 'none';
+      gift.textContent = '✨';
+
+      // Button update
+      btn.textContent = '🎉 Reward Claimed!';
+      btn.style.background = 'linear-gradient(135deg,#2D6A4F,#1B4332)';
+      btn.style.borderBottomColor = '#0d2b1f';
+
+      showToast('🎁 <strong>+150 XP</strong> added to your account!', 'home');
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       COMPLETE QUEST
+       ══════════════════════════════════════════ */
+    function completeQuest(e, btn) {
+      spawnXPFloat(e.clientX, e.clientY, 75);
+      bounceStreak();
+      const xpEl = document.getElementById('xp-count');
+      const cur = parseInt(xpEl.textContent.replace(/,/g,''));
+      tickNumber(xpEl, cur, cur + 75);
+
+      // Progress bar to 100%
+      const fill = btn.closest('.card').querySelector('.quest-fill');
+      if (fill) fill.style.width = '100%';
+
+      btn.textContent = '✓ Done!';
+      btn.disabled = true;
+      showToast('⚔️ Quest complete! <strong>+75 XP</strong>', 'today');
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       MOOD LOG
+       ══════════════════════════════════════════ */
+    function selectMood(btn) {
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    }
+
+    function logMood(e, btn) {
+      const selected = document.querySelector('.mood-btn.selected');
+      if (!selected) { showToast('👆 Select a mood first!', 'today'); return; }
+      // Persist today's mood in the weekly strip data
+      MOODS[adjustedToday] = 'logged-' + selected.dataset.mood;
+      buildWeeklyStrip();
+      spawnXPFloat(e.clientX, e.clientY, 30);
+      const xpEl = document.getElementById('xp-count');
+      const cur = parseInt(xpEl.textContent.replace(/,/g,''));
+      tickNumber(xpEl, cur, cur + 30);
+      btn.textContent = '✅ Mood Logged!';
+      btn.disabled = true;
+      showToast(`${selected.querySelector('.mood-emoji').textContent} Mood logged! <strong>+30 XP</strong>`, 'today');
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       SLIDER SYNC
+       ══════════════════════════════════════════ */
+    function updateSlider(input) {
+      const row = input.closest('.slider-row');
+      if (row) row.querySelector('.slider-score').textContent = input.value;
+      updateBalanceRing();
+    }
+
+    /* ══════════════════════════════════════════
+       WEEKLY MOOD STRIP
+       ══════════════════════════════════════════ */
+    const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const todayDow = new Date().getDay();
+    const adjustedToday = todayDow === 0 ? 6 : todayDow - 1;
+    const MOODS = [null, 'logged-happy', 'logged-content', null, 'logged-neutral', null, null];
+    const MOOD_EMOJI = {
+      'logged-happy':   '😊',
+      'logged-content': '😌',
+      'logged-neutral': '😐',
+      'logged-sad':     '😢',
+      'logged-angry':   '😠'
+    };
+
+    function buildWeeklyStrip() {
+      const strip = document.getElementById('weekly-strip');
+      strip.innerHTML = '';
+      DAYS.forEach((day, i) => {
+        const isToday = i === adjustedToday;
+        const mood = MOODS[i];
+
+        const col = document.createElement('div');
+        col.className = 'day-col';
+
+        const circle = document.createElement('div');
+        circle.className = 'day-circle' + (mood ? ' ' + mood : '');
+        if (mood && MOOD_EMOJI[mood]) circle.textContent = MOOD_EMOJI[mood];
+
+        const label = document.createElement('div');
+        label.className = 'day-label' + (isToday ? ' today' : '');
+        label.textContent = day;
+
+        col.append(circle, label);
+        if (isToday) {
+          const dot = document.createElement('div');
+          dot.className = 'today-dot';
+          col.appendChild(dot);
+        }
+        strip.appendChild(col);
+      });
+    }
+
+    /* ══════════════════════════════════════════
+       HYDRATION GLASSES
+       ══════════════════════════════════════════ */
+    let filledGlasses = 0;
+    const TOTAL_GLASSES = 8;
+
+    function buildGlasses() {
+      const container = document.getElementById('water-glasses');
+      if (!container) return;
+      container.innerHTML = '';
+      for (let i = 0; i < TOTAL_GLASSES; i++) {
+        const g = document.createElement('div');
+        g.className = 'water-glass' + (i < filledGlasses ? ' filled' : '');
+        const fill = document.createElement('div');
+        fill.className = 'water-fill';
+        g.appendChild(fill);
+        g.onclick = () => toggleGlass(i);
+        container.appendChild(g);
+      }
+      const lbl = document.getElementById('water-label');
+      if (lbl) lbl.textContent = `${filledGlasses} of ${TOTAL_GLASSES} glasses`;
+    }
+
+    function toggleGlass(idx) {
+      filledGlasses = filledGlasses === idx + 1 ? idx : idx + 1;
+      buildGlasses();
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       DAILY TASKS
+       ══════════════════════════════════════════ */
+    const TASKS = [
+      { text: '5 min meditation', done: false },
+      { text: 'Journal entry',    done: true  },
+      { text: 'Evening walk',     done: false },
+    ];
+
+    function buildTasks() {
+      const list = document.getElementById('task-list');
+      if (!list) return;
+      list.innerHTML = '';
+      TASKS.forEach((task, i) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; gap:12px; cursor:pointer;';
+        row.onclick = () => toggleTask(i, row);
+
+        const checkbox = document.createElement('div');
+        checkbox.style.cssText = `width:22px; height:22px; border-radius:6px; border:2px solid ${task.done ? 'var(--color-today)' : 'rgba(255,255,255,0.25)'}; background:${task.done ? 'rgba(67,233,123,0.25)' : 'transparent'}; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s;`;
+        if (task.done) {
+          checkbox.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path class="check-path" d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+        }
+
+        const label = document.createElement('span');
+        label.textContent = task.text;
+        label.style.cssText = `font-size:14px; font-weight:500; color:${task.done ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.85)'}; position:relative; transition:color 0.2s;`;
+        if (task.done) label.classList.add('task-done');
+
+        row.append(checkbox, label);
+        list.appendChild(row);
+      });
+    }
+
+    function toggleTask(i, row) {
+      TASKS[i].done = !TASKS[i].done;
+      buildTasks();
+      if (TASKS[i].done) {
+        const rect = row.getBoundingClientRect();
+        spawnXPFloat(rect.left + 20, rect.top, 20);
+        const xpEl = document.getElementById('xp-count');
+        const cur = parseInt(xpEl.textContent.replace(/,/g,''));
+        tickNumber(xpEl, cur, cur + 20);
+      }
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       BALANCE RING — live update from slider values
+       ══════════════════════════════════════════ */
+    function updateBalanceRing() {
+      const sliders = document.querySelectorAll('.balance-range');
+      if (!sliders.length) return;
+      const values = Array.from(sliders).map(s => parseInt(s.value));
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const circumference = 138.2;  /* 2π × r(22) */
+      const dashoffset = circumference * (1 - avg / 10);
+      const circle = document.getElementById('balance-ring-circle');
+      const label  = document.getElementById('balance-ring-label');
+      if (circle) circle.style.strokeDashoffset = dashoffset.toFixed(1);
+      if (label)  label.textContent = avg.toFixed(1);
+    }
+
+    /* ══════════════════════════════════════════
+       VAULT DAYS — days since last sealed letter
+       ══════════════════════════════════════════ */
+    function updateVaultDays() {
+      const el = document.getElementById('vault-days');
+      if (!el) return;
+      const stored = localStorage.getItem('lm_lastLetterTs');
+      if (!stored) { el.textContent = '0 days'; return; }
+      const days = Math.floor((Date.now() - parseInt(stored)) / 86_400_000);
+      el.textContent = days === 0 ? 'today' : `${days} day${days !== 1 ? 's' : ''}`;
+    }
+
+    /* ══════════════════════════════════════════
+       MODAL SYSTEM
+       ══════════════════════════════════════════ */
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('open');
+      // Focus first input for accessibility
+      const input = el.querySelector('input, textarea, select');
+      if (input) setTimeout(() => input.focus(), 180);
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+    }
+
+    /* ══════════════════════════════════════════
+       SETTINGS
+       ══════════════════════════════════════════ */
+    function showSettings() { openModal('settings-modal'); }
+
+    function exportData() {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        streak:     parseInt(document.getElementById('streak-count').textContent),
+        xp:         parseInt(document.getElementById('xp-count').textContent.replace(/,/g, '')),
+        tasks:      TASKS,
+        moods:      MOODS
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `lifemart-export-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      showToast('📁 Data exported!', 'vault');
+    }
+
+    /* ══════════════════════════════════════════
+       ADD GOAL
+       ══════════════════════════════════════════ */
+    function addGoal() { openModal('goal-modal'); }
+
+    function submitGoal() {
+      const title = document.getElementById('goal-title-input').value.trim();
+      if (!title) { showToast('👆 Enter a goal title first!', 'goals'); return; }
+      showToast(`🎯 Goal "${title}" added!`, 'goals');
+      document.getElementById('goal-title-input').value = '';
+      document.getElementById('goal-desc-input').value = '';
+      closeModal('goal-modal');
+    }
+
+    /* ══════════════════════════════════════════
+       WRITE LETTER
+       ══════════════════════════════════════════ */
+    function writeLetter() { openModal('letter-modal'); }
+
+    function submitLetter() {
+      const body = document.getElementById('letter-body-input').value.trim();
+      if (!body) { showToast('✏️ Write something first!', 'vault'); return; }
+      const days = parseInt(document.getElementById('letter-open-select').value);
+      const openDate = new Date();
+      openDate.setDate(openDate.getDate() + days);
+      const dateStr = openDate.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+      localStorage.setItem('lm_lastLetterTs', Date.now().toString());
+      updateVaultDays();
+      syncToFirestore();
+      showToast(`✉️ Letter sealed! Opens ${dateStr}`, 'vault');
+      document.getElementById('letter-body-input').value = '';
+      closeModal('letter-modal');
+    }
+
+    /* ══════════════════════════════════════════
+       ADD TASK
+       ══════════════════════════════════════════ */
+    function addTask() { openModal('task-modal'); }
+
+    function submitTask() {
+      const input = document.getElementById('task-title-input');
+      const text = input.value.trim();
+      if (!text) { showToast('👆 Enter a task name first!', 'today'); return; }
+      TASKS.push({ text, done: false });
+      buildTasks();
+      input.value = '';
+      closeModal('task-modal');
+      showToast('✅ Task added!', 'today');
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       FIRESTORE SYNC
+       ══════════════════════════════════════════ */
+
+    /**
+     * Write the full app state to Firestore under the anonymous user's doc.
+     * Called after every user action. Silent on error.
+     */
+    async function syncToFirestore() {
+      if (!firestoreUserId) return;
+      const streak = parseInt(document.getElementById('streak-count').textContent) || 0;
+      const xp     = parseInt(document.getElementById('xp-count').textContent.replace(/,/g, '')) || 0;
+      const payload = {
+        streak,
+        xp,
+        tasks:        TASKS,
+        weekMoods:    [...MOODS],
+        hydration:    filledGlasses,
+        lastLetterTs: parseInt(localStorage.getItem('lm_lastLetterTs') || '0') || null,
+        updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        await db.collection('users').doc(firestoreUserId).set(payload, { merge: true });
+      } catch (err) {
+        console.warn('Firestore sync error:', err);
+      }
+    }
+
+    /**
+     * Load saved state from Firestore and hydrate all UI components.
+     * Called once after sign-in.
+     */
+    async function loadFromFirestore() {
+      if (!firestoreUserId) return;
+      try {
+        const snap = await db.collection('users').doc(firestoreUserId).get();
+        if (!snap.exists) return;
+        const d = snap.data();
+
+        if (d.streak !== undefined) document.getElementById('streak-count').textContent = d.streak;
+        if (d.xp     !== undefined) document.getElementById('xp-count').textContent     = d.xp.toLocaleString();
+
+        if (Array.isArray(d.tasks) && d.tasks.length) {
+          TASKS.length = 0;
+          TASKS.push(...d.tasks);
+          buildTasks();
+        }
+        if (Array.isArray(d.weekMoods) && d.weekMoods.length) {
+          MOODS.length = 0;
+          MOODS.push(...d.weekMoods);
+          buildWeeklyStrip();
+        }
+        if (typeof d.hydration === 'number') {
+          filledGlasses = d.hydration;
+          buildGlasses();
+        }
+        if (d.lastLetterTs) {
+          localStorage.setItem('lm_lastLetterTs', String(d.lastLetterTs));
+          updateVaultDays();
+        }
+
+        showToast('☁️ Data synced from cloud!', 'home');
+      } catch (err) {
+        console.warn('Firestore load error:', err);
+      }
+    }
+
+    /** Update the Cloud Sync chip in Settings to reflect connection status. */
+    function updateCloudSyncStatus(enabled) {
+      const el = document.getElementById('cloud-sync-status');
+      if (!el) return;
+      el.textContent = enabled ? '✓ Enabled' : 'Connecting…';
+      el.style.color = enabled ? 'var(--color-today)' : 'rgba(255,255,255,0.4)';
+    }
+
+    /* ══════════════════════════════════════════
+       INIT
+       ══════════════════════════════════════════ */
+    document.addEventListener('DOMContentLoaded', () => {
+      // Paint the app shell immediately with the home background
+      // (setPageColor uses a crossfade timer, so we seed the base directly here)
+      const shell = document.querySelector('.app-shell');
+      if (shell) shell.style.background = PAGE_COLORS.home.bg;
+
+      // Set initial CSS variable colour state
+      setPageColor('home');
+
+
+      // Apply dynamic time-based greeting on load
+      applyHomeHeading();
+
+      // Start live clock
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      // Refresh greeting every minute (handles midnight/noon/5pm crossover)
+      setInterval(applyHomeHeading, 60_000);
+
+      // Build dynamic components
+      buildWeeklyStrip();
+      buildGlasses();
+      buildTasks();
+
+      // Sync balance ring with initial slider values
+      updateBalanceRing();
+
+      // Calculate vault days from localStorage
+      updateVaultDays();
+
+      // Close modals when clicking the overlay backdrop
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeModal(overlay.id);
+        });
+      });
+
+      // Escape key closes any open modal
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+        }
+      });
+
+      // Firebase: sign in anonymously → get a persistent user ID → load cloud data
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          firestoreUserId = user.uid;
+          loadFromFirestore();
+          updateCloudSyncStatus(true);
+        }
+      });
+      auth.signInAnonymously().catch(err => console.warn('Firebase auth:', err));
+
+      // Stagger initial home cards
+      setTimeout(() => staggerCards(document.getElementById('page-home')), 50);
+    });
+  </script>
+</body>
+</html>
