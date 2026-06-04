@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import LoginForm from './LoginForm';
+import WelcomeScreen from './WelcomeScreen';
 import Dashboard from './Dashboard'; // Assuming you have a Dashboard component
 import { auth } from './firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -56,47 +57,6 @@ const App = () => {
           <LoginForm />
         </div>
       )}
-    </div>
-  );
-};
-
-// Extracted WelcomeScreen component
-const WelcomeScreen = () => {
-  return (
-    <div className="splash-screen" style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      animation: 'fadeInOut 2.5s ease-in-out'
-    }}>
-      {/* Fallback to text if logo.svg is not available */}
-      <div style={{
-        fontSize: '3rem',
-        fontWeight: '900',
-        color: '#7C5CFC',
-        letterSpacing: '0.1em',
-        animation: 'scaleUp 2s ease-out'
-      }}>
-        GROWTH OS
-      </div>
-      
-      <style>{`
-        @keyframes fadeInOut {
-          0% { opacity: 0; }
-          20% { opacity: 1; }
-          80% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-        @keyframes scaleUp {
-          from { transform: scale(0.9); }
-          to { transform: scale(1.1); }
-        }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 };
