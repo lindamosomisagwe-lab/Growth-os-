@@ -10,6 +10,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
+  <!-- Firebase v10 compat SDKs — work in plain HTML with no bundler -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
   <style>
     /* ══════════════════════════════════════════
        1. CSS VARIABLE SYSTEM — SINGLE SOURCE OF TRUTH
@@ -40,6 +46,10 @@
       --color-xp:      #F9D423;
       --color-streak:  #FF6B6B;
       --color-chapter: #667EEA;
+
+      /* RGB equivalents for rgba() usage in HUD chip labels */
+      --color-streak-rgb:  255, 107, 107;
+      --color-chapter-rgb: 167, 139, 250;
 
       /* Dynamic page accent — JS updates these */
       --color-accent: #7C5CFC;
@@ -348,14 +358,6 @@
       transform: translateY(14px);
     }
 
-    /* Hero cards get an accent tint */
-    .card-hero {
-      background: linear-gradient(
-        140deg,
-        rgba(10,8,25,0.72) 0%,
-        color-mix(in srgb, var(--color-accent) 14%, rgba(10,8,25,0.72)) 100%
-      );
-    }
 
     /* Section overrides — card top border colour.
        These are intentionally hardcoded per-section so the border
@@ -1008,12 +1010,179 @@
     /* Goal node emoji — always inside a coloured node circle so they're fine,
        but add a subtle shadow for depth */
     .goal-node { text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+
+    /* ══════════════════════════════════════════
+       16. MODAL SYSTEM
+       ══════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.62);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 2000;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: rgba(10, 8, 25, 0.96);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-top: 3px solid var(--color-accent);
+      border-radius: 24px; padding: 28px;
+      width: min(460px, calc(100vw - 40px));
+      display: flex; flex-direction: column; gap: 18px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.75);
+      transform: translateY(22px) scale(0.97);
+      transition: transform 0.32s cubic-bezier(0.34,1.56,0.64,1), border-color 0.5s ease;
+    }
+    .modal-overlay.open .modal-box { transform: translateY(0) scale(1); }
+    .modal-header { display:flex; align-items:center; justify-content:space-between; }
+    .modal-close {
+      width:30px; height:30px; border-radius:8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: rgba(255,255,255,0.65);
+      font-family:'Inter',sans-serif;
+      font-size:18px; line-height:1;
+      cursor:pointer; display:flex; align-items:center; justify-content:center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.14); color:#fff; }
+    .modal-field { display:flex; flex-direction:column; gap:7px; }
+    .modal-input {
+      width:100%; background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.15); border-radius:12px;
+      padding: 11px 14px; color:#fff;
+      font-family:'Inter',sans-serif; font-size:14px; font-weight:500;
+      outline:none; resize:vertical;
+      transition: border-color 0.2s;
+    }
+    .modal-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 20%, transparent); }
+    .modal-input::placeholder { color:rgba(255,255,255,0.3); }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:2px; }
+    .settings-row {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius:14px; padding:14px 16px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
   </style>
 </head>
 
 <body>
   <!-- Toast container -->
   <div id="toast-container"></div>
+
+  <!-- ═══ SETTINGS MODAL ═══ -->
+  <div class="modal-overlay" id="settings-modal" role="dialog" aria-modal="true" aria-label="Settings">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">⚙️ Settings</p>
+        <button class="modal-close" onclick="closeModal('settings-modal')" aria-label="Close">×</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Dark Mode</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Always active in LifeSmart OS</p>
+          </div>
+          <span style="color:var(--color-today); font-weight:700; font-size:12px;">✓ Active</span>
+        </div>
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Reduced Motion</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Follows system preference</p>
+          </div>
+          <span style="color:rgba(255,255,255,0.4); font-weight:700; font-size:12px;">Auto</span>
+        </div>
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Export Data</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Download your progress as JSON</p>
+          </div>
+          <button class="btn-secondary" style="padding:7px 16px; font-size:12px;" onclick="exportData()">Export</button>
+        </div>
+        <div class="settings-row">
+          <div>
+            <p class="t-primary" style="margin:0 0 2px; font-size:14px;">Cloud Sync</p>
+            <p class="t-tertiary" style="margin:0; font-size:12px;">Sync across devices</p>
+          </div>
+          <span id="cloud-sync-status" style="color:rgba(255,255,255,0.4); font-weight:700; font-size:12px;">Connecting…</span>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('settings-modal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD GOAL MODAL ═══ -->
+  <div class="modal-overlay" id="goal-modal" role="dialog" aria-modal="true" aria-label="Add Goal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">🎯 Add New Goal</p>
+        <button class="modal-close" onclick="closeModal('goal-modal')" aria-label="Close">×</button>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Goal Title</span>
+        <input type="text" id="goal-title-input" class="modal-input" placeholder="e.g. Read 12 books this year" maxlength="60">
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Description <span style="color:rgba(255,255,255,0.3); font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></span>
+        <textarea id="goal-desc-input" class="modal-input" placeholder="What does achieving this look like?" rows="3" maxlength="200"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('goal-modal')">Cancel</button>
+        <button class="btn-primary" onclick="submitGoal()">🎯 Add Goal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ WRITE LETTER MODAL ═══ -->
+  <div class="modal-overlay" id="letter-modal" role="dialog" aria-modal="true" aria-label="Write Letter">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">✉️ Write to Future You</p>
+        <button class="modal-close" onclick="closeModal('letter-modal')" aria-label="Close">×</button>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Open this letter in</span>
+        <select id="letter-open-select" class="modal-input" style="cursor:pointer;">
+          <option value="30">30 days</option>
+          <option value="90">3 months</option>
+          <option value="180">6 months</option>
+          <option value="365" selected>1 year</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Your letter</span>
+        <textarea id="letter-body-input" class="modal-input" placeholder="Dear future me..." rows="6" maxlength="1000"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('letter-modal')">Cancel</button>
+        <button class="btn-primary" onclick="submitLetter()">✉️ Seal Letter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD TASK MODAL ═══ -->
+  <div class="modal-overlay" id="task-modal" role="dialog" aria-modal="true" aria-label="Add Task">
+    <div class="modal-box">
+      <div class="modal-header">
+        <p class="t-primary" style="font-weight:800; font-size:18px; margin:0;">✅ Add Task</p>
+        <button class="modal-close" onclick="closeModal('task-modal')" aria-label="Close">×</button>
+      </div>
+      <div class="modal-field">
+        <span class="t-label">Task name</span>
+        <input type="text" id="task-title-input" class="modal-input" placeholder="e.g. 10 min meditation" maxlength="80"
+               onkeydown="if(event.key==='Enter') submitTask()">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('task-modal')">Cancel</button>
+        <button class="btn-primary" onclick="submitTask()">Add Task</button>
+      </div>
+    </div>
+  </div>
 
   <div class="app-shell">
 
@@ -1089,7 +1258,7 @@
 
       <div class="sidebar-spacer"></div>
 
-      <div class="sidebar-settings" title="Settings">
+      <div class="sidebar-settings" title="Settings" onclick="showSettings()" role="button" tabindex="0">
         <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="3"/>
           <path stroke-linecap="round" d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -1199,11 +1368,11 @@
               <div class="balance-ring-wrap">
                 <svg viewBox="0 0 58 58">
                   <circle cx="29" cy="29" r="22" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8"/>
-                  <circle cx="29" cy="29" r="22" fill="none" stroke="#4FACFE" stroke-width="8"
+                  <circle id="balance-ring-circle" cx="29" cy="29" r="22" fill="none" stroke="#4FACFE" stroke-width="8"
                           stroke-dasharray="138.2" stroke-dashoffset="55.3" stroke-linecap="round"
                           style="transition: stroke-dashoffset 0.8s cubic-bezier(0.34,1.56,0.64,1)"/>
                 </svg>
-                <div class="balance-ring-label">4·4</div>
+                <div class="balance-ring-label" id="balance-ring-label">5.8</div>
               </div>
               <div>
                 <div class="t-label" style="margin-bottom:4px;">Balance</div>
@@ -1236,7 +1405,7 @@
                 <div class="t-label" style="margin-bottom:6px;">Vault</div>
                 <p class="t-primary" style="font-weight:700; font-size:16px; margin:0 0 5px;">Time Vault — Your Letters</p>
                 <p style="color:rgba(255,255,255,0.8); font-size:14px; font-weight:500; margin:0; line-height:1.5;">
-                  It's been <strong style="color:var(--color-vault);">0 days</strong> since your last letter to your future self. Write one tonight?
+                  It's been <strong id="vault-days" style="color:var(--color-vault);">0 days</strong> since your last letter to your future self. Write one tonight?
                 </p>
               </div>
               <button class="btn-primary" style="white-space:nowrap; flex-shrink:0;" onclick="navigateTo('vault')">Open Vault</button>
@@ -1315,7 +1484,7 @@
                   <div class="t-label" style="margin-bottom:4px;">Goals Map</div>
                   <p class="t-primary" style="font-weight:700; font-size:20px; margin:0;">Chapter 1: Foundation</p>
                 </div>
-                <button class="btn-primary">🎯 Add Goal</button>
+                <button class="btn-primary" onclick="addGoal()">🎯 Add Goal</button>
               </div>
 
               <!-- Goals path SVG -->
@@ -1430,7 +1599,7 @@
               <!-- ✅ checkmark emoji in tasks is high-contrast (white+green). Safe. -->
               <div class="t-label">Daily Tasks</div>
               <div id="task-list" style="display:flex; flex-direction:column; gap:10px;"></div>
-              <button class="btn-secondary" style="align-self:flex-start; padding:8px 16px; font-size:13px;">+ Add task</button>
+              <button class="btn-secondary" style="align-self:flex-start; padding:8px 16px; font-size:13px;" onclick="addTask()">+ Add task</button>
             </div>
 
           </div>
@@ -1448,7 +1617,7 @@
                 </div>
                 <!-- ✉️ is high-contrast white/cream envelope — safe on purple vault bg.
                      Replaces 💌 (pink on purple would clash). -->
-                <button class="btn-primary">✉️ Write Letter</button>
+                <button class="btn-primary" onclick="writeLetter()">✉️ Write Letter</button>
               </div>
 
               <!-- Letter cards -->
@@ -1485,6 +1654,25 @@
 
   <script>
     /* ══════════════════════════════════════════
+       FIREBASE INITIALIZATION
+       ══════════════════════════════════════════ */
+    const firebaseConfig = {
+      apiKey:            'AIzaSyBdxjq14Ky6a3n9IMj4LdO_lagVggqKnRY',
+      authDomain:        'growth-os-c892b.firebaseapp.com',
+      projectId:         'growth-os-c892b',
+      storageBucket:     'growth-os-c892b.firebasestorage.app',
+      messagingSenderId: '903565722912',
+      appId:             '1:903565722912:web:a72984814f4fc7f4820345',
+      measurementId:     'G-GYE4W6HVS5'
+    };
+
+    const fbApp     = firebase.initializeApp(firebaseConfig);
+    const analytics = firebase.analytics();
+    const db        = firebase.firestore();
+    const auth      = firebase.auth();
+    let firestoreUserId = null;   // set after anonymous sign-in
+
+    /* ══════════════════════════════════════════
        PAGE COLOUR SYSTEM
        ══════════════════════════════════════════ */
     const PAGE_COLORS = {
@@ -1496,6 +1684,7 @@
     };
 
     const PAGE_HEADINGS = {
+      home:    { h: 'Home.',           sub: 'Your personal growth dashboard' }, // actual greeting set by applyHomeHeading()
       balance: { h: 'Life Balance.',   sub: 'Wheel of Life Assessment' },
       goals:   { h: 'Goals Map.',      sub: 'Chapter 1 — Foundation' },
       today:   { h: "Today's Log.",    sub: 'Check in, track your day' },
@@ -1740,6 +1929,7 @@
       btn.style.borderBottomColor = '#0d2b1f';
 
       showToast('🎁 <strong>+150 XP</strong> added to your account!', 'home');
+      syncToFirestore();
     }
 
     /* ══════════════════════════════════════════
@@ -1759,6 +1949,7 @@
       btn.textContent = '✓ Done!';
       btn.disabled = true;
       showToast('⚔️ Quest complete! <strong>+75 XP</strong>', 'today');
+      syncToFirestore();
     }
 
     /* ══════════════════════════════════════════
@@ -1772,6 +1963,9 @@
     function logMood(e, btn) {
       const selected = document.querySelector('.mood-btn.selected');
       if (!selected) { showToast('👆 Select a mood first!', 'today'); return; }
+      // Persist today's mood in the weekly strip data
+      MOODS[adjustedToday] = 'logged-' + selected.dataset.mood;
+      buildWeeklyStrip();
       spawnXPFloat(e.clientX, e.clientY, 30);
       const xpEl = document.getElementById('xp-count');
       const cur = parseInt(xpEl.textContent.replace(/,/g,''));
@@ -1779,6 +1973,7 @@
       btn.textContent = '✅ Mood Logged!';
       btn.disabled = true;
       showToast(`${selected.querySelector('.mood-emoji').textContent} Mood logged! <strong>+30 XP</strong>`, 'today');
+      syncToFirestore();
     }
 
     /* ══════════════════════════════════════════
@@ -1787,6 +1982,7 @@
     function updateSlider(input) {
       const row = input.closest('.slider-row');
       if (row) row.querySelector('.slider-score').textContent = input.value;
+      updateBalanceRing();
     }
 
     /* ══════════════════════════════════════════
@@ -1858,6 +2054,7 @@
     function toggleGlass(idx) {
       filledGlasses = filledGlasses === idx + 1 ? idx : idx + 1;
       buildGlasses();
+      syncToFirestore();
     }
 
     /* ══════════════════════════════════════════
@@ -1904,6 +2101,198 @@
         const cur = parseInt(xpEl.textContent.replace(/,/g,''));
         tickNumber(xpEl, cur, cur + 20);
       }
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       BALANCE RING — live update from slider values
+       ══════════════════════════════════════════ */
+    function updateBalanceRing() {
+      const sliders = document.querySelectorAll('.balance-range');
+      if (!sliders.length) return;
+      const values = Array.from(sliders).map(s => parseInt(s.value));
+      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+      const circumference = 138.2;  /* 2π × r(22) */
+      const dashoffset = circumference * (1 - avg / 10);
+      const circle = document.getElementById('balance-ring-circle');
+      const label  = document.getElementById('balance-ring-label');
+      if (circle) circle.style.strokeDashoffset = dashoffset.toFixed(1);
+      if (label)  label.textContent = avg.toFixed(1);
+    }
+
+    /* ══════════════════════════════════════════
+       VAULT DAYS — days since last sealed letter
+       ══════════════════════════════════════════ */
+    function updateVaultDays() {
+      const el = document.getElementById('vault-days');
+      if (!el) return;
+      const stored = localStorage.getItem('lm_lastLetterTs');
+      if (!stored) { el.textContent = '0 days'; return; }
+      const days = Math.floor((Date.now() - parseInt(stored)) / 86_400_000);
+      el.textContent = days === 0 ? 'today' : `${days} day${days !== 1 ? 's' : ''}`;
+    }
+
+    /* ══════════════════════════════════════════
+       MODAL SYSTEM
+       ══════════════════════════════════════════ */
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('open');
+      // Focus first input for accessibility
+      const input = el.querySelector('input, textarea, select');
+      if (input) setTimeout(() => input.focus(), 180);
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+    }
+
+    /* ══════════════════════════════════════════
+       SETTINGS
+       ══════════════════════════════════════════ */
+    function showSettings() { openModal('settings-modal'); }
+
+    function exportData() {
+      const data = {
+        exportedAt: new Date().toISOString(),
+        streak:     parseInt(document.getElementById('streak-count').textContent),
+        xp:         parseInt(document.getElementById('xp-count').textContent.replace(/,/g, '')),
+        tasks:      TASKS,
+        moods:      MOODS
+      };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `lifemart-export-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      showToast('📁 Data exported!', 'vault');
+    }
+
+    /* ══════════════════════════════════════════
+       ADD GOAL
+       ══════════════════════════════════════════ */
+    function addGoal() { openModal('goal-modal'); }
+
+    function submitGoal() {
+      const title = document.getElementById('goal-title-input').value.trim();
+      if (!title) { showToast('👆 Enter a goal title first!', 'goals'); return; }
+      showToast(`🎯 Goal "${title}" added!`, 'goals');
+      document.getElementById('goal-title-input').value = '';
+      document.getElementById('goal-desc-input').value = '';
+      closeModal('goal-modal');
+    }
+
+    /* ══════════════════════════════════════════
+       WRITE LETTER
+       ══════════════════════════════════════════ */
+    function writeLetter() { openModal('letter-modal'); }
+
+    function submitLetter() {
+      const body = document.getElementById('letter-body-input').value.trim();
+      if (!body) { showToast('✏️ Write something first!', 'vault'); return; }
+      const days = parseInt(document.getElementById('letter-open-select').value);
+      const openDate = new Date();
+      openDate.setDate(openDate.getDate() + days);
+      const dateStr = openDate.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+      localStorage.setItem('lm_lastLetterTs', Date.now().toString());
+      updateVaultDays();
+      syncToFirestore();
+      showToast(`✉️ Letter sealed! Opens ${dateStr}`, 'vault');
+      document.getElementById('letter-body-input').value = '';
+      closeModal('letter-modal');
+    }
+
+    /* ══════════════════════════════════════════
+       ADD TASK
+       ══════════════════════════════════════════ */
+    function addTask() { openModal('task-modal'); }
+
+    function submitTask() {
+      const input = document.getElementById('task-title-input');
+      const text = input.value.trim();
+      if (!text) { showToast('👆 Enter a task name first!', 'today'); return; }
+      TASKS.push({ text, done: false });
+      buildTasks();
+      input.value = '';
+      closeModal('task-modal');
+      showToast('✅ Task added!', 'today');
+      syncToFirestore();
+    }
+
+    /* ══════════════════════════════════════════
+       FIRESTORE SYNC
+       ══════════════════════════════════════════ */
+
+    /**
+     * Write the full app state to Firestore under the anonymous user's doc.
+     * Called after every user action. Silent on error.
+     */
+    async function syncToFirestore() {
+      if (!firestoreUserId) return;
+      const streak = parseInt(document.getElementById('streak-count').textContent) || 0;
+      const xp     = parseInt(document.getElementById('xp-count').textContent.replace(/,/g, '')) || 0;
+      const payload = {
+        streak,
+        xp,
+        tasks:        TASKS,
+        weekMoods:    [...MOODS],
+        hydration:    filledGlasses,
+        lastLetterTs: parseInt(localStorage.getItem('lm_lastLetterTs') || '0') || null,
+        updatedAt:    firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        await db.collection('users').doc(firestoreUserId).set(payload, { merge: true });
+      } catch (err) {
+        console.warn('Firestore sync error:', err);
+      }
+    }
+
+    /**
+     * Load saved state from Firestore and hydrate all UI components.
+     * Called once after sign-in.
+     */
+    async function loadFromFirestore() {
+      if (!firestoreUserId) return;
+      try {
+        const snap = await db.collection('users').doc(firestoreUserId).get();
+        if (!snap.exists) return;
+        const d = snap.data();
+
+        if (d.streak !== undefined) document.getElementById('streak-count').textContent = d.streak;
+        if (d.xp     !== undefined) document.getElementById('xp-count').textContent     = d.xp.toLocaleString();
+
+        if (Array.isArray(d.tasks) && d.tasks.length) {
+          TASKS.length = 0;
+          TASKS.push(...d.tasks);
+          buildTasks();
+        }
+        if (Array.isArray(d.weekMoods) && d.weekMoods.length) {
+          MOODS.length = 0;
+          MOODS.push(...d.weekMoods);
+          buildWeeklyStrip();
+        }
+        if (typeof d.hydration === 'number') {
+          filledGlasses = d.hydration;
+          buildGlasses();
+        }
+        if (d.lastLetterTs) {
+          localStorage.setItem('lm_lastLetterTs', String(d.lastLetterTs));
+          updateVaultDays();
+        }
+
+        showToast('☁️ Data synced from cloud!', 'home');
+      } catch (err) {
+        console.warn('Firestore load error:', err);
+      }
+    }
+
+    /** Update the Cloud Sync chip in Settings to reflect connection status. */
+    function updateCloudSyncStatus(enabled) {
+      const el = document.getElementById('cloud-sync-status');
+      if (!el) return;
+      el.textContent = enabled ? '✓ Enabled' : 'Connecting…';
+      el.style.color = enabled ? 'var(--color-today)' : 'rgba(255,255,255,0.4)';
     }
 
     /* ══════════════════════════════════════════
@@ -1933,6 +2322,36 @@
       buildWeeklyStrip();
       buildGlasses();
       buildTasks();
+
+      // Sync balance ring with initial slider values
+      updateBalanceRing();
+
+      // Calculate vault days from localStorage
+      updateVaultDays();
+
+      // Close modals when clicking the overlay backdrop
+      document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+          if (e.target === overlay) closeModal(overlay.id);
+        });
+      });
+
+      // Escape key closes any open modal
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.modal-overlay.open').forEach(m => closeModal(m.id));
+        }
+      });
+
+      // Firebase: sign in anonymously → get a persistent user ID → load cloud data
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          firestoreUserId = user.uid;
+          loadFromFirestore();
+          updateCloudSyncStatus(true);
+        }
+      });
+      auth.signInAnonymously().catch(err => console.warn('Firebase auth:', err));
 
       // Stagger initial home cards
       setTimeout(() => staggerCards(document.getElementById('page-home')), 50);
