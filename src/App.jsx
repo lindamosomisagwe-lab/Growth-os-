@@ -28,8 +28,8 @@ const App = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // If user is logged in, bypass the welcome screen and login form
-  if (authChecked && user && !isAnimating) {
+  // If user is logged in, show the dashboard immediately
+  if (authChecked && user) {
     return <Dashboard user={user} />;
   }
 
