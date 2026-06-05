@@ -1,78 +1,130 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
-import { useGamification } from "../contexts/GamificationContext";
+import React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 
-const coreLinks = [
-  { path: "/", label: "Home", icon: "🏠", color: "var(--accent-gold)" },
-  { path: "/wheel", label: "Life Balance", icon: "⚖️", color: "var(--accent-steel)" },
-  { path: "/goals", label: "Goals Map", icon: "🗺️", color: "var(--accent-rust)" },
-  { path: "/log", label: "Today", icon: "📋", color: "var(--accent-sage)" },
-  { path: "/vault", label: "Vault", icon: "💌", color: "var(--accent-plum)" }
+const NAV_COLORS = {
+  home:    '#7C5CFC',
+  balance: '#4FACFE',
+  goals:   '#F05A7E',
+  today:   '#43E97B',
+  vault:   '#A78BFA'
+};
+
+const navItems = [
+  { id: 'home',    icon: '⊞', label: 'Home' },
+  { id: 'balance', icon: '⚖', label: 'Balance' },
+  { id: 'goals',   icon: '◎', label: 'Goals' },
+  { id: 'today',   icon: '▦', label: 'Today' },
+  { id: 'vault',   icon: '▣', label: 'Vault' },
 ];
 
-export default function Sidebar() {
-  const { progress } = useGamification();
+export default function Sidebar({ activePage, setActivePage, user }) {
+  const reduce = useReducedMotion();
+
+  // Avatar initial logic
+  const initial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : 
+                 (user?.email ? user.email.charAt(0).toUpperCase() : 'U');
   
+  const hasPhoto = user?.photoURL;
+
   return (
     <aside className="sidebar">
-      {/* Brand Header */}
-      <div style={{ marginBottom: "2.5rem" }}>
-        <h1 className="app-name">Growth OS</h1>
-        <p className="app-tagline">your story is being written</p>
+      {/* Brand logo at the top */}
+      <div className="logo-mark" style={{ background: NAV_COLORS[activePage] || NAV_COLORS.home }}>
+        OS
       </div>
 
-      {/* Main Nav */}
-      <nav className="sidebar-nav" style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {coreLinks.map(link => (
-          <NavLink
-            key={link.path}
-            to={link.path}
-            className={({ isActive }) => `nav-item ${isActive ? "active" : ""}`}
+      <nav className="sidebar-nav" style={{ flex: 1, marginTop: '20px' }}>
+        {navItems.map(item => (
+          <div 
+            key={item.id} 
+            className={`nav-item ${activePage === item.id ? 'active' : ''}`}
+            onClick={() => setActivePage(item.id)}
+            style={{ 
+              position: 'relative',
+              flexDirection: 'column', 
+              gap: '4px',
+              height: '56px', // taller to fit label
+              marginBottom: '4px',
+              zIndex: 1
+            }}
           >
-            <span className="nav-dot" style={{ backgroundColor: link.color }} aria-hidden="true" />
-            <span>{link.label}</span>
-          </NavLink>
+            {/* Sliding background pill */}
+            {activePage === item.id && !reduce && (
+              <motion.div
+                layoutId="nav-active-bg"
+                style={{
+                  position: 'absolute', inset: 0,
+                  borderRadius: 12,
+                  background: 'rgba(255,255,255,0.08)',
+                  zIndex: -1
+                }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+
+            {/* Sliding left accent bar */}
+            {activePage === item.id && !reduce && (
+              <motion.div
+                layoutId="nav-active-bar"
+                style={{
+                  position: 'absolute', left: -8, top: '20%', bottom: '20%',
+                  width: 3, borderRadius: '0 3px 3px 0',
+                  background: NAV_COLORS[item.id],
+                }}
+                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              />
+            )}
+
+            {/* Fallback for reduced motion */}
+            {activePage === item.id && reduce && (
+              <>
+                <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(255,255,255,0.08)', zIndex: -1 }} />
+                <div style={{ position: 'absolute', left: -8, top: '20%', bottom: '20%', width: 3, borderRadius: '0 3px 3px 0', background: NAV_COLORS[item.id] }} />
+              </>
+            )}
+
+            <span style={{ fontSize: '18px', display: 'block', marginTop: '4px' }}>{item.icon}</span>
+            <span style={{ fontSize: '10px', fontWeight: 500 }}>{item.label}</span>
+          </div>
         ))}
       </nav>
 
-      {/* Cursive Stats & Profile Link at bottom */}
-      <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
-        {progress && (
-          <div className="sidebar-stats">
-            <div className="sidebar-stat">
-              📖 Chapter <strong>{progress.current_chapter}</strong>
-            </div>
-            <div className="sidebar-stat">
-              ⚡ Stamped <strong>{progress.total_xp} XP</strong>
-            </div>
-            <div className="sidebar-stat">
-              🔥 Day Streak: <strong>{progress.streak_days} days</strong>
-            </div>
-          </div>
-        )}
+      {/* Avatar / Profile Link */}
+      <motion.div 
+        onClick={() => setActivePage('profile')}
+        whileHover={{ scale: 1.05, filter: 'brightness(1.1)' }}
+        whileTap={{ scale: 0.95 }}
+        style={{ 
+          cursor: 'pointer', 
+          marginBottom: '12px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '4px'
+        }}
+        title="View profile"
+      >
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%',
+          background: 'linear-gradient(135deg, #7C5CFC, #5B3FD4)',
+          color: 'white', fontWeight: 700, fontSize: 16,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
+          boxShadow: activePage === 'profile' ? '0 0 0 2px #7C5CFC' : 'none'
+        }}>
+          {hasPhoto ? <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} /> : initial}
+        </div>
+        <span style={{ fontSize: '10px', fontWeight: 500, color: activePage === 'profile' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Profile</span>
+      </motion.div>
 
-        <NavLink 
-          to="/profile" 
-          style={{ 
-            display: "flex", 
-            alignItems: "center", 
-            gap: "0.75rem", 
-            textDecoration: "none", 
-            background: "rgba(255,255,255,0.04)", 
-            padding: "10px 14px", 
-            borderRadius: "4px", 
-            border: "1px solid rgba(255,255,255,0.06)", 
-            transition: "background 0.2s" 
-          }} 
-          onMouseOver={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"} 
-          onMouseOut={e => e.currentTarget.style.background="rgba(255,255,255,0.04)"}
-        >
-          <div style={{ fontSize: "18px" }}>🌸</div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span style={{ color: "#fafafa", fontWeight: "600", fontSize: "12px" }}>Journal Profile</span>
-            <span style={{ color: "rgba(250,250,250,0.4)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.05em" }}>View Achievements</span>
-          </div>
-        </NavLink>
+      {/* Settings */}
+      <div 
+        className={`sidebar-settings ${activePage === 'settings' ? 'active' : ''}`}
+        onClick={() => setActivePage('settings')}
+        style={{ position: 'relative', flexDirection: 'column', height: '56px', gap: '4px' }}
+      >
+        <span style={{ fontSize: '18px', marginTop: '4px' }}>⚙️</span>
+        <span style={{ fontSize: '10px', fontWeight: 500, color: activePage === 'settings' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Settings</span>
       </div>
     </aside>
   );

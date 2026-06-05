@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import LoginForm from './LoginForm';
 import WelcomeScreen from './WelcomeScreen';
-import Dashboard from './Dashboard'; // Assuming you have a Dashboard component
+import Dashboard from './Dashboard';
 import { auth } from './firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -16,15 +16,14 @@ const App = () => {
       setUser(currentUser);
       setAuthChecked(true);
     });
-
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    // Entrance animation duration: 2.5 seconds
+    // Entrance animation duration: 2s (matches splash auto-advance)
     const timer = setTimeout(() => {
       setIsAnimating(false);
-    }, 2500);
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -35,28 +34,47 @@ const App = () => {
 
   return (
     <div className="app-container" style={{ 
-      backgroundColor: '#1a1033', 
       minHeight: '100vh', 
       display: 'flex', 
       alignItems: 'center', 
       justifyContent: 'center',
-      color: '#F5F0E8',
-      fontFamily: 'Inter, sans-serif'
+      position: 'relative',
+      overflow: 'hidden'
     }}>
+      {/* Background glow for the Auth screen (top right) */}
+      {!isAnimating && (
+        <div style={{
+          position: 'absolute',
+          top: '-10%', right: '-5%',
+          width: '500px', height: '500px',
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          zIndex: 0
+        }} />
+      )}
+
       {isAnimating ? (
-        <WelcomeScreen />
+        <WelcomeScreen skipAnimation={() => setIsAnimating(false)} />
       ) : (
         <div className="auth-container" style={{
           animation: 'fadeIn 0.5s ease-in-out',
-          textAlign: 'center'
+          width: '100%',
+          maxWidth: '400px',
+          padding: '0 20px',
+          position: 'relative',
+          zIndex: 1
         }}>
-          <h2 style={{ fontSize: '2rem', marginBottom: '10px' }}>Welcome to Growth OS</h2>
-          <p style={{ color: 'rgba(245,240,232,0.55)', marginBottom: '30px' }}>
-            Create an account to activate your system.
-          </p>
           <LoginForm />
         </div>
       )}
+      
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 };

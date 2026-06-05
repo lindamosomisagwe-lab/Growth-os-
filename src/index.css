@@ -57,7 +57,9 @@
     body {
       font-family: 'Inter', sans-serif;
       overflow: hidden;
-      background: #09080F;  /* deep fallback — actual gradient lives on .app-shell */
+      background: #0d0d14 !important;
+      background-image: none !important;
+      animation: none !important;
       color: var(--text-primary);
     }
 
@@ -78,28 +80,30 @@
       width: 100vw;
       overflow: hidden;
       position: relative;
-      /* The actual page background sits here so it's never clipped */
-      background: var(--bg-home);  /* initial value — JS overwrites via inline style */
-      transition: background 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #0d0d14 !important;
+      background-image: none !important;
+      animation: none !important;
     }
 
-    /* Smooth background cross-fade overlay:
-       CSS gradients can't tween, so we overlay a second gradient that
-       fades in on each navigation, then becomes the new base. */
+    /* Page-specific ambient radial glows instead of full-page gradients */
     .app-shell::before {
       content: '';
       position: absolute;
-      inset: 0;
-      background: var(--bg-next, transparent);
-      opacity: 0;
-      transition: opacity 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+      top: -20%; right: -10%;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%);
       pointer-events: none;
       z-index: 0;
+      transition: background 0.65s cubic-bezier(0.4, 0, 0.2, 1), top 0.65s, right 0.65s, bottom 0.65s, left 0.65s;
     }
-
-    .app-shell.transitioning::before {
-      opacity: 1;
-    }
+    
+    /* JavaScript will update this pseudo-element based on page */
+    .app-shell.page-home-active::before { top: -20%; right: -10%; bottom: auto; left: auto; background: radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%); }
+    .app-shell.page-balance-active::before { bottom: -20%; left: 10%; top: auto; right: auto; background: radial-gradient(circle, rgba(92,143,168,0.1) 0%, transparent 70%); width: 500px; height: 500px; }
+    .app-shell.page-goals-active::before { top: 10%; right: -5%; bottom: auto; left: auto; background: radial-gradient(circle, rgba(240,90,126,0.1) 0%, transparent 70%); width: 500px; height: 500px; }
+    .app-shell.page-today-active::before { bottom: -10%; right: 20%; top: auto; left: auto; background: radial-gradient(circle, rgba(67,233,123,0.08) 0%, transparent 70%); width: 500px; height: 500px; }
+    .app-shell.page-vault-active::before { top: -10%; left: 20%; bottom: auto; right: auto; background: radial-gradient(circle, rgba(167,139,250,0.1) 0%, transparent 70%); width: 500px; height: 500px; }
 
     /* All direct children of app-shell must sit above the ::before overlay */
     .sidebar, .main-scroll {
@@ -113,10 +117,12 @@
     .sidebar {
       width: 68px;
       flex-shrink: 0;
-      background: rgba(6, 4, 20, 0.88);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-right: 1px solid rgba(255,255,255,0.07);
+      background: #0a0a10 !important;
+      background-image: none !important;
+      animation: none !important;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border-right: 1px solid rgba(255,255,255,0.05);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -165,6 +171,17 @@
       position: relative;
       transition: color 0.18s ease, background 0.18s ease;
       flex-shrink: 0;
+    }
+    
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.5);
+      margin-top: 4px;
+      transition: color 0.18s ease;
+    }
+    .nav-item.active .sidebar-label {
+      color: #FFFFFF;
     }
 
     /* Colour bar on the left */
@@ -322,10 +339,10 @@
        never from the background so it never overrides the page gradient.
        ══════════════════════════════════════════ */
     .card {
-      background: rgba(10, 8, 25, 0.58);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #161622 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: 1px solid rgba(255, 255, 255, 0.07);
       border-top: 3px solid var(--color-accent);
       border-radius: 24px;
       box-shadow:
@@ -352,11 +369,7 @@
 
     /* Hero variant — same dark glass with an accent tint wash */
     .card-hero {
-      background: linear-gradient(
-        140deg,
-        rgba(10, 8, 25, 0.72) 0%,
-        color-mix(in srgb, var(--color-accent) 12%, rgba(10, 8, 25, 0.72)) 100%
-      );
+      background: color-mix(in srgb, var(--color-accent) 6%, #161622) !important;
     }
 
     /* ── TEXT HIERARCHY ── */
@@ -674,29 +687,42 @@
 
     .water-glass {
       width: 36px;
-      height: 48px;
-      border-radius: 4px 4px 8px 8px;
-      border: 2px solid rgba(79,172,254,0.35);
-      background: rgba(79,172,254,0.1);
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: transparent;
       cursor: pointer;
       position: relative;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       transition: border-color 0.2s ease;
+    }
+    
+    .water-glass::before {
+      content: '💧';
+      font-size: 16px;
+      opacity: 0.2;
+      z-index: 1;
+      transition: opacity 0.3s ease;
     }
 
     .water-glass.filled {
-      border-color: #4FACFE;
+      border-color: rgba(79,172,254,0.6);
     }
 
     .water-fill {
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      background: linear-gradient(180deg, rgba(79,172,254,0.85), rgba(0,198,255,0.65));
+      background: rgba(79,172,254,0.8);
       height: 0;
-      transition: height 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      transition: height 0.3s ease;
+      z-index: 0;
     }
 
     .water-glass.filled .water-fill { height: 100%; }
+    .water-glass.filled::before { opacity: 1; }
 
     /* Life Balance sliders */
     .balance-slider-wrap { display: flex; flex-direction: column; gap: 14px; }
@@ -736,7 +762,7 @@
 
     /* Vault letter cards */
     .letter-card {
-      background: rgba(167,139,250,0.1);
+      background: #161622 !important;
       border: 1px solid rgba(167,139,250,0.22);
       border-top: 3px solid var(--color-vault);
       border-radius: 16px;
@@ -1007,8 +1033,10 @@
     }
     .modal-overlay.open { opacity: 1; pointer-events: all; }
     .modal-box {
-      background: rgba(10, 8, 25, 0.96);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: #161622 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border: 1px solid rgba(255,255,255,0.07);
       border-top: 3px solid var(--color-accent);
       border-radius: 24px; padding: 28px;
       width: min(460px, calc(100vw - 40px));
