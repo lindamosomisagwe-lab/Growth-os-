@@ -664,6 +664,7 @@ const Dashboard = ({ user }) => {
 
       // Set initial CSS variable colour state
       setPageColor('home');
+      navigateTo('home');
 
 
       // Apply dynamic time-based greeting on load
@@ -749,7 +750,58 @@ window.loadFromFirestore = loadFromFirestore;
 window.updateCloudSyncStatus = updateCloudSyncStatus;
       // Stagger initial home cards
       setTimeout(() => staggerCards(document.getElementById('page-home')), 50);
-    });
+
+      // EVENT DELEGATION
+      document.body.addEventListener('click', e => {
+        // Nav items
+        const navItem = e.target.closest('.nav-item');
+        if (navItem && navItem.id && navItem.id.startsWith('nav-')) {
+          navigateTo(navItem.id.replace('nav-', ''));
+          return;
+        }
+
+        // Action Buttons
+        if (e.target.closest('.settings-btn')) { showSettings(); return; }
+        if (e.target.closest('.modal-close')) {
+          const modal = e.target.closest('.modal-overlay');
+          if (modal) closeModal(modal.id);
+          return;
+        }
+        
+        // Settings / Data
+        if (e.target.textContent === 'Export') { exportData(); return; }
+        
+        // Mood
+        const moodEmoji = e.target.closest('.mood-emoji');
+        if (moodEmoji) { selectMood(moodEmoji.parentElement); return; }
+        if (e.target.textContent.includes('Log Mood')) { logMood(e, e.target); return; }
+        
+        // Quests
+        if (e.target.textContent.includes('Done ✓')) { completeQuest(e, e.target); return; }
+        
+        // Goals
+        if (e.target.textContent.includes('Add Goal')) { 
+          if (e.target.closest('#goal-modal')) submitGoal();
+          else addGoal(); 
+          return; 
+        }
+        
+        // Tasks
+        if (e.target.textContent.includes('+ Add task')) { addTask(); return; }
+        if (e.target.textContent === 'Add Task') { submitTask(); return; }
+
+        // Vault
+        if (e.target.textContent.includes('Write Letter')) { writeLetter(); return; }
+        if (e.target.textContent.includes('Seal Letter')) { submitLetter(); return; }
+        if (e.target.textContent.includes('Open Vault')) { navigateTo('vault'); return; }
+        
+        // Claim reward
+        const claimBtn = e.target.closest('#claim-btn');
+        if (claimBtn) { claimReward(e); return; }
+
+        // Save balance
+        if (e.target.textContent.includes('Save Balance')) { showToast('✅ Balance saved!', 'balance'); return; }
+      });
   `;
     document.body.appendChild(script);
     
