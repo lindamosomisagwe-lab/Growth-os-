@@ -32,19 +32,26 @@ export default function HomeView() {
       className: 'nb-card home card-focus col-span-2',
       content: (
         <>
-          <div className="card-eyebrow">⚔️ Today's Quest</div>
+          <div className="card-eyebrow">🎯 Today's Quest</div>
           <h2 className="card-title" style={{ fontSize: '22px', marginBottom: '6px' }}>
-            Build the Home View
+            Less Stressed
           </h2>
           <p className="card-body" style={{ color: 'var(--ink-light)' }}>
-            Part of: React Refactor
+            Part of: <span style={{ color: 'rgba(255,255,255,0.85)' }}>Emotional Wellness</span>
           </p>
+          <div style={{ marginTop: '12px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
+              <div style={{ background: '#43E97B', width: '60%', height: '100%' }}></div>
+            </div>
+            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' }}>60% complete</p>
+          </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
             <motion.button
               whileHover={{ scale: 1.02, filter: 'brightness(1.08)' }}
               whileTap={{ scale: 0.96, y: 3 }}
               transition={{ type: 'spring', stiffness: 500, damping: 25 }}
               className="btn-primary"
+              style={{ flex: 1 }}
             >
               ✓ Done!
             </motion.button>
@@ -52,6 +59,7 @@ export default function HomeView() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.96 }}
               className="btn-secondary"
+              style={{ flex: 1 }}
             >
               ↷ Tomorrow
             </motion.button>
