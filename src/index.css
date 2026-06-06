@@ -34,7 +34,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  overflow: hidden;
+  overflow-x: hidden;
   background: var(--bg-app) !important;
   color: var(--text-primary);
 }
@@ -59,9 +59,17 @@ body {
   background: var(--bg-app) !important;
 }
 
-.sidebar, .main-scroll {
+.sidebar {
   position: relative;
   z-index: 1;
+}
+
+.main-scroll {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  overflow-y: auto;
+  height: 100vh;
 }
 
     /* ══════════════════════════════════════════

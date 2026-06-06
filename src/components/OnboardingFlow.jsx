@@ -536,7 +536,7 @@ export default function OnboardingFlow({ onComplete }) {
   );
 
   return (
-    <div style={{ background: 'var(--bg-app)', color: 'var(--text-primary)', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-app)', color: 'var(--text-primary)', position: 'relative', overflowX: 'hidden' }}>
       {renderProgressBar()}
       {renderHeader()}
       <AnimatePresence mode="wait">

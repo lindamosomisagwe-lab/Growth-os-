@@ -15,7 +15,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
-      navigate('/home');
+      // App.jsx will automatically redirect based on user state
     } catch (e) {
       setError(e.message);
     } finally {
@@ -28,7 +28,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/home');
+      // App.jsx will automatically redirect based on user state
     } catch (e) {
       setError(e.message);
     } finally {
@@ -45,7 +45,7 @@ export default function LoginPage() {
       justifyContent: 'center',
       padding: '24px',
       position: 'relative',
-      overflow: 'hidden'
+      overflowX: 'hidden'
     }}>
 
       {/* Lamp glow effect behind the card */}

@@ -15,7 +15,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signInWithPopup(auth, new GoogleAuthProvider());
-      navigate('/onboarding');
+      // App.jsx will automatically redirect based on user state
     } catch (e) {
       setError(e.message);
     } finally {
@@ -28,7 +28,7 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      navigate('/onboarding');
+      // App.jsx will automatically redirect based on user state
     } catch (e) {
       setError(e.message);
     } finally {
@@ -45,7 +45,7 @@ export default function SignupPage() {
       justifyContent: 'center',
       padding: '24px',
       position: 'relative',
-      overflow: 'hidden'
+      overflowX: 'hidden'
     }}>
 
       {/* Lamp glow effect behind the card */}
