@@ -430,7 +430,14 @@ export default function OnboardingFlow({ onComplete }) {
           </div>
 
           <button
-            onClick={() => setStep(8)}
+            onClick={async () => {
+              if (auth.currentUser) {
+                await saveOnboardingData(auth.currentUser);
+                setStep(9);
+              } else {
+                setStep(8);
+              }
+            }}
             disabled={!canContinue}
             style={{
               width: '100%', padding: '14px',
