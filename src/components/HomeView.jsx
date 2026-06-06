@@ -29,21 +29,22 @@ export default function HomeView() {
   const cards = [
     {
       id: 'quest',
-      className: 'nb-card home card-focus col-span-2',
+      className: 'card card-hero page-card col-span-2',
+      style: { borderLeftColor: '#43E97B' },
       content: (
         <>
           <div className="card-eyebrow">🎯 Today's Quest</div>
-          <h2 className="card-title" style={{ fontSize: '22px', marginBottom: '6px' }}>
+          <h2 className="card-title" style={{ marginBottom: '6px' }}>
             Less Stressed
           </h2>
-          <p className="card-body" style={{ color: 'var(--ink-light)' }}>
-            Part of: <span style={{ color: 'rgba(255,255,255,0.85)' }}>Emotional Wellness</span>
+          <p className="card-body">
+            Part of: <span className="t-primary">Emotional Wellness</span>
           </p>
           <div style={{ marginTop: '12px' }}>
             <div style={{ background: 'rgba(255,255,255,0.1)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
               <div style={{ background: '#43E97B', width: '60%', height: '100%' }}></div>
             </div>
-            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '6px' }}>60% complete</p>
+            <p className="text-meta" style={{ marginTop: '6px' }}>60% complete</p>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '18px' }}>
             <motion.button
@@ -69,26 +70,26 @@ export default function HomeView() {
     },
     {
       id: 'balance',
-      className: 'nb-card card-balance',
+      className: 'card card-ghost page-card',
       content: (
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: 50, height: 50, borderRadius: '50%', border: '4px solid #4FACFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>7.2</div>
           <div>
             <div className="card-eyebrow" style={{ margin: 0 }}>Balance</div>
-            <div className="card-title" style={{ fontSize: '15px', margin: 0 }}>Wheel of Life</div>
+            <div className="card-title" style={{ margin: 0 }}>Wheel of Life</div>
           </div>
         </div>
       )
     },
     {
       id: 'today',
-      className: 'nb-card card-today',
+      className: 'card card-ghost page-card',
       content: (
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ width: 50, height: 50, borderRadius: '50%', border: '4px solid #43E97B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📋</div>
           <div>
             <div className="card-eyebrow" style={{ margin: 0 }}>Today</div>
-            <div className="card-title" style={{ fontSize: '15px', margin: 0 }}>Logged Check-in</div>
+            <div className="card-title" style={{ margin: 0 }}>Logged Check-in</div>
           </div>
         </div>
       )
@@ -125,12 +126,8 @@ export default function HomeView() {
             whileHover={{ y: -3, boxShadow: '0 12px 32px rgba(0,0,0,0.2)' }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
             style={{ 
-              background: '#161622',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              borderTop: '3px solid var(--color-accent)',
-              borderRadius: '24px',
               padding: '24px',
-              position: 'relative'
+              ...card.style
             }}
           >
             {card.content}

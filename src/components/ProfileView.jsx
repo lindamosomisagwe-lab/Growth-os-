@@ -67,7 +67,7 @@ export default function ProfileView({ user }) {
       <motion.div initial="hidden" animate="visible" className="dashboard-grid">
         
         {/* Identity Card */}
-        <motion.div custom={0} variants={pageCard} className="nb-card col-span-2" style={{ background: '#161622', padding: 32, borderRadius: 24, borderTop: '3px solid #F5A623', display: 'flex', alignItems: 'center', gap: '24px' }}>
+        <motion.div custom={0} variants={pageCard} className="card card-hero page-card col-span-2" style={{ borderLeftColor: '#F5A623', padding: 32, display: 'flex', alignItems: 'center', gap: '24px' }}>
           
           <div style={{
             width: 80, height: 80, borderRadius: '50%', flexShrink: 0,
@@ -112,42 +112,42 @@ export default function ProfileView({ user }) {
         {/* Stats Row */}
         <motion.div custom={1} variants={pageCard} className="col-span-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
           
-          <div className="nb-card" style={{ background: '#161622', padding: '16px', borderRadius: '20px', borderTop: '2px solid #FF6B6B', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="card card-ghost stat-chip" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ fontSize: '24px' }}>🔥</div>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 800 }}>{stats.streak}</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Day Streak</div>
+              <div className="card-eyebrow" style={{ margin: 0, color: '#FF6B6B' }}>Day Streak</div>
             </div>
           </div>
           
-          <div className="nb-card" style={{ background: '#161622', padding: '16px', borderRadius: '20px', borderTop: '2px solid #F9D423', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="card card-ghost stat-chip" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ fontSize: '24px' }}>⚡</div>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 800 }}><AnimatedXP value={stats.xp} /></div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total XP</div>
+              <div className="card-eyebrow" style={{ margin: 0, color: '#F9D423' }}>Total XP</div>
             </div>
           </div>
           
-          <div className="nb-card" style={{ background: '#161622', padding: '16px', borderRadius: '20px', borderTop: '2px solid #43E97B', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="card card-ghost stat-chip" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ fontSize: '24px' }}>🏆</div>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 800 }}>{stats.goals}</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Goals Completed</div>
+              <div className="card-eyebrow" style={{ margin: 0, color: '#43E97B' }}>Goals Completed</div>
             </div>
           </div>
           
-          <div className="nb-card" style={{ background: '#161622', padding: '16px', borderRadius: '20px', borderTop: '2px solid #4FACFE', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="card card-ghost stat-chip" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ fontSize: '24px' }}>📋</div>
             <div>
               <div style={{ fontSize: '20px', fontWeight: 800 }}>{stats.daysLogged}</div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Days Logged</div>
+              <div className="card-eyebrow" style={{ margin: 0, color: '#4FACFE' }}>Days Logged</div>
             </div>
           </div>
 
         </motion.div>
 
         {/* XP Progress & Chapters */}
-        <motion.div custom={2} variants={pageCard} className="nb-card col-span-2" style={{ background: '#161622', padding: 24, borderRadius: 24, borderTop: '3px solid #667EEA' }}>
+        <motion.div custom={2} variants={pageCard} className="card card-default page-card col-span-2" style={{ padding: 24 }}>
           <div className="card-eyebrow">📖 Journey</div>
           
           <div style={{ marginBottom: '24px' }}>

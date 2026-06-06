@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { pageCard, expandCollapse, slideUp, fade, listItem } from '../lib/animations';
+import { pageCard, expandCollapse, slideUp, fade } from '../lib/animations';
 
 function TaskCheckbox({ done, onToggle }) {
   return (
@@ -40,7 +40,7 @@ function SubgoalRow({ subgoal, onToggle }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', marginBottom: '8px' }}>
       <TaskCheckbox done={subgoal.completed} onToggle={onToggle} />
-      <span style={{ fontSize: '14px', color: subgoal.completed ? 'var(--text-tertiary)' : 'white', textDecoration: subgoal.completed ? 'line-through' : 'none' }}>
+      <span className="card-body" style={{ color: subgoal.completed ? 'var(--text-tertiary)' : 'white', textDecoration: subgoal.completed ? 'line-through' : 'none', margin: 0 }}>
         {subgoal.title}
       </span>
     </div>
@@ -49,6 +49,8 @@ function SubgoalRow({ subgoal, onToggle }) {
 
 export default function GoalsView() {
   const [expandedGoalId, setExpandedGoalId] = useState(null);
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [newGoal, setNewGoal] = useState({ title: '', area: '', description: '' });
 
   const [goals, setGoals] = useState([
     {
@@ -60,8 +62,11 @@ export default function GoalsView() {
       ]
     },
     {
-      id: 'g2', title: 'Run a 5K', icon: '🏃', completed: false, status: 'locked',
-      subgoals: []
+      id: 'g2', title: 'Run a 5K', icon: '🏃', completed: false, status: 'active',
+      subgoals: [
+        { id: 's4', title: 'Buy running shoes', completed: true },
+        { id: 's5', title: 'Run 1K without stopping', completed: false }
+      ]
     }
   ]);
 
@@ -79,36 +84,53 @@ export default function GoalsView() {
     }));
   };
 
+  const handleAddGoal = () => {
+    if (!newGoal.title) return;
+    const goal = {
+      id: 'g' + Date.now(),
+      title: newGoal.title,
+      icon: newGoal.area === 'Health' ? '🏃' : newGoal.area === 'Work' ? '💼' : newGoal.area === 'Money' ? '💰' : '🎯',
+      completed: false,
+      status: 'active',
+      subgoals: []
+    };
+    setGoals([...goals, goal]);
+    setIsAddingGoal(false);
+    setNewGoal({ title: '', area: '', description: '' });
+  };
+
+  const areas = ['Health', 'Work', 'Money', 'Relationships', 'Growth'];
+
   return (
     <div className="content-wrap">
-      <div className="hud-bar">
+      <div className="hud-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 className="page-heading">Goals Map.</h1>
-          <div className="page-subheading">Chapter 1 — Foundation</div>
+          <h1 className="page-title">Goals Map.</h1>
+          <div className="text-meta" style={{ marginTop: '4px' }}>Chapter 1 — Foundation</div>
         </div>
+        <button className="btn-primary" onClick={() => setIsAddingGoal(true)}>+ Add Goal</button>
       </div>
 
       <motion.div initial="hidden" animate="visible" className="dashboard-grid">
-        <motion.div custom={0} variants={pageCard} className="nb-card col-span-2" style={{ background: '#161622', padding: 24, borderRadius: 24, borderTop: '3px solid #F05A7E' }}>
+        <motion.div custom={0} variants={pageCard} className="card card-hero page-card col-span-2" style={{ borderLeftColor: '#F05A7E', padding: 24 }}>
           <div className="card-eyebrow">◎ Your Map</div>
           
-          <div style={{ display: 'flex', gap: '20px', padding: '20px 0' }}>
+          <div style={{ display: 'flex', gap: '20px', padding: '20px 0', flexWrap: 'wrap' }}>
             {goals.map(goal => (
               <motion.div
                 key={goal.id}
-                whileHover={goal.status === 'active' ? { scale: 1.05 } : {}}
-                whileTap={goal.status === 'active' ? { scale: 0.95 } : {}}
-                onClick={() => goal.status === 'active' && setExpandedGoalId(goal.id)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setExpandedGoalId(goal.id)}
                 style={{
                   width: '80px', height: '80px', borderRadius: '50%',
-                  background: goal.status === 'locked' ? 'rgba(255,255,255,0.05)' : 'rgba(240,90,126,0.1)',
-                  border: `2px ${goal.status === 'locked' ? 'dashed rgba(255,255,255,0.2)' : 'solid #F05A7E'}`,
+                  background: 'rgba(240,90,126,0.1)',
+                  border: `2px solid #F05A7E`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '32px', cursor: goal.status === 'active' ? 'pointer' : 'default',
-                  opacity: goal.status === 'locked' ? 0.5 : 1
+                  fontSize: '32px', cursor: 'pointer'
                 }}
               >
-                {goal.status === 'locked' ? '🔒' : goal.icon}
+                {goal.icon}
               </motion.div>
             ))}
           </div>
@@ -116,27 +138,24 @@ export default function GoalsView() {
         </motion.div>
       </motion.div>
 
-      {/* Bottom Sheet */}
+      {/* Goal Details Bottom Sheet */}
       <AnimatePresence>
         {expandedGoalId && activeGoal && (
           <>
-            {/* Backdrop */}
             <motion.div
               variants={fade}
               initial="hidden" animate="visible" exit="exit"
               onClick={() => setExpandedGoalId(null)}
               style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)', zIndex:499 }}
             />
-
-            {/* Bottom sheet */}
             <motion.div
               variants={slideUp}
               initial="hidden" animate="visible" exit="exit"
-              style={{ position:'fixed', bottom:0, left: '68px', right:0, background:'#161622', borderRadius:'24px 24px 0 0', zIndex:500, padding:'32px', maxHeight:'75vh', overflowY:'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ position:'fixed', bottom:0, left: '68px', right:0, background:'#13131f', borderRadius:'24px 24px 0 0', zIndex:500, padding:'32px', maxHeight:'75vh', overflowY:'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
                 <span style={{ fontSize: '40px' }}>{activeGoal.icon}</span>
-                <h2 style={{ fontSize: '28px', fontWeight: 800, margin: 0 }}>{activeGoal.title}</h2>
+                <h2 className="page-title" style={{ margin: 0 }}>{activeGoal.title}</h2>
               </div>
               
               <div>
@@ -164,6 +183,72 @@ export default function GoalsView() {
               >
                 + Add Subgoal
               </motion.button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Add Goal Modal */}
+      <AnimatePresence>
+        {isAddingGoal && (
+          <>
+            <motion.div
+              variants={fade}
+              initial="hidden" animate="visible" exit="exit"
+              onClick={() => setIsAddingGoal(false)}
+              style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)', zIndex:599 }}
+            />
+            <motion.div
+              variants={slideUp}
+              initial="hidden" animate="visible" exit="exit"
+              className="card card-default modal"
+              style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)', width: '90%', maxWidth: '400px', zIndex:600, padding:'32px' }}
+            >
+              <h2 className="card-title" style={{ marginBottom: '16px', fontSize: '20px' }}>Create New Goal</h2>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <div className="card-eyebrow">Goal Title</div>
+                  <input 
+                    autoFocus
+                    placeholder="e.g. Read 10 books"
+                    value={newGoal.title}
+                    onChange={e => setNewGoal({...newGoal, title: e.target.value})}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none' }}
+                  />
+                </div>
+                
+                <div>
+                  <div className="card-eyebrow">Life Area</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {areas.map(area => (
+                      <div 
+                        key={area}
+                        onClick={() => setNewGoal({...newGoal, area})}
+                        style={{ padding: '6px 12px', borderRadius: '999px', fontSize: '13px', cursor: 'pointer', border: '1px solid', borderColor: newGoal.area === area ? '#43E97B' : 'rgba(255,255,255,0.2)', background: newGoal.area === area ? 'rgba(67,233,123,0.1)' : 'transparent', color: newGoal.area === area ? '#43E97B' : 'white' }}
+                      >
+                        {area}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="card-eyebrow">Description (Optional)</div>
+                  <textarea 
+                    rows={3}
+                    placeholder="Why is this important?"
+                    value={newGoal.description}
+                    onChange={e => setNewGoal({...newGoal, description: e.target.value})}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', resize: 'none' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                  <button className="btn-secondary" style={{ flex: 1 }} onClick={() => setIsAddingGoal(false)}>Cancel</button>
+                  <button className="btn-primary" style={{ flex: 1 }} onClick={handleAddGoal} disabled={!newGoal.title}>Create Goal</button>
+                </div>
+              </div>
             </motion.div>
           </>
         )}

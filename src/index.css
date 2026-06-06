@@ -339,21 +339,22 @@
        never from the background so it never overrides the page gradient.
        ══════════════════════════════════════════ */
     .card {
-      background: #161622 !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      border: 1px solid rgba(255, 255, 255, 0.07);
-      border-top: 3px solid var(--color-accent);
-      border-radius: 24px;
-      box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.45),
-        inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      background: #13131f;
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-card, 12px);
+      box-shadow: none;
       position: relative;
       overflow: hidden;
       will-change: transform;
-      /* Stagger entrance */
       opacity: 0;
       transform: translateY(14px);
+    }
+
+    .card:hover {
+      border-color: rgba(255,255,255,0.12);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      transform: translateY(-1px);
+      transition: all 0.15s ease;
     }
 
 
@@ -367,12 +368,66 @@
     .card-today   { border-top-color: var(--color-today);   }
     .card-vault   { border-top-color: var(--color-vault);   }
 
-    /* Hero variant — same dark glass with an accent tint wash */
     .card-hero {
-      background: color-mix(in srgb, var(--color-accent) 6%, #161622) !important;
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-left: 3px solid var(--color-accent);
+      padding-left: 21px; /* compensate for 3px border */
+    }
+
+    .card-featured {
+      border-left: 3px solid var(--color-accent);
+      padding-left: 21px;
+    }
+
+    .card-default {
+      background: #13131f;
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .card-ghost {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
     /* ── TEXT HIERARCHY ── */
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+    
+    .card-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+    
+    .card-eyebrow {
+      font-size: 10px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    
+    .card-body {
+      font-size: 14px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.6;
+    }
+    
+    .text-meta {
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.35);
+    }
+
     .t-primary   { color: #FFFFFF; font-weight: 600; }
     .t-secondary { color: rgba(255,255,255,0.75); font-weight: 500; }
     .t-tertiary  { color: rgba(255,255,255,0.45); }
@@ -443,6 +498,12 @@
 
     .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.35); }
     .btn-secondary:active { transform: translateY(3px); border-bottom-width: 1px; }
+
+    /* Border Radius Utilities */
+    .page-card { border-radius: 10px; }
+    .stat-chip { border-radius: 6px; }
+    .btn-pill { border-radius: 999px; }
+    .modal { border-radius: 16px; }
 
     /* ══════════════════════════════════════════
        9. GRID
@@ -1074,4 +1135,40 @@
       background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
       border-radius:14px; padding:14px 16px;
       display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+
+    /* Mood buttons */
+    .mood-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      opacity: 0.7;
+      transition: all 0.15s ease;
+    }
+
+    .mood-btn.selected {
+      opacity: 1;
+      transform: scale(1.06);
+      border-width: 2px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .mood-happy.selected    { border-color: #fbbf24; box-shadow: 0 0 12px rgba(251,191,36,0.2); }
+    .mood-content.selected  { border-color: #34d399; box-shadow: 0 0 12px rgba(52,211,153,0.2); }
+    .mood-neutral.selected  { border-color: #60a5fa; box-shadow: 0 0 12px rgba(96,165,250,0.2); }
+    .mood-sad.selected      { border-color: #818cf8; box-shadow: 0 0 12px rgba(129,140,248,0.2); }
+    .mood-angry.selected    { border-color: #f87171; box-shadow: 0 0 12px rgba(248,113,113,0.2); }
+
+    /* Hydration */
+    .hydration-drop {
+      opacity: 0.25;
+      filter: grayscale(1);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    .hydration-drop.filled {
+      opacity: 1;
+      filter: none;
+      transform: scale(1.15);
     }

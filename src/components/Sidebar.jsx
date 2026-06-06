@@ -29,8 +29,27 @@ export default function Sidebar({ activePage, setActivePage, user }) {
   return (
     <aside className="sidebar">
       {/* Brand logo at the top */}
-      <div className="logo-mark" style={{ background: NAV_COLORS[activePage] || NAV_COLORS.home }}>
-        OS
+      <div style={{ padding: '0 12px', marginBottom: '24px' }}>
+        <div style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: '15px',
+          fontWeight: '700',
+          color: '#ffffff',
+          letterSpacing: '-0.02em'
+        }}>
+          Growth OS
+        </div>
+        <div style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: '10px',
+          fontWeight: '400',
+          color: 'rgba(255,255,255,0.3)',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          marginTop: '2px'
+        }}>
+          Your story is being written
+        </div>
       </div>
 
       <nav className="sidebar-nav" style={{ flex: 1, marginTop: '20px' }}>

@@ -74,7 +74,7 @@ export default function BalanceView() {
 
       <motion.div initial="hidden" animate="visible" className="dashboard-grid">
         {/* The Wheel Chart Card */}
-        <motion.div custom={0} variants={pageCard} className="nb-card col-span-2" style={{ background: '#161622', padding: 24, borderRadius: 24, borderTop: '3px solid #5c8fa8' }}>
+        <motion.div custom={0} variants={pageCard} className="card card-featured page-card col-span-2" style={{ borderLeftColor: '#5c8fa8', padding: 24 }}>
           
           <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "1rem" }}>
             <svg viewBox="0 0 400 400" width="100%" style={{ maxWidth: '440px', display: 'block', margin: '0 auto', overflow: 'visible' }}>
@@ -148,18 +148,14 @@ export default function BalanceView() {
             key={dim.key} 
             custom={i + 1} 
             variants={pageCard} 
-            className="nb-card"
+            className="card card-default page-card"
             style={{ 
-              background: '#161622', 
               padding: '20px', 
-              borderRadius: '24px', 
-              borderTop: `3px solid ${dim.color}`,
-              border: '1px solid rgba(255,255,255,0.05)',
               display: 'flex', flexDirection: 'column', gap: '12px'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '15px', fontWeight: 600 }}>{dim.label}</span>
+              <span className="card-title">{dim.label}</span>
               <span style={{ fontWeight: '700', color: dim.color, fontSize: '18px' }}>
                 {data.ratings[dim.key]} <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>/ 10</span>
               </span>

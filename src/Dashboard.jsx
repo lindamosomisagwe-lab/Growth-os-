@@ -9,43 +9,28 @@ import GoalsView from './components/GoalsView';
 import TodayView from './components/TodayView';
 import VaultView from './components/VaultView';
 import ProfileView from './components/ProfileView';
+import SettingsView from './components/SettingsView';
 
 const PAGE_COLORS = {
-  home:    { accent: '#7C5CFC', grad: 'linear-gradient(135deg,#7C5CFC,#5B3FD4)', bg: 'linear-gradient(160deg,#1a0533 0%,#2d0f55 40%,#09080F 100%)' },
-  balance: { accent: '#4FACFE', grad: 'linear-gradient(135deg,#4FACFE,#00C6FF)', bg: 'linear-gradient(160deg,#0c2a4a 0%,#0f3d6e 40%,#09080F 100%)' },
-  goals:   { accent: '#F05A7E', grad: 'linear-gradient(135deg,#F05A7E,#E83B6A)', bg: 'linear-gradient(160deg,#2d0a1e 0%,#5c1035 40%,#09080F 100%)' },
-  today:   { accent: '#43E97B', grad: 'linear-gradient(135deg,#43E97B,#38F9D7)', bg: 'linear-gradient(160deg,#052e16 0%,#0a4a26 40%,#09080F 100%)' },
-  vault:   { accent: '#A78BFA', grad: 'linear-gradient(135deg,#A78BFA,#8B5CF6)', bg: 'linear-gradient(160deg,#1a0c2e 0%,#2e1555 40%,#09080F 100%)' },
-  profile: { accent: '#F5A623', grad: 'linear-gradient(135deg,#F5A623,#F76B1C)', bg: 'linear-gradient(160deg,#3d2a0d 0%,#5a310c 40%,#09080F 100%)' },
-  settings:{ accent: '#A0AEC0', grad: 'linear-gradient(135deg,#A0AEC0,#718096)', bg: 'linear-gradient(160deg,#1a202c 0%,#2d3748 40%,#09080F 100%)' }
+  home:    { accent: '#7C5CFC', grad: 'linear-gradient(135deg,#7C5CFC,#5B3FD4)' },
+  balance: { accent: '#4FACFE', grad: 'linear-gradient(135deg,#4FACFE,#00C6FF)' },
+  goals:   { accent: '#F05A7E', grad: 'linear-gradient(135deg,#F05A7E,#E83B6A)' },
+  today:   { accent: '#43E97B', grad: 'linear-gradient(135deg,#43E97B,#38F9D7)' },
+  vault:   { accent: '#A78BFA', grad: 'linear-gradient(135deg,#A78BFA,#8B5CF6)' },
+  profile: { accent: '#F5A623', grad: 'linear-gradient(135deg,#F5A623,#F76B1C)' },
+  settings:{ accent: '#A0AEC0', grad: 'linear-gradient(135deg,#A0AEC0,#718096)' }
 };
 
 export default function Dashboard({ user }) {
   const [activePage, setActivePage] = useState('home');
-  const [prevPage, setPrevPage] = useState('home');
-  const [bgNext, setBgNext] = useState('transparent');
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Crossfade background logic
+  // Update accent colors when page changes
   useEffect(() => {
-    if (activePage === prevPage) return;
-    
     const colorConfig = PAGE_COLORS[activePage] || PAGE_COLORS.home;
     const root = document.documentElement;
     root.style.setProperty('--color-accent', colorConfig.accent);
     root.style.setProperty('--grad-accent', colorConfig.grad);
-    root.style.setProperty('--bg-page', colorConfig.bg);
-
-    setBgNext(colorConfig.bg);
-    setIsTransitioning(true);
-    
-    const timer = setTimeout(() => {
-      setIsTransitioning(false);
-      setPrevPage(activePage);
-    }, 700);
-
-    return () => clearTimeout(timer);
-  }, [activePage, prevPage]);
+  }, [activePage]);
 
   // Page switcher
   const renderPage = () => {
@@ -56,18 +41,15 @@ export default function Dashboard({ user }) {
       case 'today':   return <TodayView />;
       case 'vault':   return <VaultView />;
       case 'profile': return <ProfileView user={user} />;
-      case 'settings': return <div style={{ color: 'white', padding: '40px' }}>Settings Modal (TODO)</div>;
+      case 'settings': return <SettingsView user={user} />;
       default:        return <HomeView />;
     }
   };
 
   return (
     <div 
-      className={`app-shell ${isTransitioning ? 'transitioning' : ''}`}
-      style={{ 
-        background: PAGE_COLORS[prevPage]?.bg || PAGE_COLORS.home.bg,
-        '--bg-next': bgNext 
-      }}
+      className="app-shell"
+      style={{ background: '#0d0d14' }}
     >
       <Sidebar activePage={activePage} setActivePage={setActivePage} user={user} />
       

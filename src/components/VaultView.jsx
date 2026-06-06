@@ -19,8 +19,17 @@ export default function VaultView() {
       
       <motion.div initial="hidden" animate="visible" className="dashboard-grid">
         
-        <motion.div custom={0} variants={pageCard} className="nb-card col-span-2" style={{ background: '#161622', padding: 24, borderRadius: 24, borderTop: '3px solid #A78BFA' }}>
-          <div className="card-eyebrow">▣ Capsules</div>
+        <motion.div custom={0} variants={pageCard} className="card card-hero page-card col-span-2" style={{ borderLeftColor: '#A78BFA', padding: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '16px', background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, boxShadow: '0 0 20px rgba(167,139,250,0.2)' }}>
+              🔒
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="card-eyebrow">Vault</div>
+              <h2 className="card-title" style={{ fontSize: '20px', marginBottom: '4px' }}>Time Vault</h2>
+              <p className="card-body">Write letters to your future self.</p>
+            </div>
+          </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px', marginTop: '16px' }}>
             {capsules.map((capsule, i) => (
@@ -28,10 +37,8 @@ export default function VaultView() {
                 key={capsule.id}
                 whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(167,139,250,0.15)' }}
                 whileTap={{ scale: 0.98 }}
+                className="card card-ghost"
                 style={{
-                  background: 'rgba(167,139,250,0.05)',
-                  border: '1px solid rgba(167,139,250,0.15)',
-                  borderRadius: '16px',
                   padding: '20px',
                   cursor: 'pointer',
                   position: 'relative',
