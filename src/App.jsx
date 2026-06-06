@@ -1,81 +1,97 @@
 import { useState, useEffect } from 'react';
-import LoginForm from './LoginForm';
-import WelcomeScreen from './WelcomeScreen';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from './Dashboard';
-import { auth } from './firebase-config';
+import OnboardingFlow from './components/OnboardingFlow';
+import LandingPage from './components/LandingPage';
+import LoginPage from './components/LoginPage';
+import SignupPage from './components/SignupPage';
+import PrivacyPolicyPage from './components/PrivacyPolicyPage';
+import TermsOfServicePage from './components/TermsOfServicePage';
+import { auth, db } from './firebase-config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+
+const ProtectedRoute = ({ user, authChecked, loadingData, onboardingComplete, children }) => {
+  if (!authChecked || loadingData) return <LoadingScreen />;
+  if (!user) return <Navigate to="/login" />;
+  if (!onboardingComplete) return <Navigate to="/onboarding" />;
+  return children;
+};
+
+const PublicOnlyRoute = ({ user, authChecked, loadingData, onboardingComplete, children }) => {
+  if (!authChecked || loadingData) return <LoadingScreen />;
+  if (user && onboardingComplete) return <Navigate to="/home" />;
+  if (user && !onboardingComplete) return <Navigate to="/onboarding" />;
+  return children;
+};
+
+const LoadingScreen = () => (
+  <div style={{ background: 'var(--bg-app)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Loading...</div>
+  </div>
+);
 
 const App = () => {
-  const [isAnimating, setIsAnimating] = useState(true);
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    // Check Firebase auth state
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        try {
+          const docRef = doc(db, 'users', currentUser.uid, 'onboarding', 'status');
+          const snap = await getDoc(docRef);
+          if (snap.exists() && snap.data().completed) {
+            setOnboardingComplete(true);
+          } else {
+            setOnboardingComplete(false);
+          }
+        } catch (err) {
+          console.error("Failed to fetch onboarding status", err);
+          setOnboardingComplete(false);
+        }
+      } else {
+        setUser(null);
+        setOnboardingComplete(false);
+      }
       setAuthChecked(true);
+      setLoadingData(false);
     });
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    // Entrance animation duration: 2s (matches splash auto-advance)
-    const timer = setTimeout(() => {
-      setIsAnimating(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // If user is logged in, show the dashboard immediately
-  if (authChecked && user) {
-    return <Dashboard user={user} />;
+  if (!authChecked || loadingData) {
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="app-container" style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Background glow for the Auth screen (top right) */}
-      {!isAnimating && (
-        <div style={{
-          position: 'absolute',
-          top: '-10%', right: '-5%',
-          width: '500px', height: '500px',
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(124,92,252,0.12) 0%, transparent 70%)',
-          pointerEvents: 'none',
-          zIndex: 0
-        }} />
-      )}
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><LandingPage /></PublicOnlyRoute>} />
+        <Route path="/login" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><LoginPage /></PublicOnlyRoute>} />
+        <Route path="/signup" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><SignupPage /></PublicOnlyRoute>} />
+        
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/terms" element={<TermsOfServicePage />} />
+        
+        <Route path="/onboarding" element={
+          (!user || !onboardingComplete) ? (
+            <OnboardingFlow onComplete={() => setOnboardingComplete(true)} />
+          ) : (
+            <Navigate to="/home" />
+          )
+        } />
 
-      {isAnimating ? (
-        <WelcomeScreen skipAnimation={() => setIsAnimating(false)} />
-      ) : (
-        <div className="auth-container" style={{
-          animation: 'fadeIn 0.5s ease-in-out',
-          width: '100%',
-          maxWidth: '400px',
-          padding: '0 20px',
-          position: 'relative',
-          zIndex: 1
-        }}>
-          <LoginForm />
-        </div>
-      )}
-      
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
-    </div>
+        <Route path="/*" element={
+          <ProtectedRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}>
+            <Dashboard user={user} />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </BrowserRouter>
   );
 };
 

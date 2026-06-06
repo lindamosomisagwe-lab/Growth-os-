@@ -80,7 +80,7 @@ export default function TodayView() {
                   cursor: 'pointer', outline: 'none', color: 'white'
                 }}
               >
-                <span style={{ display: 'inline-block', fontSize: '28px' }}>
+                <motion.span style={{ display: 'inline-block', fontSize: '28px' }}>
                   {mood.emoji}
                 </motion.span>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>{mood.label}</span>

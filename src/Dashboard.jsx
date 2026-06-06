@@ -11,26 +11,8 @@ import VaultView from './components/VaultView';
 import ProfileView from './components/ProfileView';
 import SettingsView from './components/SettingsView';
 
-const PAGE_COLORS = {
-  home:    { accent: '#7C5CFC', grad: 'linear-gradient(135deg,#7C5CFC,#5B3FD4)' },
-  balance: { accent: '#4FACFE', grad: 'linear-gradient(135deg,#4FACFE,#00C6FF)' },
-  goals:   { accent: '#F05A7E', grad: 'linear-gradient(135deg,#F05A7E,#E83B6A)' },
-  today:   { accent: '#43E97B', grad: 'linear-gradient(135deg,#43E97B,#38F9D7)' },
-  vault:   { accent: '#A78BFA', grad: 'linear-gradient(135deg,#A78BFA,#8B5CF6)' },
-  profile: { accent: '#F5A623', grad: 'linear-gradient(135deg,#F5A623,#F76B1C)' },
-  settings:{ accent: '#A0AEC0', grad: 'linear-gradient(135deg,#A0AEC0,#718096)' }
-};
-
 export default function Dashboard({ user }) {
   const [activePage, setActivePage] = useState('home');
-
-  // Update accent colors when page changes
-  useEffect(() => {
-    const colorConfig = PAGE_COLORS[activePage] || PAGE_COLORS.home;
-    const root = document.documentElement;
-    root.style.setProperty('--color-accent', colorConfig.accent);
-    root.style.setProperty('--grad-accent', colorConfig.grad);
-  }, [activePage]);
 
   // Page switcher
   const renderPage = () => {

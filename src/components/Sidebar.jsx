@@ -1,13 +1,7 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 
-const NAV_COLORS = {
-  home:    '#7C5CFC',
-  balance: '#4FACFE',
-  goals:   '#F05A7E',
-  today:   '#43E97B',
-  vault:   '#A78BFA'
-};
+
 
 const navItems = [
   { id: 'home',    icon: '⊞', label: 'Home' },
@@ -29,26 +23,48 @@ export default function Sidebar({ activePage, setActivePage, user }) {
   return (
     <aside className="sidebar">
       {/* Brand logo at the top */}
-      <div style={{ padding: '0 12px', marginBottom: '24px' }}>
+      <div style={{
+        padding: '20px 16px 16px',
+        borderBottom: '1px solid rgba(232,224,213,0.07)',
+        marginBottom: '8px'
+      }}>
+        {/* Wheel mark — SVG */}
+        <svg width="28" height="28" viewBox="0 0 64 64"
+          style={{ marginBottom: '8px' }}>
+          <polygon
+            points="32,4 52,12 60,32 52,52 32,60 12,52 4,32 12,12"
+            fill="rgba(255,107,53,0.15)"
+            stroke="#FF6B35"
+            strokeWidth="2"
+          />
+          <circle cx="32" cy="4" r="3.5" fill="#FF6B35"/>
+          <circle cx="60" cy="32" r="3.5" fill="#FF6B35"/>
+          <circle cx="32" cy="60" r="3.5" fill="#FF6B35"/>
+          <circle cx="4" cy="32" r="3.5" fill="#FF6B35"/>
+          <circle cx="52" cy="12" r="2.5" fill="rgba(255,107,53,0.5)"/>
+          <circle cx="52" cy="52" r="2.5" fill="rgba(255,107,53,0.5)"/>
+          <circle cx="12" cy="52" r="2.5" fill="rgba(255,107,53,0.5)"/>
+          <circle cx="12" cy="12" r="2.5" fill="rgba(255,107,53,0.5)"/>
+        </svg>
+
+        {/* Wordmark */}
         <div style={{
-          fontFamily: "'Inter', sans-serif",
-          fontSize: '15px',
+          fontSize: '17px',
           fontWeight: '700',
-          color: '#ffffff',
-          letterSpacing: '-0.02em'
+          color: '#E8E0D5',
+          letterSpacing: '-0.02em',
+          lineHeight: 1
         }}>
-          Growth OS
+          Chapter
         </div>
         <div style={{
-          fontFamily: "'Inter', sans-serif",
           fontSize: '10px',
-          fontWeight: '400',
-          color: 'rgba(255,255,255,0.3)',
-          letterSpacing: '0.08em',
+          color: 'rgba(232,224,213,0.28)',
+          letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          marginTop: '2px'
+          marginTop: '3px'
         }}>
-          Your story is being written
+          your story is being written
         </div>
       </div>
 
@@ -62,9 +78,10 @@ export default function Sidebar({ activePage, setActivePage, user }) {
               position: 'relative',
               flexDirection: 'column', 
               gap: '4px',
-              height: '56px', // taller to fit label
+              height: '56px',
               marginBottom: '4px',
-              zIndex: 1
+              zIndex: 1,
+              fontWeight: activePage === item.id ? 600 : 400
             }}
           >
             {/* Sliding background pill */}
@@ -74,7 +91,7 @@ export default function Sidebar({ activePage, setActivePage, user }) {
                 style={{
                   position: 'absolute', inset: 0,
                   borderRadius: 12,
-                  background: 'rgba(255,255,255,0.08)',
+                  background: 'rgba(255,255,255,0.06)',
                   zIndex: -1
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
@@ -87,8 +104,8 @@ export default function Sidebar({ activePage, setActivePage, user }) {
                 layoutId="nav-active-bar"
                 style={{
                   position: 'absolute', left: -8, top: '20%', bottom: '20%',
-                  width: 3, borderRadius: '0 3px 3px 0',
-                  background: NAV_COLORS[item.id],
+                  width: 2, borderRadius: '0 2px 2px 0',
+                  background: 'var(--amber)'
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
@@ -97,8 +114,8 @@ export default function Sidebar({ activePage, setActivePage, user }) {
             {/* Fallback for reduced motion */}
             {activePage === item.id && reduce && (
               <>
-                <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(255,255,255,0.08)', zIndex: -1 }} />
-                <div style={{ position: 'absolute', left: -8, top: '20%', bottom: '20%', width: 3, borderRadius: '0 3px 3px 0', background: NAV_COLORS[item.id] }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(232,224,213,0.08)', zIndex: -1 }} />
+                <div style={{ position: 'absolute', left: -8, top: '20%', bottom: '20%', width: 3, borderRadius: '0 3px 3px 0', background: 'var(--amber)' }} />
               </>
             )}
 
@@ -125,15 +142,15 @@ export default function Sidebar({ activePage, setActivePage, user }) {
       >
         <div style={{
           width: 36, height: 36, borderRadius: '50%',
-          background: 'linear-gradient(135deg, #7C5CFC, #5B3FD4)',
-          color: 'white', fontWeight: 700, fontSize: 16,
+          background: 'var(--bg-card)',
+          color: 'var(--text-primary)', fontWeight: 700, fontSize: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           overflow: 'hidden',
-          boxShadow: activePage === 'profile' ? '0 0 0 2px #7C5CFC' : 'none'
+          boxShadow: activePage === 'profile' ? '0 0 0 2px var(--amber)' : 'none'
         }}>
           {hasPhoto ? <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} /> : initial}
         </div>
-        <span style={{ fontSize: '10px', fontWeight: 500, color: activePage === 'profile' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Profile</span>
+        <span style={{ fontSize: '10px', fontWeight: 500, color: activePage === 'profile' ? 'var(--text-primary)' : 'var(--text-muted)' }}>Profile</span>
       </motion.div>
 
       {/* Settings */}

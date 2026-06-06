@@ -1,140 +1,419 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { pageCard, slideUp, fade } from '../lib/animations';
+import { auth, db } from '../firebase-config';
+import { signOut, deleteUser, updateProfile } from 'firebase/auth';
+import { doc, getDoc, setDoc, collection, getDocs, query, where, writeBatch } from 'firebase/firestore';
 
-export default function SettingsView({ user }) {
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+const SettingsSectionLabel = ({ children, danger }) => (
+  <div style={{
+    fontFamily: "'Inter', sans-serif",
+    fontSize: '10px',
+    fontWeight: '600',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: danger ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.3)',
+    marginBottom: '4px',
+    marginTop: '32px',
+    padding: '0 4px'
+  }}>
+    {children}
+  </div>
+);
 
-  const initial = user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'T';
-  const hasPhoto = user?.photoURL;
+const Chevron = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M6 4l4 4-4 4"
+      stroke="rgba(255,255,255,0.25)"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const Toggle = ({ value, onChange }) => (
+  <div 
+    className={`toggle-track ${value ? 'on' : ''}`}
+    onClick={(e) => { e.stopPropagation(); onChange(!value); }}
+    style={{
+      width: '44px',
+      height: '24px',
+      borderRadius: '999px',
+      background: value ? '#7C5CFC' : 'rgba(255,255,255,0.1)',
+      border: `1px solid ${value ? '#7C5CFC' : 'rgba(255,255,255,0.12)'}`,
+      position: 'relative',
+      cursor: 'pointer',
+      transition: 'background 0.2s ease, border-color 0.2s ease'
+    }}
+  >
+    <div 
+      className="toggle-thumb"
+      style={{
+        width: '18px',
+        height: '18px',
+        borderRadius: '50%',
+        background: 'white',
+        position: 'absolute',
+        top: '2px',
+        left: '2px',
+        transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+        transform: value ? 'translateX(20px)' : 'translateX(0px)'
+      }}
+    />
+  </div>
+);
+
+const SettingsRow = ({ icon, title, subtitle, right, onClick, danger, noHover }) => (
+  <motion.div
+    onClick={onClick}
+    whileHover={noHover || !onClick ? {} : { backgroundColor: 'rgba(255,255,255,0.03)' }}
+    whileTap={onClick && !noHover ? { scale: 0.99 } : {}}
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '14px',
+      padding: '14px 4px',
+      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      cursor: onClick ? 'pointer' : 'default',
+      borderRadius: '6px',
+    }}
+  >
+    {icon && (
+      <div style={{
+        fontSize: '16px',
+        width: '20px',
+        textAlign: 'center',
+        flexShrink: 0,
+        opacity: danger ? 0.7 : 0.6,
+        color: danger ? 'rgba(239,68,68,1)' : 'inherit'
+      }}>
+        {icon}
+      </div>
+    )}
+    
+    <div style={{ flex: 1 }}>
+      <div style={{
+        fontSize: '14px',
+        fontWeight: '500',
+        color: danger ? 'rgba(239,68,68,0.8)' : 'rgba(255,255,255,0.85)',
+        letterSpacing: '-0.01em'
+      }}>
+        {title}
+      </div>
+      {subtitle && (
+        <div style={{
+          fontSize: '12px',
+          color: 'rgba(255,255,255,0.3)',
+          marginTop: '2px'
+        }}>
+          {subtitle}
+        </div>
+      )}
+    </div>
+    
+    {right && (
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+        {right}
+      </div>
+    )}
+  </motion.div>
+);
+
+export default function SettingsPage({ user }) {
+  const [prefs, setPrefs] = useState({
+    reducedMotion: false,
+    compactView: false,
+    showXP: true,
+    dailyReminder: false,
+    reminderTime: '20:00',
+    streakAlerts: true,
+    vaultAlerts: true
+  });
+  
+  const [showEditName, setShowEditName] = useState(false);
+  const [newName, setNewName] = useState(user?.displayName || '');
+  const [showSignOut, setShowSignOut] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Load preferences
+  useEffect(() => {
+    if (!user) return;
+    const loadPrefs = async () => {
+      try {
+        const docRef = doc(db, 'users', user.uid, 'preferences', 'settings');
+        const snap = await getDoc(docRef);
+        if (snap.exists()) {
+          const data = snap.data();
+          setPrefs(prev => ({ ...prev, ...data }));
+          if (data.reducedMotion) {
+            document.documentElement.setAttribute('data-reduced-motion', 'true');
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
+      }
+    };
+    loadPrefs();
+  }, [user]);
+
+  const savePref = async (key, value) => {
+    const newPrefs = { ...prefs, [key]: value };
+    setPrefs(newPrefs);
+    
+    if (key === 'reducedMotion') {
+      if (value) document.documentElement.setAttribute('data-reduced-motion', 'true');
+      else document.documentElement.removeAttribute('data-reduced-motion');
+    }
+
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'users', user.uid, 'preferences', 'settings'), newPrefs, { merge: true });
+    } catch (err) {
+      console.error("Failed to save pref:", err);
+    }
+  };
+
+  const handleUpdateName = async () => {
+    if (!newName.trim() || !user) return;
+    try {
+      await updateProfile(user, { displayName: newName });
+      setShowEditName(false);
+      // Optional: sync to user document in Firestore if needed.
+    } catch (err) {
+      console.error("Update name error", err);
+    }
+  };
+
+  const exportData = async () => {
+    if (!user) return;
+    setIsExporting(true);
+    try {
+      const collections = [
+        'goals', 'subgoals', 'tasks',
+        'mood_logs', 'wheel_scores',
+        'vault_letters', 'user_progress',
+        'xp_events', 'daily_logs'
+      ];
+      
+      const data = {};
+      for (const col of collections) {
+        const snap = await getDocs(query(collection(db, col), where('userId', '==', user.uid)));
+        data[col] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chapter-export-${Date.now()}.json`;
+      a.click();
+    } catch (err) {
+      console.error("Export error", err);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!user) return;
+    try {
+      const collections = [
+        'goals', 'subgoals', 'tasks', 'mood_logs',
+        'wheel_scores', 'vault_letters', 'user_progress',
+        'xp_events', 'daily_logs'
+      ];
+      
+      for (const col of collections) {
+        const snap = await getDocs(query(collection(db, col), where('userId', '==', user.uid)));
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+      
+      // Delete user settings
+      const prefsRef = doc(db, 'users', user.uid, 'preferences', 'settings');
+      await writeBatch(db).delete(prefsRef).commit();
+
+      const onboardRef = doc(db, 'users', user.uid, 'onboarding', 'status');
+      await writeBatch(db).delete(onboardRef).commit();
+      
+      await deleteUser(user); // Triggers re-render in App.js
+    } catch (err) {
+      console.error("Delete account error", err);
+      // In a real app we might prompt them to re-authenticate if token is stale
+      alert("Failed to delete account. You may need to log in again and retry.");
+    }
+  };
 
   return (
-    <div className="content-wrap">
-      <div className="hud-bar">
-        <div>
-          <h1 className="page-title">Settings.</h1>
-          <div className="text-meta" style={{ marginTop: '4px' }}>Manage your preferences</div>
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 24px 80px' }}>
+      <h1 className="page-title">Settings</h1>
+      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontStyle: 'italic', marginTop: '4px' }}>
+        Manage your account and preferences
+      </p>
+
+      {/* ACCOUNT */}
+      <SettingsSectionLabel>Account</SettingsSectionLabel>
+      <motion.div
+        onClick={() => setShowEditName(true)}
+        whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+        whileTap={{ scale: 0.99 }}
+        style={{
+          display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 4px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', borderRadius: '6px'
+        }}
+      >
+        <div style={{
+          width: 44, height: 44, borderRadius: '50%', background: '#7C5CFC',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontWeight: 700, color: 'white', fontSize: '18px'
+        }}>
+          {user?.photoURL ? (
+            <img src={user.photoURL} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
+          ) : (
+            (user?.displayName?.[0] || user?.email?.[0] || 'U').toUpperCase()
+          )}
         </div>
-      </div>
-
-      <motion.div initial="hidden" animate="visible" className="dashboard-grid">
-        
-        {/* Account Section */}
-        <motion.div custom={0} variants={pageCard} className="card card-default page-card col-span-2" style={{ padding: 24 }}>
-          <h3 className="card-title" style={{ marginBottom: '16px' }}>Account</h3>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-            <div style={{
-              width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
-              background: 'linear-gradient(135deg, #7C5CFC, #5B3FD4)',
-              color: 'white', fontWeight: 800, fontSize: 24,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              overflow: 'hidden'
-            }}>
-              {hasPhoto ? <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} /> : initial}
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '16px', fontWeight: 600, color: 'white', marginBottom: '4px' }}>{user?.displayName || 'Traveler'}</div>
-              <div className="text-meta">{user?.email || 'No email associated'}</div>
-            </div>
-          </div>
-          <button className="btn-secondary" style={{ width: '100%', borderColor: 'rgba(255,255,255,0.1)' }}>Sign out</button>
-        </motion.div>
-
-        {/* Preferences Section */}
-        <motion.div custom={1} variants={pageCard} className="card card-default page-card col-span-2" style={{ padding: 24 }}>
-          <h3 className="card-title" style={{ marginBottom: '16px' }}>Preferences</h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div className="settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 500, color: 'white', marginBottom: '4px' }}>Daily Notifications</div>
-                <div className="text-meta">Reminders to log your check-ins</div>
-              </div>
-              <motion.div 
-                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                style={{ width: 44, height: 24, borderRadius: 12, background: notificationsEnabled ? '#43E97B' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', padding: 2 }}
-              >
-                <motion.div 
-                  animate={{ x: notificationsEnabled ? 20 : 0 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  style={{ width: 20, height: 20, borderRadius: 10, background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-                />
-              </motion.div>
-            </div>
-
-            <div className="settings-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0' }}>
-              <div>
-                <div style={{ fontSize: '15px', fontWeight: 500, color: 'white', marginBottom: '4px' }}>Reduced Motion</div>
-                <div className="text-meta">Minimize interface animations</div>
-              </div>
-              <motion.div 
-                onClick={() => setReducedMotion(!reducedMotion)}
-                style={{ width: 44, height: 24, borderRadius: 12, background: reducedMotion ? '#7C5CFC' : 'rgba(255,255,255,0.1)', cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', padding: 2 }}
-              >
-                <motion.div 
-                  animate={{ x: reducedMotion ? 20 : 0 }}
-                  transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                  style={{ width: 20, height: 20, borderRadius: 10, background: 'white', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
-                />
-              </motion.div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Data Section */}
-        <motion.div custom={2} variants={pageCard} className="card card-default page-card col-span-2" style={{ padding: 24 }}>
-          <h3 className="card-title" style={{ marginBottom: '16px' }}>Data & Privacy</h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <button className="btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }}>
-              📄 Export my data
-            </button>
-            
-            <button 
-              className="btn-secondary" 
-              onClick={() => setShowDeleteConfirm(!showDeleteConfirm)}
-              style={{ width: '100%', justifyContent: 'flex-start', border: '1px solid rgba(240,90,126,0.2)', color: '#F05A7E', background: showDeleteConfirm ? 'rgba(240,90,126,0.1)' : 'transparent' }}
-            >
-              ⚠️ Delete Account
-            </button>
-            
-            <AnimatePresence>
-              {showDeleteConfirm && (
-                <motion.div 
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  style={{ overflow: 'hidden' }}
-                >
-                  <div style={{ padding: '16px', background: 'rgba(240,90,126,0.1)', borderRadius: '8px', border: '1px solid rgba(240,90,126,0.2)', marginTop: '8px' }}>
-                    <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.8)', margin: '0 0 12px 0', lineHeight: 1.5 }}>
-                      This action is permanent and cannot be undone. All your check-ins, goals, and vault capsules will be erased.
-                    </p>
-                    <button style={{ width: '100%', background: '#F05A7E', color: 'white', border: 'none', padding: '10px', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}>
-                      Yes, delete my account
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-
-        {/* About Section */}
-        <motion.div custom={3} variants={pageCard} className="card card-ghost page-card col-span-2" style={{ padding: 24, textAlign: 'center' }}>
-          <div style={{ fontSize: '14px', fontWeight: 600, color: 'white', marginBottom: '4px' }}>Growth OS</div>
-          <div className="text-meta" style={{ marginBottom: '16px' }}>Version 1.0.0 (Build 42)</div>
-          
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: '13px' }}>
-            <a href="#" style={{ color: 'var(--text-tertiary)', textDecoration: 'none' }}>Privacy Policy</a>
-            <span style={{ color: 'rgba(255,255,255,0.1)' }}>|</span>
-            <a href="#" style={{ color: 'var(--text-tertiary)', textDecoration: 'none' }}>Terms of Service</a>
-          </div>
-        </motion.div>
-
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: '15px', fontWeight: 600, color: 'white' }}>{user?.displayName || 'User'}</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>{user?.email}</div>
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Member since {new Date(user?.metadata?.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+        </div>
+        <div style={{ fontSize: '12px', color: 'rgba(124,92,252,0.8)' }}>
+          Edit →
+        </div>
       </motion.div>
+
+      <SettingsRow icon="↪" title="Sign out" onClick={() => setShowSignOut(true)} />
+
+      {/* PREFERENCES */}
+      <SettingsSectionLabel>Preferences</SettingsSectionLabel>
+      <SettingsRow 
+        title="Reduced motion" subtitle="Minimise animations"
+        right={<Toggle value={prefs.reducedMotion} onChange={v => savePref('reducedMotion', v)} />} 
+        onClick={() => savePref('reducedMotion', !prefs.reducedMotion)}
+      />
+      <SettingsRow 
+        title="Compact view" subtitle="Show more content, less spacing"
+        right={<Toggle value={prefs.compactView} onChange={v => savePref('compactView', v)} />} 
+        onClick={() => savePref('compactView', !prefs.compactView)}
+      />
+      <SettingsRow 
+        title="Show XP in sidebar" subtitle="Display your XP total below nav"
+        right={<Toggle value={prefs.showXP} onChange={v => savePref('showXP', v)} />} 
+        onClick={() => savePref('showXP', !prefs.showXP)}
+      />
+
+      {/* NOTIFICATIONS */}
+      <SettingsSectionLabel>Notifications</SettingsSectionLabel>
+      <SettingsRow 
+        title="Daily reminder" subtitle="Remind me to check in each day"
+        right={<Toggle value={prefs.dailyReminder} onChange={v => savePref('dailyReminder', v)} />} 
+        onClick={() => savePref('dailyReminder', !prefs.dailyReminder)}
+      />
+      <SettingsRow 
+        title="Reminder time" subtitle="When should we remind you?"
+        right={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <input 
+              type="time" 
+              value={prefs.reminderTime} 
+              onChange={e => savePref('reminderTime', e.target.value)}
+              style={{
+                background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)',
+                fontSize: '14px', outline: 'none', cursor: 'pointer'
+              }}
+            />
+            <Chevron />
+          </div>
+        } 
+      />
+      <SettingsRow 
+        title="Streak alerts" subtitle="Notify me before I lose my streak"
+        right={<Toggle value={prefs.streakAlerts} onChange={v => savePref('streakAlerts', v)} />} 
+        onClick={() => savePref('streakAlerts', !prefs.streakAlerts)}
+      />
+      <SettingsRow 
+        title="Vault unlocks" subtitle="Alert when a letter is ready to open"
+        right={<Toggle value={prefs.vaultAlerts} onChange={v => savePref('vaultAlerts', v)} />} 
+        onClick={() => savePref('vaultAlerts', !prefs.vaultAlerts)}
+      />
+
+      {/* DATA & PRIVACY */}
+      <SettingsSectionLabel>Data & Privacy</SettingsSectionLabel>
+      <SettingsRow icon="📤" title={isExporting ? "Exporting..." : "Export my data"} subtitle="Download everything as JSON" right={<Chevron />} onClick={exportData} />
+      <SettingsRow icon="🔒" title="Privacy policy" subtitle="How we handle your data" right={<Chevron />} onClick={() => window.open('/privacy', '_blank')} />
+      <SettingsRow icon="📜" title="Terms of service" subtitle="Your rights and our rules" right={<Chevron />} onClick={() => window.open('/terms', '_blank')} />
+      <SettingsRow title="Chapter" subtitle="Built with care ✦" right={<span style={{color:'rgba(255,255,255,0.2)',fontSize:'13px'}}>v1.0.0</span>} noHover />
+
+      {/* DANGER ZONE */}
+      <SettingsSectionLabel danger>Danger Zone</SettingsSectionLabel>
+      <SettingsRow icon="🗑" title="Delete account" subtitle="Permanently delete all your data" danger onClick={() => setShowDelete(true)} />
+
+      {/* MODALS */}
+      <AnimatePresence>
+        {showEditName && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: '#13131f', border: '1px solid rgba(255,255,255,0.1)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 360 }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600 }}>Edit display name</h3>
+              <input value={newName} onChange={e => setNewName(e.target.value)} autoFocus style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', marginBottom: 20, outline: 'none' }} />
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => setShowEditName(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={handleUpdateName} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#7C5CFC', color: 'white', cursor: 'pointer' }}>Save</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showSignOut && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: '#13131f', border: '1px solid rgba(255,255,255,0.1)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 360, textAlign: 'center' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600 }}>Sign out of Chapter?</h3>
+              <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+                <button onClick={() => setShowSignOut(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => signOut(auth)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Sign out</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {showDelete && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} style={{ background: '#13131f', borderTop: '1px solid rgba(255,255,255,0.1)', padding: '32px 24px', borderTopLeftRadius: 24, borderTopRightRadius: 24, width: '100%', maxWidth: 640 }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '20px', fontWeight: 600 }}>Delete your account?</h3>
+              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', marginBottom: 16 }}>This will permanently delete:</p>
+              <ul style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', paddingLeft: 20, marginBottom: 24, lineHeight: 1.6 }}>
+                <li>All your goals and progress</li>
+                <li>Your mood history</li>
+                <li>Your vault letters (cannot be recovered)</li>
+                <li>Your XP and streak data</li>
+              </ul>
+              
+              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Type DELETE to confirm:</div>
+              <input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', marginBottom: 24, outline: 'none' }} />
+              
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={() => setShowDelete(false)} style={{ flex: 1, padding: 14, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
+                <button 
+                  onClick={deleteAccount} 
+                  disabled={deleteConfirmText !== 'DELETE'}
+                  style={{ 
+                    flex: 1, padding: 14, borderRadius: 10, border: 'none', 
+                    background: deleteConfirmText === 'DELETE' ? '#ef4444' : 'rgba(239,68,68,0.3)', 
+                    color: 'white', cursor: deleteConfirmText === 'DELETE' ? 'pointer' : 'not-allowed', 
+                    fontWeight: 600, boxShadow: deleteConfirmText === 'DELETE' ? '0 3px 0 #991b1b' : 'none' 
+                  }}
+                >
+                  Delete permanently
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Users can only access their own documents
+    match /users/{userId}/{document=**} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /goals/{docId} {
+      allow read, write: if isOwner(resource.data.userId)
+                         || isOwner(request.resource.data.userId);
+    }
+
+    match /mood_logs/{docId} {
+      allow read, write: if isOwner(resource.data.userId)
+                         || isOwner(request.resource.data.userId);
+    }
+
+    match /wheel_scores/{docId} {
+      allow read, write: if isOwner(resource.data.userId)
+                         || isOwner(request.resource.data.userId);
+    }
+
+    match /vault_letters/{docId} {
+      allow read, write: if isOwner(resource.data.userId)
+                         || isOwner(request.resource.data.userId);
+    }
+
+    match /user_progress/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /xp_events/{docId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if false; // XP events are immutable
+    }
+
+    // Consent records — readable by owner, never deletable
+    match /consent_records/{docId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if false; // consent records are permanent
+    }
+
+    // Default — deny everything not explicitly allowed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
