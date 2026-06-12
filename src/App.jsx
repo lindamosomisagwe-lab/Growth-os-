@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Agentation } from 'agentation';
 import Dashboard from './Dashboard';
 import OnboardingFlow from './components/OnboardingFlow';
 import LandingPage from './components/LandingPage';
@@ -68,30 +69,40 @@ const App = () => {
   }
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><LandingPage /></PublicOnlyRoute>} />
-        <Route path="/login" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><LoginPage /></PublicOnlyRoute>} />
-        <Route path="/signup" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><SignupPage /></PublicOnlyRoute>} />
-        
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        <Route path="/terms" element={<TermsOfServicePage />} />
-        
-        <Route path="/onboarding" element={
-          (!user || !onboardingComplete) ? (
-            <OnboardingFlow onComplete={() => setOnboardingComplete(true)} />
-          ) : (
-            <Navigate to="/home" />
-          )
-        } />
+    <>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><LandingPage /></PublicOnlyRoute>} />
+          <Route path="/login" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><LoginPage /></PublicOnlyRoute>} />
+          <Route path="/signup" element={<PublicOnlyRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}><SignupPage /></PublicOnlyRoute>} />
+          
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsOfServicePage />} />
+          
+          <Route path="/onboarding" element={
+            (!user || !onboardingComplete) ? (
+              <OnboardingFlow onComplete={() => setOnboardingComplete(true)} />
+            ) : (
+              <Navigate to="/home" />
+            )
+          } />
 
-        <Route path="/*" element={
-          <ProtectedRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}>
-            <Dashboard user={user} />
-          </ProtectedRoute>
-        } />
-      </Routes>
-    </BrowserRouter>
+          <Route path="/*" element={
+            <ProtectedRoute user={user} authChecked={authChecked} loadingData={loadingData} onboardingComplete={onboardingComplete}>
+              <Dashboard user={user} />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </BrowserRouter>
+      {import.meta.env.DEV && (
+        <Agentation
+          endpoint="http://localhost:4747"
+          onSessionCreated={(sessionId) => {
+            console.log("Session started:", sessionId);
+          }}
+        />
+      )}
+    </>
   );
 };
 

@@ -183,7 +183,7 @@ export default function OnboardingFlow({ onComplete }) {
   // Screen Components
   // =====================
 
-  const Screen1 = () => (
+  const renderScreen1 = () => (
     <motion.div key="s1" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw' }}>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ staggerChildren: 0.08 }}>
         <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Chapter</h1>
@@ -195,7 +195,7 @@ export default function OnboardingFlow({ onComplete }) {
     </motion.div>
   );
 
-  const Screen2 = () => {
+  const renderScreen2 = () => {
     const [cardIdx, setCardIdx] = useState(0);
     const cards = [
       { e: '🎯', title: 'One goal at a time.', sub: 'For people who feel overwhelmed — a simple system that actually sticks.' },
@@ -236,7 +236,7 @@ export default function OnboardingFlow({ onComplete }) {
     );
   };
 
-  const Screen3 = () => {
+  const renderScreen3 = () => {
     const opts = [
       { id: 'Health', icon: '💪', label: 'Health & Wellness' },
       { id: 'Career', icon: '💼', label: 'Career & Finances' },
@@ -270,7 +270,7 @@ export default function OnboardingFlow({ onComplete }) {
     );
   };
 
-  const Screen4 = () => (
+  const renderScreen4 = () => (
     <motion.div key="s4" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px' }}>
       <h2 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 24px', maxWidth: 300 }}>What does success look like in 3 months?</h2>
       
@@ -297,7 +297,7 @@ export default function OnboardingFlow({ onComplete }) {
     </motion.div>
   );
 
-  const Screen5 = () => {
+  const renderScreen5 = () => {
     const opts = [
       { id: '5min', e: '⚡', title: 'Just 5 minutes', sub: 'Quick daily check-in only' },
       { id: '10min', e: '🎯', title: 'About 10 minutes', sub: 'Check in + track one goal' },
@@ -328,7 +328,7 @@ export default function OnboardingFlow({ onComplete }) {
     );
   };
 
-  const Screen6 = () => {
+  const renderScreen6 = () => {
     // Generate derived properties
     const areaEmoji = lifeArea === 'Health' ? '💪' : lifeArea === 'Career' ? '💼' : lifeArea === 'Mental' ? '🧠' : lifeArea === 'Relationships' ? '❤️' : '✨';
     const areaName = lifeArea || 'Personal Growth';
@@ -365,7 +365,7 @@ export default function OnboardingFlow({ onComplete }) {
     );
   };
 
-  const Screen7 = () => {
+  const renderScreen7 = () => {
     const canContinue = accountConsent && healthConsent;
     
     return (
@@ -457,7 +457,7 @@ export default function OnboardingFlow({ onComplete }) {
     );
   };
 
-  const Screen8 = () => (
+  const renderScreen8 = () => (
     <motion.div key="s8" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px 24px' }}>
       <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>Save your progress.</h2>
       <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 32px' }}>
@@ -519,7 +519,7 @@ export default function OnboardingFlow({ onComplete }) {
     </motion.div>
   );
 
-  const Screen9 = () => (
+  const renderScreen9 = () => (
     <motion.div key="s9" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: 'var(--bg-app)' }}>
       <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
         <h2 style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 16px' }}>Welcome to Chapter.</h2>
@@ -547,15 +547,15 @@ export default function OnboardingFlow({ onComplete }) {
       {renderProgressBar()}
       {renderHeader()}
       <AnimatePresence mode="wait">
-        {step === 1 && <Screen1 />}
-        {step === 2 && <Screen2 />}
-        {step === 3 && <Screen3 />}
-        {step === 4 && <Screen4 />}
-        {step === 5 && <Screen5 />}
-        {step === 6 && <Screen6 />}
-        {step === 7 && <Screen7 />}
-        {step === 8 && <Screen8 />}
-        {step === 9 && <Screen9 />}
+        {step === 1 && renderScreen1()}
+        {step === 2 && renderScreen2()}
+        {step === 3 && renderScreen3()}
+        {step === 4 && renderScreen4()}
+        {step === 5 && renderScreen5()}
+        {step === 6 && renderScreen6()}
+        {step === 7 && renderScreen7()}
+        {step === 8 && renderScreen8()}
+        {step === 9 && renderScreen9()}
       </AnimatePresence>
     </div>
   );

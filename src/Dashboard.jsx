@@ -17,14 +17,14 @@ export default function Dashboard({ user }) {
   // Page switcher
   const renderPage = () => {
     switch (activePage) {
-      case 'home':    return <HomeView />;
+      case 'home':    return <HomeView user={user} />;
       case 'balance': return <BalanceView />;
       case 'goals':   return <GoalsView />;
       case 'today':   return <TodayView />;
-      case 'vault':   return <VaultView />;
+      case 'vault':   return <VaultView user={user} />;
       case 'profile': return <ProfileView user={user} />;
       case 'settings': return <SettingsView user={user} />;
-      default:        return <HomeView />;
+      default:        return <HomeView user={user} />;
     }
   };
 
