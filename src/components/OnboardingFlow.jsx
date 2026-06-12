@@ -235,19 +235,21 @@ export default function OnboardingFlow({ onComplete }) {
 
   const renderScreen3 = () => {
     const opts = [
-      { id: 'Health', icon: '💪', label: 'Health & Wellness' },
-      { id: 'Career', icon: '💼', label: 'Career & Finances' },
-      { id: 'Mental', icon: '🧠', label: 'Mental Health' },
-      { id: 'Relationships', icon: '❤️', label: 'Relationships' },
-      { id: 'Personal Growth', icon: '✨', label: 'Personal Growth' },
-      { id: 'All', icon: '🌱', label: 'All of the above' }
+      { id: 'mental_health',       icon: '🧠', label: 'Mental Health' },
+      { id: 'physical_health',     icon: '💪', label: 'Physical Health' },
+      { id: 'career_finances',     icon: '💼', label: 'Career & Finances' },
+      { id: 'life_vision',         icon: '🧭', label: 'Life Vision' },
+      { id: 'personal_development',icon: '🌱', label: 'Personal Dev.' },
+      { id: 'spirituality',        icon: '✨', label: 'Spirituality' },
+      { id: 'creativity',          icon: '🎨', label: 'Creativity' },
+      { id: 'relationships',       icon: '❤️', label: 'Relationships' }
     ];
     return (
-      <motion.div key="s3" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh', width: '100vw', padding: '64px 24px' }}>
+      <motion.div key="s3" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh', width: '100vw', padding: '64px 24px', overflowY: 'auto' }}>
         <h2 style={{ fontSize: '22px', fontWeight: 600, textAlign: 'center', margin: '0 0 8px' }}>What area of your life do you most want to improve right now?</h2>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '32px' }}>We'll personalise your experience.</div>
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}>We'll personalise your experience.</div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', maxWidth: 400 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', maxWidth: 400, paddingBottom: '32px' }}>
           {opts.map(opt => {
             const sel = lifeArea === opt.id;
             return (
@@ -327,8 +329,27 @@ export default function OnboardingFlow({ onComplete }) {
 
   const renderScreen6 = () => {
     // Generate derived properties
-    const areaEmoji = lifeArea === 'Health' ? '💪' : lifeArea === 'Career' ? '💼' : lifeArea === 'Mental' ? '🧠' : lifeArea === 'Relationships' ? '❤️' : '✨';
-    const areaName = lifeArea || 'Personal Growth';
+    const areaEmoji = lifeArea === 'physical_health' ? '💪' 
+          : lifeArea === 'career_finances' ? '💼' 
+          : lifeArea === 'mental_health' ? '🧠' 
+          : lifeArea === 'relationships' ? '❤️' 
+          : lifeArea === 'life_vision' ? '🧭' 
+          : lifeArea === 'personal_development' ? '🌱' 
+          : lifeArea === 'spirituality' ? '✨' 
+          : lifeArea === 'creativity' ? '🎨' 
+          : '✨';
+
+    const areaNames = {
+      mental_health: 'Mental Health',
+      physical_health: 'Physical Health',
+      career_finances: 'Career & Finances',
+      life_vision: 'Life Vision',
+      personal_development: 'Personal Growth',
+      spirituality: 'Spirituality',
+      creativity: 'Creativity',
+      relationships: 'Relationships'
+    };
+    const areaName = areaNames[lifeArea] || 'Personal Growth';
     const truncatedGoal = goalDescription.length > 40 ? goalDescription.substring(0, 40) + '...' : goalDescription;
 
     return (

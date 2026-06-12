@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageCard } from '../lib/animations';
+import { db } from '../firebase-config';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-export default function TodayView() {
+export default function TodayView({ user }) {
   const [glasses, setGlasses] = useState(Array(8).fill(false));
   const [selectedMood, setSelectedMood] = useState(null);
+  const [isLogging, setIsLogging] = useState(false);
+  const [logMessage, setLogMessage] = useState('');
 
   const toggleGlass = (index) => {
     setGlasses(prev => {
@@ -23,6 +27,41 @@ export default function TodayView() {
     { id: 'sad',     emoji: '😢', label: 'Sad',     className: 'mood-sad' },
     { id: 'angry',   emoji: '😠', label: 'Angry',   className: 'mood-angry' }
   ];
+
+  const handleLogMood = async () => {
+    if (!selectedMood) return;
+    if (!user) {
+      setLogMessage('You must be logged in to log your mood.');
+      return;
+    }
+    setIsLogging(true);
+    setLogMessage('');
+    try {
+      const scoreMap = {
+        happy: 10,
+        content: 8,
+        neutral: 5,
+        sad: 3,
+        angry: 1
+      };
+      
+      await addDoc(collection(db, 'mood_logs'), {
+        userId: user.uid,
+        score: scoreMap[selectedMood] || 5,
+        mood: selectedMood,
+        createdAt: serverTimestamp()
+      });
+      
+      setLogMessage('Mood logged successfully! ✨');
+      setSelectedMood(null);
+      setTimeout(() => setLogMessage(''), 3000);
+    } catch (err) {
+      console.error('Error logging mood:', err);
+      setLogMessage('Failed to log mood. Please check database permissions.');
+    } finally {
+      setIsLogging(false);
+    }
+  };
 
   return (
     <div className="content-wrap">
@@ -89,14 +128,23 @@ export default function TodayView() {
           </div>
 
           {selectedMood && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '20px' }}>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
               <motion.button
                 whileHover={{ scale: 1.02, filter: 'brightness(1.1)' }}
                 whileTap={{ scale: 0.96 }}
                 className="btn-primary"
+                onClick={handleLogMood}
+                disabled={isLogging}
+                style={{ opacity: isLogging ? 0.7 : 1 }}
               >
-                ✓ Log Mood
+                {isLogging ? 'Logging...' : '✓ Log Mood'}
               </motion.button>
+            </motion.div>
+          )}
+
+          {logMessage && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ marginTop: '16px', fontSize: '14px', fontWeight: 600, color: logMessage.includes('Failed') || logMessage.includes('must') ? 'var(--rose)' : 'var(--teal)' }}>
+              {logMessage}
             </motion.div>
           )}
         </motion.div>

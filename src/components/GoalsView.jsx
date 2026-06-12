@@ -89,7 +89,15 @@ export default function GoalsView() {
     const goal = {
       id: 'g' + Date.now(),
       title: newGoal.title,
-      icon: newGoal.area === 'Health' ? '🏃' : newGoal.area === 'Work' ? '💼' : newGoal.area === 'Money' ? '💰' : '🎯',
+      icon: newGoal.area === 'Physical Health' ? '💪' 
+            : newGoal.area === 'Career & Finances' ? '💼' 
+            : newGoal.area === 'Mental Health' ? '🧠' 
+            : newGoal.area === 'Relationships' ? '❤️' 
+            : newGoal.area === 'Life Vision' ? '🧭' 
+            : newGoal.area === 'Personal Dev.' ? '🌱' 
+            : newGoal.area === 'Spirituality' ? '✨' 
+            : newGoal.area === 'Creativity' ? '🎨' 
+            : '🎯',
       completed: false,
       status: 'active',
       subgoals: []
@@ -99,7 +107,16 @@ export default function GoalsView() {
     setNewGoal({ title: '', area: '', description: '' });
   };
 
-  const areas = ['Health', 'Work', 'Money', 'Relationships', 'Growth'];
+  const areas = [
+    'Mental Health',
+    'Physical Health',
+    'Career & Finances',
+    'Life Vision',
+    'Personal Dev.',
+    'Spirituality',
+    'Creativity',
+    'Relationships'
+  ];
 
   return (
     <div className="content-wrap">
@@ -151,7 +168,7 @@ export default function GoalsView() {
             <motion.div
               variants={slideUp}
               initial="hidden" animate="visible" exit="exit"
-              style={{ position:'fixed', bottom:0, left: '68px', right:0, background:'#13131f', borderRadius:'24px 24px 0 0', zIndex:500, padding:'32px', maxHeight:'75vh', overflowY:'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+              style={{ position:'fixed', bottom:0, left: '240px', right:0, background:'#13131f', borderRadius:'24px 24px 0 0', zIndex:500, padding:'32px', maxHeight:'75vh', overflowY:'auto', borderTop: '1px solid rgba(255,255,255,0.1)' }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
                 <span style={{ fontSize: '40px' }}>{activeGoal.icon}</span>
@@ -191,18 +208,13 @@ export default function GoalsView() {
       {/* Add Goal Modal */}
       <AnimatePresence>
         {isAddingGoal && (
-          <>
-            <motion.div
-              variants={fade}
-              initial="hidden" animate="visible" exit="exit"
-              onClick={() => setIsAddingGoal(false)}
-              style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)', zIndex:599 }}
-            />
+          <div style={{ position:'fixed', inset:0, zIndex:599, display: 'flex', alignItems: 'center', justifyContent: 'center', background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)' }}>
+            <div style={{ position: 'absolute', inset: 0, zIndex: -1 }} onClick={() => setIsAddingGoal(false)} />
             <motion.div
               variants={slideUp}
               initial="hidden" animate="visible" exit="exit"
               className="card card-default modal"
-              style={{ position:'fixed', top:'50%', left:'50%', transform:'translate(-50%, -50%)', width: '90%', maxWidth: '400px', zIndex:600, padding:'32px' }}
+              style={{ width: '90%', maxWidth: '400px', padding:'32px', position: 'relative' }}
             >
               <h2 className="card-title" style={{ marginBottom: '16px', fontSize: '20px' }}>Create New Goal</h2>
               
@@ -225,7 +237,7 @@ export default function GoalsView() {
                       <div 
                         key={area}
                         onClick={() => setNewGoal({...newGoal, area})}
-                        style={{ padding: '6px 12px', borderRadius: '999px', fontSize: '13px', cursor: 'pointer', border: '1px solid', borderColor: newGoal.area === area ? '#43E97B' : 'rgba(255,255,255,0.2)', background: newGoal.area === area ? 'rgba(67,233,123,0.1)' : 'transparent', color: newGoal.area === area ? '#43E97B' : 'white' }}
+                        style={{ padding: '6px 12px', borderRadius: '999px', fontSize: '13px', cursor: 'pointer', border: '1px solid', borderColor: newGoal.area === area ? '#FF6B35' : 'rgba(255,255,255,0.2)', background: newGoal.area === area ? 'rgba(255,107,53,0.1)' : 'transparent', color: newGoal.area === area ? '#FF6B35' : 'white' }}
                       >
                         {area}
                       </div>
@@ -250,7 +262,7 @@ export default function GoalsView() {
                 </div>
               </div>
             </motion.div>
-          </>
+          </div>
         )}
       </AnimatePresence>
     </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
 import { pageCard } from '../lib/animations';
+import { auth } from '../firebase-config';
+import { updateProfile } from 'firebase/auth';
 
 function AnimatedXP({ value }) {
   const count = useMotionValue(0);
@@ -33,6 +35,37 @@ function AnimatedProgressBar({ percent, color }) {
 export default function ProfileView({ user }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [displayName, setDisplayName] = useState(user?.displayName || 'Traveler');
+  const [selectedAvatar, setSelectedAvatar] = useState(user?.photoURL || '');
+
+  const characters = [
+    { id: 'wizard', emoji: '🧙‍♂️', label: 'Wizard' },
+    { id: 'ninja',  emoji: '🥷', label: 'Ninja' },
+    { id: 'astro',  emoji: '🚀', label: 'Astronaut' },
+    { id: 'scholar',emoji: '🦊', label: 'Scholar' },
+    { id: 'dragon', emoji: '🐉', label: 'Dragon' }
+  ];
+
+  const handleSelectAvatar = async (emoji) => {
+    setSelectedAvatar(emoji);
+    if (auth.currentUser) {
+      try {
+        await updateProfile(auth.currentUser, { photoURL: emoji });
+      } catch (err) {
+        console.error("Failed to update avatar:", err);
+      }
+    }
+  };
+
+  const handleSaveName = async () => {
+    setIsEditingName(false);
+    if (auth.currentUser) {
+      try {
+        await updateProfile(auth.currentUser, { displayName: displayName });
+      } catch (err) {
+        console.error("Failed to update name:", err);
+      }
+    }
+  };
 
   const stats = {
     streak: 12,
@@ -54,6 +87,7 @@ export default function ProfileView({ user }) {
 
   const initial = displayName.charAt(0).toUpperCase();
   const hasPhoto = user?.photoURL;
+  const isUrl = (str) => str && (str.startsWith('http') || str.startsWith('/'));
 
   return (
     <div className="content-wrap">
@@ -76,7 +110,11 @@ export default function ProfileView({ user }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             overflow: 'hidden', border: '2px solid rgba(255,255,255,0.1)'
           }}>
-            {hasPhoto ? <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} /> : initial}
+            {hasPhoto && isUrl(user?.photoURL) ? (
+              <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} />
+            ) : (
+              user?.photoURL || initial
+            )}
           </div>
 
           <div style={{ flex: 1 }}>
@@ -86,8 +124,8 @@ export default function ProfileView({ user }) {
                   type="text" 
                   value={displayName} 
                   onChange={e => setDisplayName(e.target.value)}
-                  onBlur={() => setIsEditingName(false)}
-                  onKeyDown={e => e.key === 'Enter' && setIsEditingName(false)}
+                  onBlur={handleSaveName}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveName()}
                   autoFocus
                   style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', fontSize: '24px', fontWeight: 700, borderRadius: '6px', padding: '2px 8px', outline: 'none' }}
                 />
@@ -144,6 +182,34 @@ export default function ProfileView({ user }) {
             </div>
           </div>
 
+        </motion.div>
+
+        {/* Character Avatar Picker */}
+        <motion.div custom={1.5} variants={pageCard} className="card card-default page-card col-span-2" style={{ padding: 24 }}>
+          <div className="card-eyebrow">🦊 Choose Your Character</div>
+          <h3 className="card-title" style={{ marginBottom: '16px' }}>Select profile avatar</h3>
+          
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+            {characters.map(char => (
+              <motion.button
+                key={char.id}
+                onClick={() => handleSelectAvatar(char.emoji)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  background: selectedAvatar === char.emoji ? 'rgba(255,107,53,0.15)' : 'rgba(255,255,255,0.03)',
+                  border: `2px solid ${selectedAvatar === char.emoji ? '#FF6B35' : 'rgba(255,255,255,0.08)'}`,
+                  cursor: 'pointer', outline: 'none', color: 'white', minWidth: '90px'
+                }}
+              >
+                <span style={{ fontSize: '32px' }}>{char.emoji}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>{char.label}</span>
+              </motion.button>
+            ))}
+          </div>
         </motion.div>
 
         {/* XP Progress & Chapters */}

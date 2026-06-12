@@ -20,7 +20,7 @@ export default function Dashboard({ user }) {
       case 'home':    return <HomeView user={user} />;
       case 'balance': return <BalanceView />;
       case 'goals':   return <GoalsView />;
-      case 'today':   return <TodayView />;
+      case 'today':   return <TodayView user={user} />;
       case 'vault':   return <VaultView user={user} />;
       case 'profile': return <ProfileView user={user} />;
       case 'settings': return <SettingsView user={user} />;

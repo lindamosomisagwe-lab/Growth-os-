@@ -1,14 +1,13 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-
-
+import { Home, Scale, Target, Calendar, Lock, Settings } from 'lucide-react';
 
 const navItems = [
-  { id: 'home',    icon: '⊞', label: 'Home' },
-  { id: 'balance', icon: '⚖', label: 'Balance' },
-  { id: 'goals',   icon: '◎', label: 'Goals' },
-  { id: 'today',   icon: '▦', label: 'Today' },
-  { id: 'vault',   icon: '▣', label: 'Vault' },
+  { id: 'home',    icon: Home,     label: 'Home' },
+  { id: 'balance', icon: Scale,    label: 'Balance' },
+  { id: 'goals',   icon: Target,   label: 'Goals' },
+  { id: 'today',   icon: Calendar, label: 'Today' },
+  { id: 'vault',   icon: Lock,     label: 'Vault' },
 ];
 
 export default function Sidebar({ activePage, setActivePage, user }) {
@@ -19,39 +18,36 @@ export default function Sidebar({ activePage, setActivePage, user }) {
                  (user?.email ? user.email.charAt(0).toUpperCase() : 'U');
   
   const hasPhoto = user?.photoURL;
+  const isUrl = (str) => str && (str.startsWith('http') || str.startsWith('/'));
 
   return (
     <aside className="sidebar">
       {/* Brand logo at the top */}
       <div style={{
-        padding: '20px 16px 16px',
-        borderBottom: '1px solid rgba(232,224,213,0.07)',
+        padding: '12px 12px 20px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
         marginBottom: '8px'
       }}>
-        {/* Wheel mark — SVG */}
-        <svg width="28" height="28" viewBox="0 0 64 64"
-          style={{ marginBottom: '8px' }}>
-          <polygon
-            points="32,4 52,12 60,32 52,52 32,60 12,52 4,32 12,12"
-            fill="rgba(255,107,53,0.15)"
-            stroke="#FF6B35"
-            strokeWidth="2"
-          />
-          <circle cx="32" cy="4" r="3.5" fill="#FF6B35"/>
-          <circle cx="60" cy="32" r="3.5" fill="#FF6B35"/>
-          <circle cx="32" cy="60" r="3.5" fill="#FF6B35"/>
-          <circle cx="4" cy="32" r="3.5" fill="#FF6B35"/>
-          <circle cx="52" cy="12" r="2.5" fill="rgba(255,107,53,0.5)"/>
-          <circle cx="52" cy="52" r="2.5" fill="rgba(255,107,53,0.5)"/>
-          <circle cx="12" cy="52" r="2.5" fill="rgba(255,107,53,0.5)"/>
-          <circle cx="12" cy="12" r="2.5" fill="rgba(255,107,53,0.5)"/>
+        {/* Growth Compass Logo SVG */}
+        <svg width="36" height="36" viewBox="0 0 32 32" fill="none" style={{ marginBottom: '16px', display: 'block' }}>
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FF6B35" />
+              <stop offset="100%" stopColor="#FF8E53" />
+            </linearGradient>
+          </defs>
+          <path d="M16 2L30 10V22L16 30L2 22V10L16 2Z" stroke="url(#logoGrad)" strokeWidth="2.5" strokeLinejoin="round" />
+          <path d="M16 2V30" stroke="url(#logoGrad)" strokeWidth="1.2" strokeDasharray="3 3" />
+          <path d="M2 10H30" stroke="url(#logoGrad)" strokeWidth="1.2" strokeDasharray="3 3" />
+          <circle cx="16" cy="16" r="6" fill="url(#logoGrad)" />
+          <circle cx="16" cy="16" r="3" fill="#0a0a10" />
         </svg>
 
         {/* Wordmark */}
         <div style={{
-          fontSize: '17px',
-          fontWeight: '700',
-          color: '#E8E0D5',
+          fontSize: '20px',
+          fontWeight: '800',
+          color: '#FFFFFF',
           letterSpacing: '-0.02em',
           lineHeight: 1
         }}>
@@ -59,108 +55,131 @@ export default function Sidebar({ activePage, setActivePage, user }) {
         </div>
         <div style={{
           fontSize: '10px',
-          color: 'rgba(232,224,213,0.28)',
-          letterSpacing: '0.1em',
+          color: '#FFFFFF',
+          opacity: 0.8,
+          letterSpacing: '0.05em',
           textTransform: 'uppercase',
-          marginTop: '3px'
+          marginTop: '6px'
         }}>
           your story is being written
         </div>
       </div>
 
-      <nav className="sidebar-nav" style={{ flex: 1, marginTop: '20px' }}>
-        {navItems.map(item => (
-          <div 
-            key={item.id} 
-            className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-            onClick={() => setActivePage(item.id)}
-            style={{ 
-              position: 'relative',
-              flexDirection: 'column', 
-              gap: '4px',
-              height: '56px',
-              marginBottom: '4px',
-              zIndex: 1,
-              fontWeight: activePage === item.id ? 600 : 400
-            }}
-          >
-            {/* Sliding background pill */}
-            {activePage === item.id && !reduce && (
-              <motion.div
-                layoutId="nav-active-bg"
-                style={{
-                  position: 'absolute', inset: 0,
-                  borderRadius: 12,
-                  background: 'rgba(255,255,255,0.06)',
-                  zIndex: -1
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              />
-            )}
+      <nav className="sidebar-nav" style={{ flex: 1, marginTop: '12px' }}>
+        {navItems.map(item => {
+          const Icon = item.icon;
+          const isActive = activePage === item.id;
+          
+          return (
+            <div 
+              key={item.id} 
+              className={`nav-item ${isActive ? 'active' : ''}`}
+              onClick={() => setActivePage(item.id)}
+              style={{ 
+                position: 'relative',
+                zIndex: 1,
+                fontWeight: isActive ? 600 : 400
+              }}
+            >
+              {/* Sliding background pill */}
+              {isActive && !reduce && (
+                <motion.div
+                  layoutId="nav-active-bg"
+                  style={{
+                    position: 'absolute', inset: 0,
+                    borderRadius: 12,
+                    background: 'rgba(255,255,255,0.06)',
+                    zIndex: -1
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
 
-            {/* Sliding left accent bar */}
-            {activePage === item.id && !reduce && (
-              <motion.div
-                layoutId="nav-active-bar"
-                style={{
-                  position: 'absolute', left: -8, top: '20%', bottom: '20%',
-                  width: 2, borderRadius: '0 2px 2px 0',
-                  background: 'var(--amber)'
-                }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-              />
-            )}
+              {/* Sliding left accent bar */}
+              {isActive && !reduce && (
+                <motion.div
+                  layoutId="nav-active-bar"
+                  style={{
+                    position: 'absolute', left: -4, top: '20%', bottom: '20%',
+                    width: 3, borderRadius: '0 2px 2px 0',
+                    background: 'var(--amber)'
+                  }}
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
 
-            {/* Fallback for reduced motion */}
-            {activePage === item.id && reduce && (
-              <>
-                <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(232,224,213,0.08)', zIndex: -1 }} />
-                <div style={{ position: 'absolute', left: -8, top: '20%', bottom: '20%', width: 3, borderRadius: '0 3px 3px 0', background: 'var(--amber)' }} />
-              </>
-            )}
+              {/* Fallback for reduced motion */}
+              {isActive && reduce && (
+                <>
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: 12, background: 'rgba(255,255,255,0.08)', zIndex: -1 }} />
+                  <div style={{ position: 'absolute', left: -4, top: '20%', bottom: '20%', width: 3, borderRadius: '0 3px 3px 0', background: 'var(--amber)' }} />
+                </>
+              )}
 
-            <span style={{ fontSize: '18px', display: 'block', marginTop: '4px' }}>{item.icon}</span>
-            <span style={{ fontSize: '10px', fontWeight: 500 }}>{item.label}</span>
-          </div>
-        ))}
+              <Icon size={20} style={{ opacity: isActive ? 1 : 0.75 }} />
+              <span className="sidebar-label" style={{ color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.6)' }}>{item.label}</span>
+            </div>
+          );
+        })}
       </nav>
 
-      {/* Avatar / Profile Link */}
-      <motion.div 
-        onClick={() => setActivePage('profile')}
-        whileHover={{ scale: 1.05, filter: 'brightness(1.1)' }}
-        whileTap={{ scale: 0.95 }}
-        style={{ 
-          cursor: 'pointer', 
-          marginBottom: '12px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '4px'
-        }}
-        title="View profile"
-      >
-        <div style={{
-          width: 36, height: 36, borderRadius: '50%',
-          background: 'var(--bg-card)',
-          color: 'var(--text-primary)', fontWeight: 700, fontSize: 16,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          overflow: 'hidden',
-          boxShadow: activePage === 'profile' ? '0 0 0 2px var(--amber)' : 'none'
-        }}>
-          {hasPhoto ? <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} /> : initial}
-        </div>
-        <span style={{ fontSize: '10px', fontWeight: 500, color: activePage === 'profile' ? 'var(--text-primary)' : 'var(--text-muted)' }}>Profile</span>
-      </motion.div>
+      {/* Profile & Settings Footer */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '16px' }}>
+        {/* Avatar / Profile Link */}
+        <motion.div 
+          onClick={() => setActivePage('profile')}
+          whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.04)' }}
+          whileTap={{ scale: 0.98 }}
+          style={{ 
+            cursor: 'pointer', 
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 16px',
+            borderRadius: '12px',
+            background: activePage === 'profile' ? 'rgba(255,255,255,0.06)' : 'transparent'
+          }}
+          title="View profile"
+        >
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: 'var(--bg-card)',
+            color: 'var(--text-primary)', fontWeight: 700, fontSize: 16,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            overflow: 'hidden',
+            flexShrink: 0,
+            boxShadow: activePage === 'profile' ? '0 0 0 2px var(--amber)' : 'none'
+          }}>
+            {hasPhoto && isUrl(user?.photoURL) ? (
+              <img src={user.photoURL} alt="Avatar" style={{ width:'100%', height:'100%' }} />
+            ) : (
+              user?.photoURL || initial
+            )}
+          </div>
+          <span style={{ fontSize: '13px', fontWeight: 500, color: activePage === 'profile' ? '#FFFFFF' : 'rgba(255,255,255,0.6)' }}>Profile</span>
+        </motion.div>
 
-      {/* Settings */}
-      <div 
-        className={`sidebar-settings ${activePage === 'settings' ? 'active' : ''}`}
-        onClick={() => setActivePage('settings')}
-        style={{ position: 'relative', flexDirection: 'column', height: '56px', gap: '4px' }}
-      >
-        <span style={{ fontSize: '18px', marginTop: '4px' }}>⚙️</span>
-        <span style={{ fontSize: '10px', fontWeight: 500, color: activePage === 'settings' ? '#fff' : 'rgba(255,255,255,0.5)' }}>Settings</span>
+        {/* Settings */}
+        <motion.div 
+          onClick={() => setActivePage('settings')}
+          whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.04)' }}
+          whileTap={{ scale: 0.98 }}
+          style={{ 
+            cursor: 'pointer', 
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '10px 16px',
+            borderRadius: '12px',
+            background: activePage === 'settings' ? 'rgba(255,255,255,0.06)' : 'transparent'
+          }}
+          title="Settings"
+        >
+          <Settings size={20} style={{ opacity: activePage === 'settings' ? 1 : 0.75, color: 'white', flexShrink: 0 }} />
+          <span style={{ fontSize: '13px', fontWeight: 500, color: activePage === 'settings' ? '#FFFFFF' : 'rgba(255,255,255,0.6)' }}>Settings</span>
+        </motion.div>
       </div>
     </aside>
   );
