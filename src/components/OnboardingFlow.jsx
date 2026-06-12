@@ -22,6 +22,7 @@ export default function OnboardingFlow({ onComplete }) {
   const [password, setPassword] = useState('');
   const [isLogin, setIsLogin] = useState(false); // toggle for login vs signup
   const [authError, setAuthError] = useState('');
+  const [cardIdx, setCardIdx] = useState(0);
 
   // Auto-advance splash
   useEffect(() => {
@@ -38,6 +39,14 @@ export default function OnboardingFlow({ onComplete }) {
       return () => clearTimeout(timer);
     }
   }, [step, onComplete]);
+
+  // Auto-advance carousel for Screen2
+  useEffect(() => {
+    if (step === 2 && cardIdx < 2) {
+      const t = setTimeout(() => setCardIdx(cardIdx + 1), 5000);
+      return () => clearTimeout(t);
+    }
+  }, [cardIdx, step]);
 
   const handleAreaSelect = (area) => {
     setLifeArea(area);
@@ -196,20 +205,11 @@ export default function OnboardingFlow({ onComplete }) {
   );
 
   const renderScreen2 = () => {
-    const [cardIdx, setCardIdx] = useState(0);
     const cards = [
       { e: '🎯', title: 'One goal at a time.', sub: 'For people who feel overwhelmed — a simple system that actually sticks.' },
       { e: '📈', title: 'Watch yourself grow.', sub: 'Track your mood, your habits, and your progress. See patterns you never noticed.' },
       { e: '💌', title: 'Write to your future self.', sub: "Seal a letter today. Read it in 6 months. There's nothing else like it." }
     ];
-
-    // Auto-advance carousel
-    useEffect(() => {
-      if (cardIdx < 2) {
-        const t = setTimeout(() => setCardIdx(cardIdx + 1), 5000);
-        return () => clearTimeout(t);
-      }
-    }, [cardIdx]);
 
     return (
       <motion.div key="s2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh', width: '100vw', padding: '64px 24px 40px' }}>
