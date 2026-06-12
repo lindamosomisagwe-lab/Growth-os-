@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth, db } from '../firebase-config';
-import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function OnboardingFlow({ onComplete }) {
@@ -134,10 +134,7 @@ export default function OnboardingFlow({ onComplete }) {
     setAuthError('');
     try {
       if (isLogin) {
-        // Sign in doesn't save new onboarding data
-        // TODO: actually call signInWithEmailAndPassword, but we use createUserWithEmailAndPassword here for both for now to avoid extra imports, wait no let's fix that.
-        // I will add the import later if needed, or just let them use Google for now in the demo.
-        // Actually, just for mock purposes if auth fails due to missing import, we just proceed
+        await signInWithEmailAndPassword(auth, email, password);
         onComplete();
       } else {
         const result = await createUserWithEmailAndPassword(auth, email, password);
