@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { auth, db } from '../firebase-config';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function OnboardingFlow({ onComplete }) {
   const [step, setStep] = useState(1);
@@ -20,6 +21,7 @@ export default function OnboardingFlow({ onComplete }) {
   // Auth inputs
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLogin, setIsLogin] = useState(false); // toggle for login vs signup
   const [authError, setAuthError] = useState('');
   const [cardIdx, setCardIdx] = useState(0);
@@ -134,8 +136,13 @@ export default function OnboardingFlow({ onComplete }) {
     setAuthError('');
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-        onComplete();
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        if (goalDescription) {
+          await saveOnboardingData(result.user);
+          setStep(9);
+        } else {
+          onComplete();
+        }
       } else {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         await saveOnboardingData(result.user);
@@ -220,15 +227,36 @@ export default function OnboardingFlow({ onComplete }) {
 
         <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
           {[0, 1, 2].map(i => (
-            <div key={i} style={{ width: 6, height: 6, borderRadius: 3, background: i === cardIdx ? 'white' : 'rgba(255,255,255,0.2)', transition: 'background 0.3s' }} />
+            <div 
+              key={i} 
+              onClick={() => setCardIdx(i)}
+              style={{ 
+                width: 6, 
+                height: 6, 
+                borderRadius: 3, 
+                background: i === cardIdx ? 'white' : 'rgba(255,255,255,0.2)', 
+                transition: 'background 0.3s',
+                cursor: 'pointer'
+              }} 
+            />
           ))}
         </div>
 
-        {cardIdx === 2 && (
-          <motion.button initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="btn-primary" onClick={() => setStep(3)} style={{ width: '100%', maxWidth: 300, padding: '14px 32px', borderRadius: '10px' }}>
-            Get started →
-          </motion.button>
-        )}
+        <motion.button 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="btn-primary" 
+          onClick={() => {
+            if (cardIdx < 2) {
+              setCardIdx(cardIdx + 1);
+            } else {
+              setStep(3);
+            }
+          }} 
+          style={{ width: '100%', maxWidth: 300, padding: '14px 32px', borderRadius: '10px', cursor: 'pointer' }}
+        >
+          {cardIdx < 2 ? 'Next →' : 'Get started →'}
+        </motion.button>
       </motion.div>
     );
   };
@@ -249,18 +277,19 @@ export default function OnboardingFlow({ onComplete }) {
         <h2 style={{ fontSize: '22px', fontWeight: 600, textAlign: 'center', margin: '0 0 8px' }}>What area of your life do you most want to improve right now?</h2>
         <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}>We'll personalise your experience.</div>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', width: '100%', maxWidth: 400, paddingBottom: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', width: '100%', maxWidth: 400, paddingBottom: '32px' }}>
           {opts.map(opt => {
             const sel = lifeArea === opt.id;
             return (
               <motion.div key={opt.id} whileTap={{ scale: 0.97 }} onClick={() => handleAreaSelect(opt.id)} style={{
-                background: sel ? 'var(--amber-bg)' : 'var(--bg-card)',
-                border: `1px solid ${sel ? 'var(--amber)' : 'var(--border)'}`,
+                background: sel ? '#FFFFFF' : 'var(--bg-card)',
+                border: `1px solid ${sel ? '#FFFFFF' : 'var(--border)'}`,
                 borderWidth: sel ? 2 : 1,
-                borderRadius: 12, padding: 20, textAlign: 'center', cursor: 'pointer'
+                borderRadius: 12, padding: 20, textAlign: 'center', cursor: 'pointer',
+                transition: 'background 0.2s, border-color 0.2s'
               }}>
                 <div style={{ fontSize: '28px', marginBottom: '8px' }}>{opt.icon}</div>
-                <div style={{ fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.8)' }}>{opt.label}</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: sel ? '#1B1F3B' : '#FFFFFF' }}>{opt.label}</div>
               </motion.div>
             )
           })}
@@ -497,7 +526,38 @@ export default function OnboardingFlow({ onComplete }) {
 
         <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', outline: 'none' }} required />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', outline: 'none' }} required />
+          <div style={{ position: 'relative' }}>
+            <input 
+              type={showPassword ? "text" : "password"} 
+              placeholder="Password" 
+              value={password} 
+              onChange={e => setPassword(e.target.value)} 
+              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 44px 14px 14px', borderRadius: 10, color: 'white', outline: 'none', boxSizing: 'border-box' }} 
+              required 
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: 'absolute',
+                right: '14px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.4)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                padding: 0,
+                outline: 'none'
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = 'white'}
+              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
           
           <div style={{ marginBottom: '16px', marginTop: '8px' }}>
             <label style={{ display: 'flex', gap: '10px', cursor: 'pointer' }}>

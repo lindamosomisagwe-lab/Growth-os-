@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { auth } from '../firebase-config';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -183,24 +185,48 @@ export default function LoginPage() {
               }}>
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Min. 8 characters"
-                required
-                style={{
-                  width: '100%', padding: '11px 14px',
-                  background: 'rgba(232,224,213,0.05)',
-                  border: '1px solid rgba(232,224,213,0.12)',
-                  borderRadius: '8px',
-                  fontSize: '14px', color: '#E8E0D5',
-                  outline: 'none',
-                  boxSizing: 'border-box'
-                }}
-                onFocus={e => e.target.style.borderColor = '#FF6B35'}
-                onBlur={e => e.target.style.borderColor = 'rgba(232,224,213,0.12)'}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Min. 8 characters"
+                  required
+                  style={{
+                    width: '100%', padding: '11px 40px 11px 14px',
+                    background: 'rgba(232,224,213,0.05)',
+                    border: '1px solid rgba(232,224,213,0.12)',
+                    borderRadius: '8px',
+                    fontSize: '14px', color: '#E8E0D5',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={e => e.target.style.borderColor = '#FF6B35'}
+                  onBlur={e => e.target.style.borderColor = 'rgba(232,224,213,0.12)'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'rgba(232,224,213,0.4)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0,
+                    outline: 'none'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = '#E8E0D5'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(232,224,213,0.4)'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
 
             {error && (

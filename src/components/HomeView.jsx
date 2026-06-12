@@ -23,9 +23,16 @@ export default function HomeView({ user }) {
 
         // 2. Fetch recent moods for greeting
         let moodAvg = 0;
-        const moodSnap = await getDocs(query(collection(db, 'mood_logs'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(3)));
+        const moodSnap = await getDocs(query(collection(db, 'mood_logs'), where('userId', '==', user.uid)));
         if (!moodSnap.empty) {
-          const moods = moodSnap.docs.map(d => d.data().score); // assuming 1-10 scale
+          const moodDocs = moodSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          moodDocs.sort((a, b) => {
+            const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+            const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+            return bTime - aTime;
+          });
+          const recentMoods = moodDocs.slice(0, 3);
+          const moods = recentMoods.map(d => d.score); // assuming 1-10 scale
           moodAvg = moods.reduce((a, b) => a + b, 0) / moods.length;
         }
 
@@ -51,9 +58,15 @@ export default function HomeView({ user }) {
         }
 
         // 4. Fetch next vault letter
-        const vaultSnap = await getDocs(query(collection(db, 'vault_letters'), where('userId', '==', user.uid), where('status', '==', 'sealed'), orderBy('revealDate', 'asc'), limit(1)));
+        const vaultSnap = await getDocs(query(collection(db, 'vault_letters'), where('userId', '==', user.uid), where('status', '==', 'sealed')));
         if (!vaultSnap.empty) {
-          setNextVaultLetter({ id: vaultSnap.docs[0].id, ...vaultSnap.docs[0].data() });
+          const vaultDocs = vaultSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+          vaultDocs.sort((a, b) => {
+            const aTime = a.revealDate?.toDate ? a.revealDate.toDate().getTime() : 0;
+            const bTime = b.revealDate?.toDate ? b.revealDate.toDate().getTime() : 0;
+            return aTime - bTime;
+          });
+          setNextVaultLetter(vaultDocs[0]);
         }
 
       } catch (err) {

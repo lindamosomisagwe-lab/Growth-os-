@@ -79,10 +79,10 @@ export default function ProfileView({ user }) {
   const progressPercent = Math.min((currentChapterXP / nextChapterXP) * 100, 100);
 
   const chapters = [
-    { name: 'The Beginning', emoji: '🌱', xpRequired: 0, status: 'current' },
-    { name: 'Finding Your Footing', emoji: '🌿', xpRequired: 2000, status: 'locked' },
-    { name: 'Building Momentum', emoji: '🔥', xpRequired: 5000, status: 'locked' },
-    { name: 'The Architect', emoji: '🏛️', xpRequired: 10000, status: 'locked' }
+    { name: 'The Beginning', emoji: '🌱', xpRequired: 0, status: 'current', desc: 'Access to goals map & daily mood logs.' },
+    { name: 'Finding Your Footing', emoji: '🌿', xpRequired: 2000, status: 'locked', desc: 'Unlocks Time Vault & letters to your future self.' },
+    { name: 'Building Momentum', emoji: '🔥', xpRequired: 5000, status: 'locked', desc: 'Unlocks AI goal architect & habit-building guides.' },
+    { name: 'The Architect', emoji: '🏛️', xpRequired: 10000, status: 'locked', desc: 'Unlocks analytics reports & custom UI theme templates.' }
   ];
 
   const initial = displayName.charAt(0).toUpperCase();
@@ -131,7 +131,7 @@ export default function ProfileView({ user }) {
                 />
               ) : (
                 <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0, cursor: 'pointer' }} onClick={() => setIsEditingName(true)} title="Click to edit">
-                  {displayName} <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>✏️</span>
+                  {displayName}'s Journey <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>✏️</span>
                 </h2>
               )}
             </div>
@@ -240,7 +240,8 @@ export default function ProfileView({ user }) {
                 <div style={{ fontSize: '20px', filter: ch.status === 'locked' ? 'grayscale(1)' : 'none' }}>{ch.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: ch.status === 'locked' ? 'var(--text-secondary)' : 'white' }}>{ch.name}</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{ch.xpRequired > 0 ? `${ch.xpRequired} XP required` : 'Unlocked'}</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{ch.desc}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{ch.xpRequired > 0 ? `${ch.xpRequired} XP required` : 'Unlocked'}</div>
                 </div>
                 {ch.status === 'locked' && <div style={{ fontSize: '16px', opacity: 0.5 }}>🔒</div>}
                 {ch.status === 'current' && <div style={{ fontSize: '12px', fontWeight: 600, color: '#667EEA' }}>CURRENT</div>}

@@ -289,24 +289,6 @@ export default function SettingsPage({ user }) {
 
       <SettingsRow icon="↪" title="Sign out" onClick={() => setShowSignOut(true)} />
 
-      {/* PREFERENCES */}
-      <SettingsSectionLabel>Preferences</SettingsSectionLabel>
-      <SettingsRow 
-        title="Reduced motion" subtitle="Minimise animations"
-        right={<Toggle value={prefs.reducedMotion} onChange={v => savePref('reducedMotion', v)} />} 
-        onClick={() => savePref('reducedMotion', !prefs.reducedMotion)}
-      />
-      <SettingsRow 
-        title="Compact view" subtitle="Show more content, less spacing"
-        right={<Toggle value={prefs.compactView} onChange={v => savePref('compactView', v)} />} 
-        onClick={() => savePref('compactView', !prefs.compactView)}
-      />
-      <SettingsRow 
-        title="Show XP in sidebar" subtitle="Display your XP total below nav"
-        right={<Toggle value={prefs.showXP} onChange={v => savePref('showXP', v)} />} 
-        onClick={() => savePref('showXP', !prefs.showXP)}
-      />
-
       {/* NOTIFICATIONS */}
       <SettingsSectionLabel>Notifications</SettingsSectionLabel>
       <SettingsRow 
