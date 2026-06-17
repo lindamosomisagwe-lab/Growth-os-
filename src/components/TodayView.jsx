@@ -4,6 +4,26 @@ import { pageCard } from '../lib/animations';
 import { db } from '../firebase-config';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
+function WaterDropIcon({ filled }) {
+  return (
+    <svg width="24" height="32" viewBox="0 0 24 32" style={{ display: 'block', overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="dropGrad" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor="#00C6FF" />
+          <stop offset="100%" stopColor="#4FACFE" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M12 2 C12 2 21 13.5 21 19.5 C21 24.7 16.9 29 12 29 C7.1 29 3 24.7 3 19.5 C3 13.5 12 2 12 2 Z"
+        fill={filled ? "url(#dropGrad)" : "rgba(79, 172, 254, 0.08)"}
+        stroke={filled ? "#4FACFE" : "rgba(232, 224, 213, 0.25)"}
+        strokeWidth="2"
+        style={{ transition: 'fill 0.35s ease, stroke 0.35s ease' }}
+      />
+    </svg>
+  );
+}
+
 export default function TodayView({ user }) {
   const [glasses, setGlasses] = useState(Array(8).fill(false));
   const [selectedMood, setSelectedMood] = useState(null);
@@ -83,16 +103,16 @@ export default function TodayView({ user }) {
               <motion.div
                 key={i}
                 onClick={() => toggleGlass(i)}
+                whileHover={{ scale: 1.12 }}
                 whileTap={{ scale: 0.85 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                className={`hydration-drop ${filled ? 'filled' : ''}`}
                 style={{
-                  fontSize: '40px',
-                  lineHeight: 1,
-                  userSelect: 'none'
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  padding: '4px'
                 }}
               >
-                💧
+                <WaterDropIcon filled={filled} />
               </motion.div>
             ))}
           </div>
@@ -112,17 +132,19 @@ export default function TodayView({ user }) {
                 key={mood.id}
                 onClick={() => setSelectedMood(mood.id)}
                 className={`mood-btn ${mood.className} ${selectedMood === mood.id ? 'selected' : ''}`}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.94 }}
                 style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
                   padding: '16px',
-                  cursor: 'pointer', outline: 'none', color: 'white'
+                  cursor: 'pointer', outline: 'none',
+                  color: selectedMood === mood.id ? '#1B1F3B' : 'white'
                 }}
               >
                 <motion.span style={{ display: 'inline-block', fontSize: '28px' }}>
                   {mood.emoji}
                 </motion.span>
-                <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255,255,255,0.8)' }}>{mood.label}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: selectedMood === mood.id ? '#1B1F3B' : 'var(--text-secondary)' }}>{mood.label}</span>
               </motion.button>
             ))}
           </div>

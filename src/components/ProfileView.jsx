@@ -235,15 +235,15 @@ export default function ProfileView({ user }) {
                 padding: '12px 16px', borderRadius: '12px',
                 background: ch.status === 'current' ? 'rgba(102,126,234,0.1)' : 'rgba(255,255,255,0.03)',
                 border: ch.status === 'current' ? '1px solid rgba(102,126,234,0.3)' : '1px solid rgba(255,255,255,0.05)',
-                opacity: ch.status === 'locked' ? 0.6 : 1
+                opacity: 1
               }}>
                 <div style={{ fontSize: '20px', filter: ch.status === 'locked' ? 'grayscale(1)' : 'none' }}>{ch.emoji}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '14px', fontWeight: 600, color: ch.status === 'locked' ? 'var(--text-secondary)' : 'white' }}>{ch.name}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>{ch.desc}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-tertiary)', marginTop: '4px' }}>{ch.xpRequired > 0 ? `${ch.xpRequired} XP required` : 'Unlocked'}</div>
+                  <div style={{ fontSize: '11px', color: ch.status === 'locked' ? 'var(--text-secondary)' : 'var(--text-tertiary)', marginTop: '4px' }}>{ch.xpRequired > 0 ? `${ch.xpRequired} XP required` : 'Unlocked'}</div>
                 </div>
-                {ch.status === 'locked' && <div style={{ fontSize: '16px', opacity: 0.5 }}>🔒</div>}
+                {ch.status === 'locked' && <div style={{ fontSize: '16px', opacity: 0.7 }}>🔒</div>}
                 {ch.status === 'current' && <div style={{ fontSize: '12px', fontWeight: 600, color: '#667EEA' }}>CURRENT</div>}
               </div>
             ))}

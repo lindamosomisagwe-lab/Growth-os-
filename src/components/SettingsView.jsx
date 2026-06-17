@@ -11,7 +11,7 @@ const SettingsSectionLabel = ({ children, danger }) => (
     fontWeight: '600',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
-    color: danger ? 'rgba(239,68,68,0.6)' : 'rgba(255,255,255,0.3)',
+    color: danger ? 'rgba(239,68,68,0.75)' : 'var(--text-secondary)',
     marginBottom: '4px',
     marginTop: '32px',
     padding: '0 4px'
@@ -104,7 +104,7 @@ const SettingsRow = ({ icon, title, subtitle, right, onClick, danger, noHover })
       {subtitle && (
         <div style={{
           fontSize: '12px',
-          color: 'rgba(255,255,255,0.3)',
+          color: 'var(--text-secondary)',
           marginTop: '2px'
         }}>
           {subtitle}
@@ -251,7 +251,7 @@ export default function SettingsPage({ user }) {
   return (
     <div style={{ maxWidth: '640px', margin: '0 auto', padding: '32px 24px 80px' }}>
       <h1 className="page-title">Settings</h1>
-      <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontStyle: 'italic', marginTop: '4px' }}>
+      <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontStyle: 'italic', marginTop: '4px' }}>
         Manage your account and preferences
       </p>
 
@@ -279,10 +279,10 @@ export default function SettingsPage({ user }) {
         </div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '15px', fontWeight: 600, color: 'white' }}>{user?.displayName || 'User'}</div>
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)' }}>{user?.email}</div>
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Member since {new Date(user?.metadata?.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
+          <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{user?.email}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 2 }}>Member since {new Date(user?.metadata?.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
         </div>
-        <div style={{ fontSize: '12px', color: 'rgba(124,92,252,0.8)' }}>
+        <div style={{ fontSize: '12px', color: 'var(--amber)', cursor: 'pointer' }}>
           Edit →
         </div>
       </motion.div>
@@ -329,7 +329,7 @@ export default function SettingsPage({ user }) {
       <SettingsRow icon="📤" title={isExporting ? "Exporting..." : "Export my data"} subtitle="Download everything as JSON" right={<Chevron />} onClick={exportData} />
       <SettingsRow icon="🔒" title="Privacy policy" subtitle="How we handle your data" right={<Chevron />} onClick={() => window.open('/privacy', '_blank')} />
       <SettingsRow icon="📜" title="Terms of service" subtitle="Your rights and our rules" right={<Chevron />} onClick={() => window.open('/terms', '_blank')} />
-      <SettingsRow title="Chapter" subtitle="Built with care ✦" right={<span style={{color:'rgba(255,255,255,0.2)',fontSize:'13px'}}>v1.0.0</span>} noHover />
+      <SettingsRow title="Chapter" subtitle="Built with care ✦" right={<span style={{color:'var(--text-secondary)',fontSize:'13px'}}>v1.0.0</span>} noHover />
 
       {/* DANGER ZONE */}
       <SettingsSectionLabel danger>Danger Zone</SettingsSectionLabel>

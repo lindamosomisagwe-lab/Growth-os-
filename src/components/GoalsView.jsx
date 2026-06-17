@@ -4,12 +4,24 @@ import { pageCard, expandCollapse, slideUp, fade } from '../lib/animations';
 import { db } from '../firebase-config';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 
+const CATEGORY_STYLES = {
+  mental_health:        { color: '#7a5c8b', rgb: '122,92,139' },
+  physical_health:      { color: '#5c7a5c', rgb: '92,122,92' },
+  career_finances:      { color: '#c9a96e', rgb: '201,169,110' },
+  life_vision:          { color: '#5c8fa8', rgb: '92,143,168' },
+  personal_development: { color: '#8b3a2a', rgb: '139,58,42' },
+  spirituality:         { color: '#8b7a3a', rgb: '139,122,58' },
+  creativity:           { color: '#5c8a8a', rgb: '92,138,138' },
+  relationships:        { color: '#a8745c', rgb: '168,116,92' },
+  default:              { color: '#FF6B35', rgb: '255,107,53' }
+};
+
 function TaskCheckbox({ done, onToggle }) {
   return (
     <motion.div
       onClick={onToggle}
       animate={done
-        ? { backgroundColor: '#FF6B35', borderColor: '#FF6B35' }
+        ? { backgroundColor: 'var(--teal)', borderColor: 'var(--teal)' }
         : { backgroundColor: 'transparent', borderColor: 'rgba(255,255,255,0.2)' }
       }
       whileTap={{ scale: 0.85 }}
@@ -265,6 +277,9 @@ export default function GoalsView({ user }) {
                     ? `${completedCount} of ${totalCount} step${totalCount > 1 ? 's' : ''} completed`
                     : 'No steps added yet';
 
+                  const areaKey = goal.lifeArea ? goal.lifeArea.toLowerCase().replace(/ & /g, '_').replace(/ /g, '_') : 'default';
+                  const catStyle = CATEGORY_STYLES[areaKey] || CATEGORY_STYLES.default;
+
                   return (
                     <motion.div
                       key={goal.id}
@@ -285,9 +300,9 @@ export default function GoalsView({ user }) {
                     >
                       <div style={{
                         width: '48px', height: '48px', borderRadius: '50%',
-                        background: 'rgba(255,107,53,0.1)',
-                        border: '1px solid rgba(255,107,53,0.3)',
-                        display: 'flex', alignItems: 'center', justifycontent: 'center',
+                        background: `rgba(${catStyle.rgb}, 0.1)`,
+                        border: `1px solid rgba(${catStyle.rgb}, 0.35)`,
+                        display: 'flex', alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '24px', flexShrink: 0
                       }}>
@@ -319,97 +334,112 @@ export default function GoalsView({ user }) {
               }}
               style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)', zIndex:499 }}
             />
-            <motion.div
-              variants={slideUp}
-              initial="hidden" animate="visible" exit="exit"
-              style={{ 
-                position:'fixed', 
-                bottom:0, 
-                left: isMobile ? 0 : '240px', 
-                right:0, 
-                background:'#13131f', 
-                borderRadius:'24px 24px 0 0', 
-                zIndex:500, 
-                padding:'32px', 
-                maxHeight:'75vh', 
-                overflowY:'auto', 
-                borderTop: '1px solid rgba(255,255,255,0.1)' 
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <span style={{ fontSize: '40px' }}>{activeGoal.icon}</span>
-                  <div>
-                    <h2 className="page-title" style={{ margin: 0, fontSize: '22px', color: 'white' }}>{activeGoal.title}</h2>
-                    {activeGoal.description && (
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '4px 0 0', fontStyle: 'italic' }}>
-                        "{activeGoal.description}"
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <button 
-                  onClick={() => {
-                    setExpandedGoalId(null);
-                    setIsAddingSubgoal(false);
+            {(() => {
+              const areaKey = activeGoal.lifeArea ? activeGoal.lifeArea.toLowerCase().replace(/ & /g, '_').replace(/ /g, '_') : 'default';
+              const catStyle = CATEGORY_STYLES[areaKey] || CATEGORY_STYLES.default;
+              return (
+                <motion.div
+                  variants={slideUp}
+                  initial="hidden" animate="visible" exit="exit"
+                  style={{ 
+                    position:'fixed', 
+                    bottom:0, 
+                    left: isMobile ? 0 : '240px', 
+                    right:0, 
+                    background:'#13131f', 
+                    borderRadius:'24px 24px 0 0', 
+                    zIndex:500, 
+                    padding:'32px', 
+                    maxHeight:'75vh', 
+                    overflowY:'auto', 
+                    borderTop: `3px solid ${catStyle.color}` 
                   }}
-                  style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '24px' }}
                 >
-                  &times;
-                </button>
-              </div>
-              
-              <div style={{ marginTop: '16px' }}>
-                <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em', marginBottom: '12px' }}>Steps Checklist</h4>
-                
-                <AnimatePresence mode="popLayout">
-                  {activeGoal.subgoals.length === 0 ? (
-                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '12px 0' }}>
-                      No steps defined for this goal yet. Add one below!
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <div style={{
+                        width: '56px', height: '56px', borderRadius: '50%',
+                        background: `rgba(${catStyle.rgb}, 0.1)`,
+                        border: `1px solid rgba(${catStyle.rgb}, 0.35)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '28px', flexShrink: 0
+                      }}>
+                        {activeGoal.icon}
+                      </div>
+                      <div>
+                        <h2 className="page-title" style={{ margin: 0, fontSize: '22px', color: 'white' }}>{activeGoal.title}</h2>
+                        {activeGoal.description && (
+                          <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '4px 0 0', fontStyle: 'italic' }}>
+                            "{activeGoal.description}"
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    activeGoal.subgoals.map((sg, i) => (
-                      <motion.div
-                        key={sg.id}
-                        custom={i}
-                        layout
-                        variants={expandCollapse}
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                      >
-                        <SubgoalRow subgoal={sg} onToggle={() => toggleSubgoal(activeGoal.id, sg.id, sg.completed)} />
-                      </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
-              </div>
+                    <button 
+                      onClick={() => {
+                        setExpandedGoalId(null);
+                        setIsAddingSubgoal(false);
+                      }}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '24px' }}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                  
+                  <div style={{ marginTop: '16px' }}>
+                    <h4 style={{ fontSize: '12px', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.05em', marginBottom: '12px' }}>Steps Checklist</h4>
+                    
+                    <AnimatePresence mode="popLayout">
+                      {activeGoal.subgoals.length === 0 ? (
+                        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontStyle: 'italic', padding: '12px 0' }}>
+                          No steps defined for this goal yet. Add one below!
+                        </div>
+                      ) : (
+                        activeGoal.subgoals.map((sg, i) => (
+                          <motion.div
+                            key={sg.id}
+                            custom={i}
+                            layout
+                            variants={expandCollapse}
+                            initial="hidden"
+                            animate="visible"
+                            exit="exit"
+                          >
+                            <SubgoalRow subgoal={sg} onToggle={() => toggleSubgoal(activeGoal.id, sg.id, sg.completed)} />
+                          </motion.div>
+                        ))
+                      )}
+                    </AnimatePresence>
+                  </div>
 
-              {isAddingSubgoal ? (
-                <form onSubmit={handleAddSubgoalSubmit} style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="Enter step name... (e.g. Draft outline)"
-                    value={newSubgoalTitle}
-                    onChange={e => setNewSubgoalTitle(e.target.value)}
-                    style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', fontSize: '14px' }}
-                    required
-                  />
-                  <button type="submit" className="btn-primary" style={{ padding: '0 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Save</button>
-                  <button type="button" className="btn-secondary" onClick={() => setIsAddingSubgoal(false)} style={{ padding: '0 16px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>Cancel</button>
-                </form>
-              ) : (
-                <motion.button 
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setIsAddingSubgoal(true)}
-                  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: 'white', fontWeight: 600, marginTop: '16px', cursor: 'pointer', fontSize: '14px' }}
-                >
-                  + Add Step
-                </motion.button>
-              )}
-            </motion.div>
+                  {isAddingSubgoal ? (
+                    <form onSubmit={handleAddSubgoalSubmit} style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                      <input
+                        type="text"
+                        autoFocus
+                        placeholder="Enter step name... (e.g. Draft outline)"
+                        value={newSubgoalTitle}
+                        onChange={e => setNewSubgoalTitle(e.target.value)}
+                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', fontSize: '14px' }}
+                        required
+                      />
+                      <button type="submit" className="btn-primary" style={{ padding: '0 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Save</button>
+                      <button type="button" className="btn-secondary" onClick={() => setIsAddingSubgoal(false)} style={{ padding: '0 16px', borderRadius: '8px', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                    </form>
+                  ) : (
+                    <motion.button 
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setIsAddingSubgoal(true)}
+                      className="btn-secondary"
+                      style={{ width: '100%', marginTop: '16px', borderRadius: '12px', borderStyle: 'dashed' }}
+                    >
+                      + Add Step
+                    </motion.button>
+                  )}
+                </motion.div>
+              );
+            })()}
           </>
         )}
       </AnimatePresence>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { db } from '../firebase-config';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 
-export default function HomeView({ user }) {
+export default function HomeView({ user, setActivePage }) {
   const [loading, setLoading] = useState(true);
   const [greeting, setGreeting] = useState('');
   const [activeGoal, setActiveGoal] = useState(null);
@@ -16,9 +16,9 @@ export default function HomeView({ user }) {
     const fetchData = async () => {
       try {
         // 1. Fetch User Progress (for Streak)
-        const progressSnap = await getDocs(query(collection(db, 'user_progress'), where('userId', '==', user.uid)));
-        if (!progressSnap.empty) {
-          setStreakDays(progressSnap.docs[0].data().streakDays || 0);
+        const progressSnap = await getDoc(doc(db, 'user_progress', user.uid));
+        if (progressSnap.exists()) {
+          setStreakDays(progressSnap.data().streakDays || 0);
         }
 
         // 2. Fetch recent moods for greeting
@@ -108,7 +108,7 @@ export default function HomeView({ user }) {
         style={{
           fontFamily: "'Inter', sans-serif",
           fontSize: '13px',
-          color: 'rgba(255,255,255,0.45)',
+          color: 'var(--text-secondary)',
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
           marginBottom: '24px'
@@ -122,19 +122,20 @@ export default function HomeView({ user }) {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1, type: 'spring', stiffness: 400, damping: 30 }}
-        className="card-hero"
+        className="card card-hero"
         style={{
           minHeight: '40vh',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           padding: '40px 32px',
-          borderRadius: '16px',
+          borderRadius: 'var(--radius-card, 12px)',
           marginBottom: '20px',
-          position: 'relative'
+          position: 'relative',
+          opacity: 1
         }}
       >
-        <div style={{ fontSize: '11px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>
+        <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '16px' }}>
           🎯 Today's Quest
         </div>
 
@@ -143,14 +144,14 @@ export default function HomeView({ user }) {
             <h2 style={{ fontSize: '28px', fontWeight: 700, color: 'white', letterSpacing: '-0.02em', margin: '0 0 8px' }}>
               {activeGoal.title}
             </h2>
-            <div style={{ fontSize: '15px', color: 'rgba(255,255,255,0.6)', marginBottom: '32px' }}>
+            <div style={{ fontSize: '15px', color: 'rgba(232, 224, 213, 0.75)', marginBottom: '32px' }}>
               Focus area: <span style={{ color: 'white' }}>{activeGoal.lifeArea || 'Personal Growth'}</span>
             </div>
 
             <div style={{ background: 'rgba(255,255,255,0.06)', height: '6px', borderRadius: '3px', overflow: 'hidden', marginBottom: '8px' }}>
               <div style={{ background: 'var(--teal)', width: `${activeGoal.progressPercent || 0}%`, height: '100%' }} />
             </div>
-            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '32px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '32px' }}>
               {activeGoal.progressPercent || 0}% Complete
             </div>
 
@@ -175,8 +176,14 @@ export default function HomeView({ user }) {
         ) : (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <div style={{ fontSize: '18px', color: 'white', marginBottom: '16px' }}>No active quests</div>
-            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginBottom: '24px' }}>Take a moment to set a new goal.</p>
-            <motion.button className="btn-primary" whileHover={{ filter: 'brightness(1.1)' }} whileTap={{ scale: 0.98 }} style={{ padding: '12px 24px' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '24px' }}>Take a moment to set a new goal.</p>
+            <motion.button 
+              className="btn-primary" 
+              whileHover={{ filter: 'brightness(1.1)' }} 
+              whileTap={{ scale: 0.98 }} 
+              style={{ padding: '12px 24px' }}
+              onClick={() => setActivePage('goals')}
+            >
               Set Goal →
             </motion.button>
           </div>
@@ -188,21 +195,27 @@ export default function HomeView({ user }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
+        whileHover={{ y: -2, backgroundColor: 'rgba(255,255,255,0.06)' }}
+        whileTap={{ scale: 0.99 }}
+        onClick={() => setActivePage('today')}
         style={{
           background: 'rgba(255,255,255,0.03)',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-card, 12px)',
           padding: '16px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
-          marginBottom: '32px'
+          marginBottom: '32px',
+          cursor: 'pointer',
+          border: '1px solid var(--border)',
+          transition: 'border-color 0.2s, background-color 0.2s'
         }}
       >
         <span style={{ fontSize: '20px' }}>🔥</span>
         <div style={{ fontSize: '14px', fontWeight: 600, color: 'white' }}>
           {streakDays} DAY STREAK
         </div>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)' }}>
+        <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
           — You're building momentum.
         </div>
       </motion.div>
@@ -211,21 +224,35 @@ export default function HomeView({ user }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
         
         {/* Life Balance */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card-ghost" style={{ padding: '24px', borderRadius: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', cursor: 'pointer' }} whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.3 }} 
+          className="card card-ghost" 
+          style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', cursor: 'pointer', opacity: 1 }}
+          onClick={() => setActivePage('balance')}
+        >
           <div style={{ width: 64, height: 64, borderRadius: '50%', border: '4px solid var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: 700, color: 'white', marginBottom: '16px' }}>
             7.2
           </div>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '4px' }}>Balance</div>
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '4px' }}>Balance</div>
           <div style={{ fontSize: '15px', color: 'white', fontWeight: 500 }}>Wheel of Life</div>
         </motion.div>
 
         {/* Vault Countdown */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="card-default" style={{ padding: '24px', borderRadius: '16px', borderLeft: '4px solid var(--rose)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }} whileHover={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
-          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '16px' }}>💌 A letter from your past self</div>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.4 }} 
+          className="card card-default" 
+          style={{ padding: '24px', borderLeft: '4px solid var(--rose)', cursor: 'pointer', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', opacity: 1 }}
+          onClick={() => setActivePage('vault')}
+        >
+          <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '16px' }}>💌 A letter from your past self</div>
           {vaultDays !== null && vaultDays > 0 ? (
             <>
               <div style={{ fontSize: '48px', fontWeight: 300, color: 'white', lineHeight: 1 }}>{vaultDays}</div>
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginTop: '4px' }}>days until it unlocks</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>days until it unlocks</div>
               <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.7)', fontStyle: 'italic', marginTop: '16px' }}>"{nextVaultLetter.subject ? nextVaultLetter.subject.substring(0, 20) + '...' : 'A sealed memory...'}"</div>
             </>
           ) : vaultDays !== null && vaultDays <= 0 ? (
@@ -237,7 +264,7 @@ export default function HomeView({ user }) {
           ) : (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
               <div style={{ fontSize: '32px', marginBottom: '8px', opacity: 0.5 }}>📭</div>
-              <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>Your vault is empty</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Your vault is empty</div>
             </div>
           )}
         </motion.div>

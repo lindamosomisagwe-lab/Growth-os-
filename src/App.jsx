@@ -43,9 +43,9 @@ const App = () => {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const docRef = doc(db, 'users', currentUser.uid, 'onboarding', 'status');
+          const docRef = doc(db, 'users', currentUser.uid);
           const snap = await getDoc(docRef);
-          if (snap.exists() && snap.data().completed) {
+          if (snap.exists() && snap.data().onboardingComplete === true) {
             setOnboardingComplete(true);
           } else {
             setOnboardingComplete(false);

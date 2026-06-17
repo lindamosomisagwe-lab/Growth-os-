@@ -8,6 +8,9 @@ service cloud.firestore {
     }
 
     // Users can only access their own documents
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
     match /users/{userId}/{document=**} {
       allow read, write: if isOwner(userId);
     }
@@ -27,7 +30,7 @@ service cloud.firestore {
     match /wheel_scores/{docId} {
       allow read: if isOwner(resource.data.userId);
       allow create: if isOwner(request.resource.data.userId);
-      allow update, delete: if isOwner(resource.data.userId);
+      allow update, delete: if false; // Snapshots are permanent history
     }
 
     match /vault_letters/{docId} {

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth, db } from '../firebase-config';
 import { signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function OnboardingFlow({ onComplete }) {
@@ -62,38 +62,38 @@ export default function OnboardingFlow({ onComplete }) {
 
   const saveOnboardingData = async (user) => {
     try {
-      // Create user onboarding record
-      await setDoc(doc(db, 'users', user.uid, 'onboarding', 'status'), {
-        completed: true,
-        completedAt: serverTimestamp(),
-        primaryLifeArea: lifeArea,
-        goalDescription: goalDescription,
-        dailyCommitment: commitment
+      // 1. Update the user document with onboarding data
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        displayName: user.displayName || 'Traveler',
+        onboardingComplete: true,
+        primaryLifeArea: lifeArea,  // from onboarding quiz
+        dailyCommitment: commitment,    // from onboarding quiz
+        createdAt: serverTimestamp(),
       }, { merge: true });
+      console.log('User document updated:', user.uid);
 
-      // Create first goal if they went through the flow
-      if (goalDescription) {
-        const goalId = 'g' + Date.now();
-        await setDoc(doc(db, 'goals', goalId), {
-          userId: user.uid,
-          title: goalDescription.substring(0, 60),
-          lifeArea: lifeArea || 'Personal Growth',
-          tier: 1,
-          progressPercent: 0,
-          status: 'active',
-          createdAt: serverTimestamp(),
-          fromOnboarding: true
-        });
-      }
-
-      // Progress tracker
+      // 2. Create their user_progress document
       await setDoc(doc(db, 'user_progress', user.uid), {
         totalXp: 50,
         currentChapter: 1,
         streakDays: 0,
+        goalsCompleted: 0,
         lastActiveDate: null,
-        goalsCompleted: 0
-      }, { merge: true });
+      });
+      console.log('User progress created:', user.uid);
+
+      // 3. Create their first goal from the onboarding quiz answer
+      await addDoc(collection(db, 'goals'), {
+        userId: user.uid,
+        title: goalDescription,  // from onboarding Q2 answer
+        lifeArea: lifeArea,
+        tier: 1,
+        progressPercent: 0,
+        status: 'in-progress',
+        createdAt: serverTimestamp(),
+      });
+      console.log('First goal created for user:', user.uid);
 
       // Consent Record
       const consentId = `consent_${user.uid}_${Date.now()}`;
@@ -106,6 +106,7 @@ export default function OnboardingFlow({ onComplete }) {
         consentTimestamp: serverTimestamp(),
         userAgent: navigator.userAgent
       });
+      console.log('Consent record created:', consentId);
 
     } catch (err) {
       console.error('Error saving onboarding data:', err);
@@ -118,13 +119,21 @@ export default function OnboardingFlow({ onComplete }) {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
-      // If we are in the signup flow and they actually filled out the goal
-      if (goalDescription) {
-        await saveOnboardingData(result.user);
-        setStep(9);
-      } else {
-        // They skipped and just logged in
+      // Check if they are already fully onboarded to prevent overwriting progress
+      const userSnap = await getDoc(doc(db, 'users', result.user.uid));
+      const isFullyOnboarded = userSnap.exists() && userSnap.data().onboardingComplete === true;
+      
+      if (isFullyOnboarded) {
+        // Existing user, just login
         onComplete();
+      } else {
+        // New user or someone who dropped off previously
+        if (goalDescription) {
+          await saveOnboardingData(result.user);
+          setStep(9);
+        } else {
+          onComplete();
+        }
       }
     } catch (err) {
       setAuthError(err.message);
@@ -137,11 +146,19 @@ export default function OnboardingFlow({ onComplete }) {
     try {
       if (isLogin) {
         const result = await signInWithEmailAndPassword(auth, email, password);
-        if (goalDescription) {
-          await saveOnboardingData(result.user);
-          setStep(9);
-        } else {
+        
+        const userSnap = await getDoc(doc(db, 'users', result.user.uid));
+        const isFullyOnboarded = userSnap.exists() && userSnap.data().onboardingComplete === true;
+        
+        if (isFullyOnboarded) {
           onComplete();
+        } else {
+          if (goalDescription) {
+            await saveOnboardingData(result.user);
+            setStep(9);
+          } else {
+            onComplete();
+          }
         }
       } else {
         const result = await createUserWithEmailAndPassword(auth, email, password);

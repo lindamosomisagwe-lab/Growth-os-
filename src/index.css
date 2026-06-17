@@ -391,7 +391,7 @@ body {
 
     /* Border Radius Utilities */
     .page-card { border-radius: 10px; }
-    .stat-chip { border-radius: 6px; }
+    .stat-chip { border-radius: var(--radius-card, 12px); }
     .btn-pill { border-radius: 999px; }
     .modal { border-radius: 16px; }
 

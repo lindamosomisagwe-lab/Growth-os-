@@ -17,7 +17,7 @@ export default function Dashboard({ user }) {
   // Page switcher
   const renderPage = () => {
     switch (activePage) {
-      case 'home':    return <HomeView user={user} />;
+      case 'home':    return <HomeView user={user} setActivePage={setActivePage} />;
       case 'balance': return <BalanceView />;
       case 'goals':   return <GoalsView user={user} />;
       case 'today':   return <TodayView user={user} />;
