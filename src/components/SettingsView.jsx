@@ -396,6 +396,24 @@ export default function SettingsPage({ user }) {
           </div>
         )}
       </AnimatePresence>
+
+      {import.meta.env.DEV && (
+        <div style={{ marginTop: '40px', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'white', marginBottom: '12px' }}>🛠️ Offline Database Debug Panel</h3>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+            <strong>Mock User Session:</strong>
+            <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginTop: '4px', color: 'white', fontFamily: 'monospace' }}>
+              {JSON.stringify(JSON.parse(localStorage.getItem('firebase_mock_user') || 'null'), null, 2)}
+            </pre>
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+            <strong>Mock database storage (localStorage):</strong>
+            <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginTop: '4px', color: 'white', fontFamily: 'monospace' }}>
+              {JSON.stringify(JSON.parse(localStorage.getItem('firebase_mock_db') || 'null'), null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
