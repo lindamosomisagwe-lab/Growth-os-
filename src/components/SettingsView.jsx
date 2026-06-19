@@ -23,7 +23,7 @@ const SettingsSectionLabel = ({ children, danger }) => (
 const Chevron = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <path d="M6 4l4 4-4 4"
-      stroke="rgba(255,255,255,0.25)"
+      stroke="rgba(27, 31, 29, 0.35)"
       strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -39,8 +39,8 @@ const Toggle = ({ value, onChange }) => (
       width: '44px',
       height: '24px',
       borderRadius: '999px',
-      background: value ? '#7C5CFC' : 'rgba(255,255,255,0.1)',
-      border: `1px solid ${value ? '#7C5CFC' : 'rgba(255,255,255,0.12)'}`,
+      background: value ? '#607A66' : 'rgba(27,31,29,0.08)',
+      border: `1px solid ${value ? '#607A66' : 'rgba(27,31,29,0.12)'}`,
       position: 'relative',
       cursor: 'pointer',
       transition: 'background 0.2s ease, border-color 0.2s ease'
@@ -57,7 +57,7 @@ const Toggle = ({ value, onChange }) => (
         top: '2px',
         left: '2px',
         transition: 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+        boxShadow: '0 1px 3px rgba(27,31,29,0.15)',
         transform: value ? 'translateX(20px)' : 'translateX(0px)'
       }}
     />
@@ -67,14 +67,14 @@ const Toggle = ({ value, onChange }) => (
 const SettingsRow = ({ icon, title, subtitle, right, onClick, danger, noHover }) => (
   <motion.div
     onClick={onClick}
-    whileHover={noHover || !onClick ? {} : { backgroundColor: 'rgba(255,255,255,0.03)' }}
+    whileHover={noHover || !onClick ? {} : { backgroundColor: 'rgba(27,31,29,0.02)' }}
     whileTap={onClick && !noHover ? { scale: 0.99 } : {}}
     style={{
       display: 'flex',
       alignItems: 'center',
       gap: '14px',
       padding: '14px 4px',
-      borderBottom: '1px solid rgba(255,255,255,0.05)',
+      borderBottom: '1px solid rgba(27,31,29,0.08)',
       cursor: onClick ? 'pointer' : 'default',
       borderRadius: '6px',
     }}
@@ -96,7 +96,7 @@ const SettingsRow = ({ icon, title, subtitle, right, onClick, danger, noHover })
       <div style={{
         fontSize: '14px',
         fontWeight: '500',
-        color: danger ? 'rgba(239,68,68,0.8)' : 'rgba(255,255,255,0.85)',
+        color: danger ? 'rgba(239,68,68,0.8)' : 'var(--text-primary)',
         letterSpacing: '-0.01em'
       }}>
         {title}
@@ -259,15 +259,15 @@ export default function SettingsPage({ user }) {
       <SettingsSectionLabel>Account</SettingsSectionLabel>
       <motion.div
         onClick={() => setShowEditName(true)}
-        whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+        whileHover={{ backgroundColor: 'rgba(27,31,29,0.02)' }}
         whileTap={{ scale: 0.99 }}
         style={{
           display: 'flex', alignItems: 'center', gap: '14px', padding: '14px 4px',
-          borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', borderRadius: '6px'
+          borderBottom: '1px solid rgba(27,31,29,0.08)', cursor: 'pointer', borderRadius: '6px'
         }}
       >
         <div style={{
-          width: 44, height: 44, borderRadius: '50%', background: '#7C5CFC',
+          width: 44, height: 44, borderRadius: '50%', background: '#607A66',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontWeight: 700, color: 'white', fontSize: '18px'
         }}>
@@ -278,11 +278,11 @@ export default function SettingsPage({ user }) {
           )}
         </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '15px', fontWeight: 600, color: 'white' }}>{user?.displayName || 'User'}</div>
+          <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-primary)' }}>{user?.displayName || 'User'}</div>
           <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{user?.email}</div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 2 }}>Member since {new Date(user?.metadata?.creationTime).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--amber)', cursor: 'pointer' }}>
+        <div style={{ fontSize: '12px', color: '#607A66', cursor: 'pointer', fontWeight: '500' }}>
           Edit →
         </div>
       </motion.div>
@@ -305,7 +305,7 @@ export default function SettingsPage({ user }) {
               value={prefs.reminderTime} 
               onChange={e => savePref('reminderTime', e.target.value)}
               style={{
-                background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.8)',
+                background: 'transparent', border: 'none', color: 'var(--text-primary)',
                 fontSize: '14px', outline: 'none', cursor: 'pointer'
               }}
             />
@@ -338,55 +338,55 @@ export default function SettingsPage({ user }) {
       {/* MODALS */}
       <AnimatePresence>
         {showEditName && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: '#13131f', border: '1px solid rgba(255,255,255,0.1)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 360 }}>
-              <h3 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600 }}>Edit display name</h3>
-              <input value={newName} onChange={e => setNewName(e.target.value)} autoFocus style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', marginBottom: 20, outline: 'none' }} />
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(27,31,29,0.3)', backdropFilter: 'blur(4px)' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: '#FFFFFF', border: '1px solid rgba(27,31,29,0.08)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 360, boxShadow: '0 10px 30px rgba(27,31,29,0.08)' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Edit display name</h3>
+              <input value={newName} onChange={e => setNewName(e.target.value)} autoFocus style={{ width: '100%', background: 'rgba(27,31,29,0.02)', border: '1px solid rgba(27,31,29,0.12)', padding: 14, borderRadius: 10, color: 'var(--text-primary)', marginBottom: 20, outline: 'none' }} />
               <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => setShowEditName(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Cancel</button>
-                <button onClick={handleUpdateName} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#7C5CFC', color: 'white', cursor: 'pointer' }}>Save</button>
+                <button onClick={() => setShowEditName(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(27,31,29,0.05)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '500' }}>Cancel</button>
+                <button onClick={handleUpdateName} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#607A66', color: 'white', cursor: 'pointer', fontWeight: '500' }}>Save</button>
               </div>
             </motion.div>
           </div>
         )}
 
         {showSignOut && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: '#13131f', border: '1px solid rgba(255,255,255,0.1)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 360, textAlign: 'center' }}>
-              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600 }}>Sign out of Chapter?</h3>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(27,31,29,0.3)', backdropFilter: 'blur(4px)' }}>
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} style={{ background: '#FFFFFF', border: '1px solid rgba(27,31,29,0.08)', padding: 24, borderRadius: 16, width: '90%', maxWidth: 360, textAlign: 'center', boxShadow: '0 10px 30px rgba(27,31,29,0.08)' }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>Sign out of Chapter?</h3>
               <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-                <button onClick={() => setShowSignOut(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Cancel</button>
-                <button onClick={() => signOut(auth)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer' }}>Sign out</button>
+                <button onClick={() => setShowSignOut(false)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: 'rgba(27,31,29,0.05)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: '500' }}>Cancel</button>
+                <button onClick={() => signOut(auth)} style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: '#C4596A', color: 'white', cursor: 'pointer', fontWeight: '500' }}>Sign out</button>
               </div>
             </motion.div>
           </div>
         )}
 
         {showDelete && (
-          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
-            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} style={{ background: '#13131f', borderTop: '1px solid rgba(255,255,255,0.1)', padding: '32px 24px', borderTopLeftRadius: 24, borderTopRightRadius: 24, width: '100%', maxWidth: 640 }}>
-              <h3 style={{ margin: '0 0 16px', fontSize: '20px', fontWeight: 600 }}>Delete your account?</h3>
-              <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '15px', marginBottom: 16 }}>This will permanently delete:</p>
-              <ul style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px', paddingLeft: 20, marginBottom: 24, lineHeight: 1.6 }}>
+          <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(27,31,29,0.3)', backdropFilter: 'blur(4px)' }}>
+            <motion.div initial={{ y: '100%', opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: '100%', opacity: 0 }} transition={{ type: 'spring', damping: 25, stiffness: 300 }} style={{ background: '#FFFFFF', borderTop: '1px solid rgba(27,31,29,0.08)', padding: '32px 24px', borderTopLeftRadius: 24, borderTopRightRadius: 24, width: '100%', maxWidth: 640, boxShadow: '0 -10px 30px rgba(27,31,29,0.05)' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '20px', fontWeight: 600, color: 'var(--text-primary)' }}>Delete your account?</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '15px', marginBottom: 16 }}>This will permanently delete:</p>
+              <ul style={{ color: 'var(--text-secondary)', fontSize: '14px', paddingLeft: 20, marginBottom: 24, lineHeight: 1.6 }}>
                 <li>All your goals and progress</li>
                 <li>Your mood history</li>
                 <li>Your vault letters (cannot be recovered)</li>
                 <li>Your XP and streak data</li>
               </ul>
               
-              <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>Type DELETE to confirm:</div>
-              <input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', marginBottom: 24, outline: 'none' }} />
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: 8 }}>Type DELETE to confirm:</div>
+              <input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} style={{ width: '100%', background: 'rgba(27,31,29,0.02)', border: '1px solid rgba(27,31,29,0.12)', padding: 14, borderRadius: 10, color: 'var(--text-primary)', marginBottom: 24, outline: 'none' }} />
               
               <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={() => setShowDelete(false)} style={{ flex: 1, padding: 14, borderRadius: 10, border: 'none', background: 'rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
+                <button onClick={() => setShowDelete(false)} style={{ flex: 1, padding: 14, borderRadius: 10, border: 'none', background: 'rgba(27,31,29,0.05)', color: 'var(--text-primary)', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
                 <button 
                   onClick={deleteAccount} 
                   disabled={deleteConfirmText !== 'DELETE'}
                   style={{ 
                     flex: 1, padding: 14, borderRadius: 10, border: 'none', 
-                    background: deleteConfirmText === 'DELETE' ? '#ef4444' : 'rgba(239,68,68,0.3)', 
-                    color: 'white', cursor: deleteConfirmText === 'DELETE' ? 'pointer' : 'not-allowed', 
-                    fontWeight: 600, boxShadow: deleteConfirmText === 'DELETE' ? '0 3px 0 #991b1b' : 'none' 
+                    background: deleteConfirmText === 'DELETE' ? '#ef4444' : 'rgba(239,68,68,0.15)', 
+                    color: deleteConfirmText === 'DELETE' ? 'white' : 'rgba(27,31,29,0.4)', cursor: deleteConfirmText === 'DELETE' ? 'pointer' : 'not-allowed', 
+                    fontWeight: 600
                   }}
                 >
                   Delete permanently
@@ -398,17 +398,17 @@ export default function SettingsPage({ user }) {
       </AnimatePresence>
 
       {import.meta.env.DEV && (
-        <div style={{ marginTop: '40px', padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'white', marginBottom: '12px' }}>🛠️ Offline Database Debug Panel</h3>
+        <div style={{ marginTop: '40px', padding: '16px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border)' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '12px' }}>🛠️ Offline Database Debug Panel</h3>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
             <strong>Mock User Session:</strong>
-            <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginTop: '4px', color: 'white', fontFamily: 'monospace' }}>
+            <pre style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginTop: '4px', color: 'var(--text-primary)', fontFamily: 'monospace' }}>
               {JSON.stringify(JSON.parse(localStorage.getItem('firebase_mock_user') || 'null'), null, 2)}
             </pre>
           </div>
           <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
             <strong>Mock database storage (localStorage):</strong>
-            <pre style={{ background: 'rgba(0,0,0,0.3)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginTop: '4px', color: 'white', fontFamily: 'monospace' }}>
+            <pre style={{ background: 'var(--bg-app)', border: '1px solid var(--border)', padding: '8px', borderRadius: '6px', overflowX: 'auto', marginTop: '4px', color: 'var(--text-primary)', fontFamily: 'monospace' }}>
               {JSON.stringify(JSON.parse(localStorage.getItem('firebase_mock_db') || 'null'), null, 2)}
             </pre>
           </div>

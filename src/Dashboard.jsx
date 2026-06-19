@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import HomeView from './components/HomeView';
 import BalanceView from './components/BalanceView';
 import GoalsView from './components/GoalsView';
-import TodayView from './components/TodayView';
+import DailyLog from './components/DailyLog';
 import VaultView from './components/VaultView';
 import ProfileView from './components/ProfileView';
 import SettingsView from './components/SettingsView';
@@ -20,7 +20,7 @@ export default function Dashboard({ user }) {
       case 'home':    return <HomeView user={user} setActivePage={setActivePage} />;
       case 'balance': return <BalanceView />;
       case 'goals':   return <GoalsView user={user} />;
-      case 'today':   return <TodayView user={user} />;
+      case 'today':   return <DailyLog user={user} />;
       case 'vault':   return <VaultView user={user} />;
       case 'profile': return <ProfileView user={user} />;
       case 'settings': return <SettingsView user={user} />;
@@ -31,7 +31,7 @@ export default function Dashboard({ user }) {
   return (
     <div 
       className="app-shell"
-      style={{ background: '#0d0d14' }}
+      style={{ background: 'var(--bg-app)' }}
     >
       <Sidebar activePage={activePage} setActivePage={setActivePage} user={user} />
       

@@ -1,65 +1,79 @@
 import React, { useState, useEffect } from "react";
-import { useGamification } from "../contexts/GamificationContext";
+import { motion, AnimatePresence } from "framer-motion";
+import { db } from "../firebase-config";
+import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 
 const moods = [
   { emoji: "😁", label: "Great", id: "happy" },
   { emoji: "😌", label: "Good", id: "content" },
-  { emoji: "😐", label: "Okay", id: "neutral" },
-  { emoji: "😔", label: "Hard", id: "sad" },
-  { emoji: "😤", label: "Frustrated", id: "angry" }
+  { emoji: "😐", label: "OK", id: "neutral" },
+  { emoji: "😔", label: "Low", id: "sad" },
+  { emoji: "Rough", emojiChar: "🤕", label: "Rough", id: "angry" } // using emojiChar if needed, or emoji
 ];
 
-function dispatchSave() { window.dispatchEvent(new Event("growth_os_save")); }
-
-export default function DailyLog() {
-  const [logs, setLogs] = useState(() => {
-    const saved = localStorage.getItem("growth_os_v1");
-    return saved ? JSON.parse(saved).dailyLogs || [] : [];
-  });
-
+export default function DailyLog({ user }) {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [mood, setMood] = useState("");
   const [win, setWin] = useState("");
   const [intention, setIntention] = useState("");
-  
+  const [isSaving, setIsSaving] = useState(false);
+  const [expandedLogId, setExpandedLogId] = useState(null);
+
+  // Optional extra tracking
   const [showMore, setShowMore] = useState(false);
   const [hydration, setHydration] = useState(0);
   const [sleep, setSleep] = useState(7);
   const [energy, setEnergy] = useState(5);
   const [note, setNote] = useState("");
 
-  const [expandedLogId, setExpandedLogId] = useState(null);
-  const [flashAnim, setFlashAnim] = useState(false);
-  const { awardXP } = useGamification();
+  useEffect(() => {
+    if (!user) return;
+    fetchLogs();
+  }, [user]);
 
-  const saveLog = async () => {
-    if (!mood) return; 
-    
-    setFlashAnim(true);
-    await awardXP("daily_checkin");
+  const fetchLogs = async () => {
+    try {
+      setLoading(false);
+      const q = query(collection(db, "daily_logs"), where("userId", "==", user.uid));
+      const snap = await getDocs(q);
+      const fetched = snap.docs.map(d => {
+        const data = d.data();
+        const createdDate = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+        const dateStr = createdDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        return {
+          id: d.id,
+          date: dateStr,
+          timestamp: createdDate.getTime(),
+          ...data
+        };
+      });
+      fetched.sort((a, b) => b.timestamp - a.timestamp);
+      setLogs(fetched);
+    } catch (err) {
+      console.error("Failed to fetch logs:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setTimeout(() => {
-      const newLog = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+  const handleSave = async () => {
+    if (!mood || !user) return;
+    setIsSaving(true);
+    try {
+      await addDoc(collection(db, "daily_logs"), {
+        userId: user.uid,
         mood,
         win: win.trim(),
         intention: intention.trim(),
         hydration: showMore ? hydration : 0,
         sleep: showMore ? sleep : null,
         energy: showMore ? energy : null,
-        note: showMore ? note.trim() : ""
-      };
+        note: showMore ? note.trim() : "",
+        createdAt: serverTimestamp()
+      });
 
-      const newLogs = [newLog, ...logs];
-      setLogs(newLogs);
-      
-      const saved = localStorage.getItem("growth_os_v1");
-      const parsed = saved ? JSON.parse(saved) : {};
-      parsed.dailyLogs = newLogs;
-      localStorage.setItem("growth_os_v1", JSON.stringify(parsed));
-      dispatchSave();
-
-      // Reset
+      // Reset fields
       setMood("");
       setWin("");
       setIntention("");
@@ -68,50 +82,81 @@ export default function DailyLog() {
       setSleep(7);
       setEnergy(5);
       setNote("");
-      setFlashAnim(false);
-    }, 500);
+      fetchLogs();
+    } catch (err) {
+      console.error("Failed to save daily check-in log:", err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  if (loading) {
+    return (
+      <div className="content-wrap" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "50vh" }}>
+        <div style={{ color: "var(--text-muted)", fontSize: "14px" }}>Loading check-ins...</div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ color: "var(--ink-dark)", fontFamily: "var(--font-sans)", maxWidth: "100%", margin: "0 auto", paddingBottom: "4rem" }}>
+    <div style={{ color: "#1B1D1D", fontFamily: "'Inter', sans-serif", maxWidth: "640px", margin: "0 auto", paddingBottom: "80px" }}>
       
-      <header style={{ marginBottom: "2rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "1px solid var(--ink-faint)", paddingBottom: "16px" }}>
-        <div>
-          <h2 className="page-title">Today</h2>
-          <p className="page-subtitle" style={{ margin: "4px 0 0 0" }}>
-            The 60-second journal ritual.
-          </p>
-        </div>
+      <header style={{ marginBottom: "24px", borderBottom: "1px solid rgba(27,31,29,0.08)", paddingBottom: "16px" }}>
+        <h1 className="page-title" style={{ fontSize: "32px", fontWeight: 700, fontFamily: "'Playfair Display', Georgia, serif", color: "#1B1D1D", margin: 0 }}>Check-in.</h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: "14px", marginTop: "4px" }}>The 60-second journal ritual.</p>
       </header>
 
       {/* Main Journal Card */}
       <div 
-        className="journal-entry" 
+        className="card" 
         style={{ 
-          marginBottom: "3rem",
-          boxShadow: flashAnim ? "0 0 24px rgba(92,122,92,0.25)" : "var(--shadow-raised)",
-          transition: "box-shadow 0.3s ease"
+          background: "#FFFFFF",
+          border: "1px solid rgba(27,31,29,0.08)",
+          borderRadius: "12px",
+          padding: "32px",
+          marginBottom: "32px"
         }}
       >
         {/* Elegant handwriting date header */}
-        <div className="journal-date">
+        <div style={{ fontSize: "13px", color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "24px", fontWeight: 600 }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         </div>
         
         {/* Mood Section */}
-        <section style={{ marginBottom: "2rem" }}>
-          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: "600", margin: "0 0 10px 0" }}>How is today going?</h3>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+        <section style={{ marginBottom: "24px" }}>
+          <h3 style={{ fontSize: "15px", fontWeight: "600", color: "#1B1D1D", margin: "0 0 12px 0" }}>How is today going?</h3>
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
             {moods.map(m => {
               const active = mood === m.id;
               return (
                 <button
                   key={m.id}
                   onClick={() => setMood(m.id)}
-                  className={`mood-btn ${active ? "selected" : ""}`}
-                  style={{ flex: 1, minWidth: "90px" }}
+                  style={{
+                    flex: 1,
+                    minWidth: "90px",
+                    padding: "12px 8px",
+                    background: active ? "#1B1D1D" : "transparent",
+                    color: active ? "#FFFFFF" : "#1B1D1D",
+                    border: `1px solid ${active ? "#1B1D1D" : "rgba(27,31,29,0.12)"}`,
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: "4px",
+                    transition: "all 0.15s ease"
+                  }}
+                  onMouseEnter={e => {
+                    if (!active) e.currentTarget.style.borderColor = "#607A66";
+                  }}
+                  onMouseLeave={e => {
+                    if (!active) e.currentTarget.style.borderColor = "rgba(27,31,29,0.12)";
+                  }}
                 >
-                  <span style={{ fontSize: "1.2rem" }}>{m.emoji}</span>
+                  <span style={{ fontSize: "20px" }}>{m.emojiChar || m.emoji}</span>
                   <span>{m.label}</span>
                 </button>
               );
@@ -120,31 +165,63 @@ export default function DailyLog() {
         </section>
 
         {/* Win & Intention Inputs */}
-        <section style={{ display: "flex", flexDirection: "column", gap: "1.75rem", marginBottom: "1.75rem" }}>
+        <section style={{ display: "flex", flexDirection: "column", gap: "20px", marginBottom: "24px" }}>
           <div>
-            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: "600", margin: "0 0 4px 0" }}>What went well today?</h3>
-            <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-light)", fontStyle: "italic" }}>Even the smallest highlight counts.</p>
+            <h3 style={{ fontSize: "15px", fontWeight: "600", color: "#1B1D1D", margin: "0 0 4px 0" }}>One win from today</h3>
+            <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--text-secondary)", fontStyle: "italic" }}>Even the smallest highlight counts.</p>
             <textarea
               placeholder="e.g. Cleared my desk and made a perfect cup of tea..."
               value={win} 
               onChange={e => setWin(e.target.value)}
               rows={2} 
+              style={{
+                width: "100%",
+                background: "rgba(27,31,29,0.01)",
+                border: "1px solid rgba(27,31,29,0.12)",
+                borderRadius: "8px",
+                padding: "12px",
+                fontSize: "14px",
+                color: "#1B1D1D",
+                outline: "none",
+                resize: "none",
+                fontFamily: "inherit",
+                boxSizing: "border-box",
+                transition: "border-color 0.2s"
+              }}
+              onFocus={e => e.target.style.borderColor = "#607A66"}
+              onBlur={e => e.target.style.borderColor = "rgba(27,31,29,0.12)"}
             />
           </div>
           
           <div>
-            <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "16px", fontWeight: "600", margin: "0 0 4px 0" }}>Your core focus for tomorrow?</h3>
-            <p style={{ margin: "0 0 10px 0", fontSize: "12px", color: "var(--ink-light)", fontStyle: "italic" }}>Name one single high-impact intention.</p>
+            <h3 style={{ fontSize: "15px", fontWeight: "600", color: "#1B1D1D", margin: "0 0 4px 0" }}>One intention for tomorrow</h3>
+            <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "var(--text-secondary)", fontStyle: "italic" }}>Name one single high-impact intention.</p>
             <textarea
               placeholder="e.g. Finalize the project roadmap outline."
               value={intention} 
               onChange={e => setIntention(e.target.value)}
               rows={2} 
+              style={{
+                width: "100%",
+                background: "rgba(27,31,29,0.01)",
+                border: "1px solid rgba(27,31,29,0.12)",
+                borderRadius: "8px",
+                padding: "12px",
+                fontSize: "14px",
+                color: "#1B1D1D",
+                outline: "none",
+                resize: "none",
+                fontFamily: "inherit",
+                boxSizing: "border-box",
+                transition: "border-color 0.2s"
+              }}
+              onFocus={e => e.target.style.borderColor = "#607A66"}
+              onBlur={e => e.target.style.borderColor = "rgba(27,31,29,0.12)"}
             />
           </div>
         </section>
 
-        {/* Expander to track hydration / sleep / energy */}
+        {/* Optional details expander */}
         {!showMore ? (
           <button 
             onClick={() => setShowMore(true)} 
@@ -152,7 +229,7 @@ export default function DailyLog() {
               alignSelf: "flex-start", 
               background: "none", 
               border: "none", 
-              color: "var(--accent-sage)", 
+              color: "#607A66", 
               cursor: "pointer", 
               fontStyle: "italic", 
               fontSize: "13px", 
@@ -160,30 +237,35 @@ export default function DailyLog() {
               padding: "4px 0",
               display: "flex",
               alignItems: "center",
-              gap: "4px"
+              gap: "4px",
+              outline: "none"
             }}
           >
             ✦ Track hydration, sleep & energy
           </button>
         ) : (
-          <section style={{ padding: "1.5rem", border: "1px dashed var(--ink-faint)", borderRadius: "6px", display: "flex", flexDirection: "column", gap: "1.5rem", marginBottom: "1.5rem" }}>
+          <section style={{ padding: "16px", border: "1px dashed rgba(27,31,29,0.12)", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "16px", marginBottom: "16px" }}>
             
-            {/* Hydration Hollow Circle Dots */}
+            {/* Hydration */}
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
                 <span style={{ fontSize: "13px", fontWeight: "600" }}>Hydration</span>
-                <span style={{ fontSize: "12px", color: "var(--ink-medium)", fontFamily: "monospace" }}>{hydration} / 8 glasses</span>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)", fontFamily: "monospace" }}>{hydration} / 8 glasses</span>
               </div>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                 {[...Array(8)].map((_, i) => (
                   <button 
                     key={i} 
                     onClick={() => setHydration(i + 1 === hydration ? i : i + 1)} 
-                    className={`hydration-dot ${i < hydration ? "filled" : ""}`}
-                    style={{ flex: "1 0 30px", height: "30px", display: "grid", placeContent: "center", padding: 0 }}
+                    style={{
+                      flex: "1 0 30px", height: "30px", border: "1px solid rgba(27,31,29,0.12)", borderRadius: "50%",
+                      background: i < hydration ? "#607A66" : "transparent",
+                      color: i < hydration ? "#FFFFFF" : "rgba(27,31,29,0.3)",
+                      display: "flex", alignItems: "center", justifyContent: "center", padding: 0, cursor: "pointer",
+                      fontSize: "12px"
+                    }}
                   >
-                    {/* Faint dot in the center of hollow circles */}
-                    {i >= hydration && <span style={{ fontSize: "6px", color: "var(--accent-steel)", opacity: 0.35 }}>●</span>}
+                    {i < hydration ? "💧" : "•"}
                   </button>
                 ))}
               </div>
@@ -193,7 +275,7 @@ export default function DailyLog() {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                 <span style={{ fontSize: "13px", fontWeight: "600" }}>Sleep Quality</span>
-                <span style={{ fontSize: "12px", color: "var(--ink-medium)" }}>{sleep} / 10 hours</span>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{sleep} / 10 hours</span>
               </div>
               <input 
                 type="range" 
@@ -201,7 +283,7 @@ export default function DailyLog() {
                 max="10" 
                 value={sleep} 
                 onChange={e => setSleep(parseInt(e.target.value))} 
-                style={{ accentColor: "var(--accent-sage)" }}
+                style={{ accentColor: "#607A66", width: "100%" }}
               />
             </div>
 
@@ -209,7 +291,7 @@ export default function DailyLog() {
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                 <span style={{ fontSize: "13px", fontWeight: "600" }}>Energy Level</span>
-                <span style={{ fontSize: "12px", color: "var(--ink-medium)" }}>{energy} / 10 rating</span>
+                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>{energy} / 10 rating</span>
               </div>
               <input 
                 type="range" 
@@ -217,7 +299,7 @@ export default function DailyLog() {
                 max="10" 
                 value={energy} 
                 onChange={e => setEnergy(parseInt(e.target.value))} 
-                style={{ accentColor: "var(--accent-sage)" }}
+                style={{ accentColor: "#607A66", width: "100%" }}
               />
             </div>
 
@@ -229,6 +311,9 @@ export default function DailyLog() {
                 value={note} 
                 onChange={e => setNote(e.target.value)} 
                 rows={3} 
+                style={{
+                  width: "100%", background: "rgba(27,31,29,0.01)", border: "1px solid rgba(27,31,29,0.12)", borderRadius: "8px", padding: "10px", fontSize: "13px", color: "#1B1D1D", outline: "none", resize: "none", fontFamily: "inherit", boxSizing: "border-box"
+                }}
               />
             </div>
 
@@ -236,29 +321,27 @@ export default function DailyLog() {
         )}
 
         <button 
-          onClick={saveLog} 
-          disabled={!mood} 
+          onClick={handleSave} 
+          disabled={!mood || isSaving} 
           className="btn-primary"
           style={{ 
             padding: "12px", 
-            fontSize: "13px", 
+            fontSize: "14px", 
             width: "100%", 
-            opacity: mood ? 1 : 0.5,
-            background: "var(--accent-sage) !important",
-            color: "#ffffff !important",
-            boxShadow: "0 3px 0 #3a5a3a !important",
-            marginTop: "1.25rem"
+            marginTop: "20px",
+            fontWeight: 700,
+            cursor: mood ? "pointer" : "not-allowed"
           }}
         >
-          Save Today's Journal Entry
+          {isSaving ? "Saving Entry..." : "Save Today's Journal Entry"}
         </button>
       </div>
 
       {/* Archive List of Past Days */}
       {logs.length > 0 && (
-        <div style={{ marginTop: "3rem" }}>
-          <h3 style={{ fontFamily: "var(--font-serif)", fontSize: "20px", fontWeight: "600", marginBottom: "1.25rem" }}>Past Journal Logs</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div style={{ marginTop: "32px" }}>
+          <h3 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: "20px", fontWeight: "600", color: "#1B1D1D", marginBottom: "16px" }}>Recent</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {logs.map(log => {
               const isExpanded = expandedLogId === log.id;
               const logMood = moods.find(m => m.id === log.mood) || moods[2];
@@ -266,64 +349,67 @@ export default function DailyLog() {
               return (
                 <div 
                   key={log.id} 
-                  className="nb-card today" 
                   onClick={() => setExpandedLogId(isExpanded ? null : log.id)} 
                   style={{ 
-                    padding: "1.25rem 1.5rem", 
+                    padding: "16px 20px", 
                     cursor: "pointer",
-                    borderLeft: "3px solid var(--accent-sage)"
+                    background: "#FFFFFF",
+                    border: "1px solid rgba(27,31,29,0.08)",
+                    borderLeft: "4px solid var(--amber)",
+                    borderRadius: "12px",
+                    transition: "all 0.2s"
                   }}
                 >
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-                      <span style={{ fontSize: "1.4rem" }}>{logMood.emoji}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "24px" }}>{logMood.emojiChar || logMood.emoji}</span>
                       <div>
-                        <div style={{ fontFamily: "var(--font-serif)", fontWeight: "700", fontSize: "15px", color: "var(--ink-dark)" }}>{log.date}</div>
-                        {log.win && (
-                          <div style={{ fontSize: "13px", color: "var(--ink-medium)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "450px" }}>
+                        <div style={{ fontWeight: "700", fontSize: "15px", color: "#1B1D1D" }}>{log.date}</div>
+                        {log.win && !isExpanded && (
+                          <div style={{ fontSize: "13px", color: "var(--text-secondary)", marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "400px" }}>
                             {log.win}
                           </div>
                         )}
                       </div>
                     </div>
-                    <div style={{ color: "var(--ink-medium)", fontSize: "11px", fontWeight: "bold" }}>
-                      {isExpanded ? '▲ CLOSE' : '▼ OPEN'}
+                    <div style={{ color: "var(--text-muted)", fontSize: "11px", fontWeight: "bold" }}>
+                      {isExpanded ? 'CLOSE' : 'OPEN'}
                     </div>
                   </div>
                   
                   {isExpanded && (
-                    <div style={{ marginTop: "1.25rem", paddingTop: "1.25rem", borderTop: "1px solid var(--ink-faint)", fontSize: "13px", color: "var(--ink-medium)" }}>
+                    <div style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid rgba(27,31,29,0.08)", fontSize: "13px", color: "var(--text-secondary)" }}>
                       
                       {log.win && (
-                        <div style={{ marginBottom: "1rem" }}>
-                          <strong style={{ color: "var(--ink-dark)", display: "block", marginBottom: "2px" }}>Highlight of the Day:</strong>
-                          <div style={{ fontFamily: "var(--font-cursive)", fontSize: "18px", color: "#2a4a35", lineHeight: "1.4" }}>
+                        <div style={{ marginBottom: "12px" }}>
+                          <strong style={{ color: "#1B1D1D", display: "block", marginBottom: "4px" }}>One win from today:</strong>
+                          <div style={{ fontSize: "14px", color: "#5C615C", lineHeight: "1.4" }}>
                             {log.win}
                           </div>
                         </div>
                       )}
 
                       {log.intention && (
-                        <div style={{ marginBottom: "1rem" }}>
-                          <strong style={{ color: "var(--ink-dark)", display: "block", marginBottom: "2px" }}>Intention Set:</strong>
-                          <div style={{ fontFamily: "var(--font-cursive)", fontSize: "18px", color: "#2a4a35", lineHeight: "1.4" }}>
+                        <div style={{ marginBottom: "12px" }}>
+                          <strong style={{ color: "#1B1D1D", display: "block", marginBottom: "4px" }}>One intention for tomorrow:</strong>
+                          <div style={{ fontSize: "14px", color: "#5C615C", lineHeight: "1.4" }}>
                             {log.intention}
                           </div>
                         </div>
                       )}
                       
                       {(log.sleep !== null || log.energy !== null || (log.hydration && log.hydration > 0)) && (
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "0.5rem", marginBottom: "1rem", background: "var(--page-warm)", padding: "0.75rem", borderRadius: "4px", border: "1px solid var(--ink-faint)" }}>
-                          {log.sleep !== null && <div style={{ fontSize: "12px" }}>💤 <strong>{log.sleep}</strong> hrs sleep</div>}
-                          {log.energy !== null && <div style={{ fontSize: "12px" }}>⚡ <strong>{log.energy}</strong>/10 energy</div>}
-                          {log.hydration > 0 && <div style={{ fontSize: "12px" }}>💧 <strong>{log.hydration}</strong>/8 glasses</div>}
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "12px", background: "rgba(27,31,29,0.02)", padding: "10px", borderRadius: "8px", border: "1px solid rgba(27,31,29,0.05)" }}>
+                          {log.sleep !== null && <div>💤 <strong>{log.sleep}</strong> hrs sleep</div>}
+                          {log.energy !== null && <div>⚡ <strong>{log.energy}</strong>/10 energy</div>}
+                          {log.hydration > 0 && <div>💧 <strong>{log.hydration}</strong>/8 glasses</div>}
                         </div>
                       )}
                       
                       {log.note && (
                         <div>
-                          <strong style={{ color: "var(--ink-dark)", display: "block", marginBottom: "2px" }}>Margin Annotations:</strong>
-                          <div style={{ fontFamily: "var(--font-cursive)", fontSize: "18px", color: "#665040", fontStyle: "italic", lineHeight: "1.4" }}>
+                          <strong style={{ color: "#1B1D1D", display: "block", marginBottom: "4px" }}>Reflections:</strong>
+                          <div style={{ fontSize: "14px", color: "#5C615C", fontStyle: "italic", lineHeight: "1.4" }}>
                             "{log.note}"
                           </div>
                         </div>

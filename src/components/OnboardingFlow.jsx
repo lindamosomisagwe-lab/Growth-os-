@@ -6,74 +6,64 @@ import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'fireba
 import { Eye, EyeOff } from 'lucide-react';
 
 export default function OnboardingFlow({ onComplete }) {
+  // Step state:
+  // 1: Splash ("your story is being written")
+  // 2: Step 1 of 4 (Category Selection)
+  // 3: Step 2 of 4 (Goal Vision text area)
+  // 4: Step 3 of 4 (Daily Commitment minutes)
+  // 5: Step 4 of 4 (Goal Summary & Consent Checkbox)
+  // 6: Save Progress (Signup/Login)
+  // 7: Welcome Splash ("Welcome to Chapter")
   const [step, setStep] = useState(1);
   
-  // State for selections
+  // Quiz selections
   const [lifeArea, setLifeArea] = useState('');
   const [goalDescription, setGoalDescription] = useState('');
-  const [commitment, setCommitment] = useState('');
+  const [commitment, setCommitment] = useState(15);
 
-  // Consent state
-  const [accountConsent, setAccountConsent] = useState(false);
+  // Consent & Auth state
   const [healthConsent, setHealthConsent] = useState(false);
-  const [analyticsConsent, setAnalyticsConsent] = useState(false);
-
-  // Auth inputs
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLogin, setIsLogin] = useState(false); // toggle for login vs signup
+  const [isLogin, setIsLogin] = useState(false);
   const [authError, setAuthError] = useState('');
-  const [cardIdx, setCardIdx] = useState(0);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // Auto-advance splash
+  // Auto-advance Splash Screen 1
   useEffect(() => {
     if (step === 1) {
-      const timer = setTimeout(() => setStep(2), 2000); // Wait for animations
+      const timer = setTimeout(() => setStep(2), 2000);
       return () => clearTimeout(timer);
     }
   }, [step]);
 
-  // Screen 9 Auto-advance to home
+  // Auto-advance Welcome Screen 7
   useEffect(() => {
-    if (step === 9) {
+    if (step === 7) {
       const timer = setTimeout(() => onComplete(), 3000);
       return () => clearTimeout(timer);
     }
   }, [step, onComplete]);
 
-  // Auto-advance carousel for Screen2
-  useEffect(() => {
-    if (step === 2 && cardIdx < 2) {
-      const t = setTimeout(() => setCardIdx(cardIdx + 1), 5000);
-      return () => clearTimeout(t);
-    }
-  }, [cardIdx, step]);
-
   const handleAreaSelect = (area) => {
     setLifeArea(area);
-    setTimeout(() => setStep(4), 300);
-  };
-
-  const handleCommitmentSelect = (time) => {
-    setCommitment(time);
-    setTimeout(() => setStep(6), 300);
+    setTimeout(() => setStep(3), 200);
   };
 
   const saveOnboardingData = async (user) => {
     try {
-      // 1. Update the user document with onboarding data
+      // 1. Update user onboarding record
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
         displayName: user.displayName || 'Traveler',
         onboardingComplete: true,
-        primaryLifeArea: lifeArea,  // from onboarding quiz
-        dailyCommitment: commitment,    // from onboarding quiz
+        primaryLifeArea: lifeArea,
+        dailyCommitment: `${commitment}min`,
         createdAt: serverTimestamp(),
       }, { merge: true });
-      console.log('User document updated:', user.uid);
 
-      // 2. Create their user_progress document
+      // 2. Create user progress
       await setDoc(doc(db, 'user_progress', user.uid), {
         totalXp: 50,
         currentChapter: 1,
@@ -81,32 +71,29 @@ export default function OnboardingFlow({ onComplete }) {
         goalsCompleted: 0,
         lastActiveDate: null,
       });
-      console.log('User progress created:', user.uid);
 
-      // 3. Create their first goal from the onboarding quiz answer
+      // 3. Create first goal
       await addDoc(collection(db, 'goals'), {
         userId: user.uid,
-        title: goalDescription,  // from onboarding Q2 answer
+        title: goalDescription,
         lifeArea: lifeArea,
         tier: 1,
         progressPercent: 0,
         status: 'in-progress',
         createdAt: serverTimestamp(),
       });
-      console.log('First goal created for user:', user.uid);
 
-      // Consent Record
+      // 4. Save consent
       const consentId = `consent_${user.uid}_${Date.now()}`;
       await setDoc(doc(db, 'consent_records', consentId), {
         userId: user.uid,
         consentVersion: "1.0",
-        accountDataConsent: accountConsent,
+        accountDataConsent: true,
         healthDataConsent: healthConsent,
-        analyticsConsent: analyticsConsent,
+        analyticsConsent: false,
         consentTimestamp: serverTimestamp(),
         userAgent: navigator.userAgent
       });
-      console.log('Consent record created:', consentId);
 
     } catch (err) {
       console.error('Error saving onboarding data:', err);
@@ -115,617 +102,550 @@ export default function OnboardingFlow({ onComplete }) {
 
   const handleGoogleAuth = async () => {
     setAuthError('');
+    setIsLoggingIn(true);
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
-      // Check if they are already fully onboarded to prevent overwriting progress
       const userSnap = await getDoc(doc(db, 'users', result.user.uid));
       const isFullyOnboarded = userSnap.exists() && userSnap.data().onboardingComplete === true;
       
       if (isFullyOnboarded) {
-        // Existing user, just login
         onComplete();
       } else {
-        // New user or someone who dropped off previously
-        if (goalDescription) {
-          await saveOnboardingData(result.user);
-          setStep(9);
-        } else {
-          onComplete();
-        }
+        await saveOnboardingData(result.user);
+        setStep(7);
       }
     } catch (err) {
       setAuthError(err.message);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
     setAuthError('');
+    setIsLoggingIn(true);
     try {
       if (isLogin) {
         const result = await signInWithEmailAndPassword(auth, email, password);
-        
         const userSnap = await getDoc(doc(db, 'users', result.user.uid));
         const isFullyOnboarded = userSnap.exists() && userSnap.data().onboardingComplete === true;
         
         if (isFullyOnboarded) {
           onComplete();
         } else {
-          if (goalDescription) {
-            await saveOnboardingData(result.user);
-            setStep(9);
-          } else {
-            onComplete();
-          }
+          await saveOnboardingData(result.user);
+          setStep(7);
         }
       } else {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         await saveOnboardingData(result.user);
-        setStep(9);
+        setStep(7);
       }
     } catch (err) {
       setAuthError(err.message);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
-  // Shared Animation Variants
-  const fadeUp = {
-    hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
-    exit: { opacity: 0, y: -10, transition: { duration: 0.2 } }
-  };
-
-  const renderProgressBar = () => {
-    if (step < 3 || step > 5) return null;
-    let pct = 33;
-    if (step === 4) pct = 66;
-    if (step === 5) pct = 100;
+  // Dynamic content mapper based on chosen category (Step 1 Selection)
+  const getDynamicContent = (area, minutes) => {
+    const areaLabels = {
+      mental_health: 'mental health',
+      physical_health: 'physical health',
+      career_finances: 'career & finances',
+      relationships: 'relationships',
+      creativity: 'creativity',
+      personal_development: 'personal development'
+    };
+    const label = areaLabels[area] || 'personal growth';
     
+    return {
+      subgoals: [
+        `Build the ${label} habit`,
+        'Track weekly progress',
+        'Review and adjust monthly'
+      ],
+      tasks: [
+        `Spend ${minutes || 15} minutes today on ${label}`,
+        'Write down what success looks like this week',
+        'Identify one obstacle and one way around it'
+      ]
+    };
+  };
+
+  // Header progress bar
+  const renderProgressHeader = (currentStep) => {
+    const pct = (currentStep / 4) * 100;
     return (
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.08)' }}>
-        <motion.div 
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.4 }}
-          style={{ height: '100%', background: 'var(--amber)' }}
-        />
-      </div>
+      <header style={{ width: '100%', maxWidth: '640px', margin: '0 auto', padding: '16px 0 0' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px' }}>
+          <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '20px', fontWeight: 700, color: '#1B1D1D' }}>
+            Chapter
+          </span>
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '13px', fontWeight: 500, color: '#8C918C' }}>
+            Step {currentStep} of 4
+          </span>
+        </div>
+        <div style={{ width: '100%', height: '1px', background: 'rgba(27,31,29,0.08)', position: 'relative' }}>
+          <div 
+            style={{ 
+              position: 'absolute', top: '-0.5px', left: 0, height: '2px', 
+              background: '#607A66', width: `${pct}%`, transition: 'width 0.3s ease' 
+            }} 
+          />
+        </div>
+      </header>
     );
   };
 
-  const renderHeader = () => {
-    if (step < 2 || step > 5) return null;
-    return (
-      <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
-        <button 
-          onClick={() => setStep(7)}
-          style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '13px', cursor: 'pointer' }}
-        >
-          Skip
-        </button>
-      </div>
-    );
-  };
-
-  // =====================
-  // Screen Components
-  // =====================
-
-  const renderScreen1 = () => (
-    <motion.div key="s1" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw' }}>
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ staggerChildren: 0.08 }}>
-        <h1 style={{ fontSize: '28px', fontWeight: 700, margin: 0, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>Chapter</h1>
-      </motion.div>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.04em', marginTop: '8px', textTransform: 'uppercase' }}>your story is being written</div>
-      </motion.div>
-      <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 1 }} style={{ width: 6, height: 6, borderRadius: 3, background: 'white', position: 'absolute', bottom: '15%' }} />
+  // Screens
+  const renderSplash = () => (
+    <motion.div key="splash" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: '#FAF9F6' }}>
+      <h1 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '36px', fontWeight: 700, color: '#1B1D1D', margin: 0 }}>
+        Chapter
+      </h1>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.12em', color: '#8C918C', textTransform: 'uppercase', marginTop: '12px' }}>
+        your story is being written
+      </span>
     </motion.div>
   );
 
-  const renderScreen2 = () => {
-    const cards = [
-      { e: '🎯', title: 'One goal at a time.', sub: 'For people who feel overwhelmed — a simple system that actually sticks.' },
-      { e: '📈', title: 'Watch yourself grow.', sub: 'Track your mood, your habits, and your progress. See patterns you never noticed.' },
-      { e: '💌', title: 'Write to your future self.', sub: "Seal a letter today. Read it in 6 months. There's nothing else like it." }
+  const renderStep1 = () => {
+    const options = [
+      { id: 'mental_health', label: 'Mental health' },
+      { id: 'physical_health', label: 'Physical health' },
+      { id: 'career_finances', label: 'Career & finances' },
+      { id: 'relationships', label: 'Relationships' },
+      { id: 'creativity', label: 'Creativity' },
+      { id: 'personal_development', label: 'Personal development' }
     ];
 
     return (
-      <motion.div key="s2" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh', width: '100vw', padding: '64px 24px 40px' }}>
-        <AnimatePresence mode="wait">
-          <motion.div key={cardIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '24px' }}>{cards[cardIdx].e}</div>
-            <h2 style={{ fontSize: '26px', fontWeight: 700, margin: '0 0 16px', letterSpacing: '-0.02em' }}>{cards[cardIdx].title}</h2>
-            <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, maxWidth: 280, margin: 0 }}>{cards[cardIdx].sub}</p>
-          </motion.div>
-        </AnimatePresence>
+      <motion.div key="step1" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+        <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '32px', fontWeight: 700, color: '#1B1D1D', marginBottom: '8px', lineHeight: 1.25 }}>
+          What part of your life do you want to give attention to first?
+        </h2>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '16px', color: '#5C615C', marginBottom: '32px' }}>
+          You can change this anytime. Start with what feels most alive.
+        </p>
 
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
-          {[0, 1, 2].map(i => (
-            <div 
-              key={i} 
-              onClick={() => setCardIdx(i)}
-              style={{ 
-                width: 6, 
-                height: 6, 
-                borderRadius: 3, 
-                background: i === cardIdx ? 'white' : 'rgba(255,255,255,0.2)', 
-                transition: 'background 0.3s',
-                cursor: 'pointer'
-              }} 
-            />
-          ))}
-        </div>
-
-        <motion.button 
-          initial={{ opacity: 0, y: 10 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          className="btn-primary" 
-          onClick={() => {
-            if (cardIdx < 2) {
-              setCardIdx(cardIdx + 1);
-            } else {
-              setStep(3);
-            }
-          }} 
-          style={{ width: '100%', maxWidth: 300, padding: '14px 32px', borderRadius: '10px', cursor: 'pointer' }}
-        >
-          {cardIdx < 2 ? 'Next →' : 'Get started →'}
-        </motion.button>
-      </motion.div>
-    );
-  };
-
-  const renderScreen3 = () => {
-    const opts = [
-      { id: 'mental_health',       icon: '🧠', label: 'Mental Health' },
-      { id: 'physical_health',     icon: '💪', label: 'Physical Health' },
-      { id: 'career_finances',     icon: '💼', label: 'Career & Finances' },
-      { id: 'life_vision',         icon: '🧭', label: 'Life Vision' },
-      { id: 'personal_development',icon: '🌱', label: 'Personal Dev.' },
-      { id: 'spirituality',        icon: '✨', label: 'Spirituality' },
-      { id: 'creativity',          icon: '🎨', label: 'Creativity' },
-      { id: 'relationships',       icon: '❤️', label: 'Relationships' }
-    ];
-    return (
-      <motion.div key="s3" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100vh', width: '100vw', padding: '64px 24px', overflowY: 'auto' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 600, textAlign: 'center', margin: '0 0 8px' }}>What area of your life do you most want to improve right now?</h2>
-        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}>We'll personalise your experience.</div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px', width: '100%', maxWidth: 400, paddingBottom: '32px' }}>
-          {opts.map(opt => {
-            const sel = lifeArea === opt.id;
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', width: '100%' }}>
+          {options.map(opt => {
+            const isSelected = lifeArea === opt.id;
             return (
-              <motion.div key={opt.id} whileTap={{ scale: 0.97 }} onClick={() => handleAreaSelect(opt.id)} style={{
-                background: sel ? '#FFFFFF' : 'var(--bg-card)',
-                border: `1px solid ${sel ? '#FFFFFF' : 'var(--border)'}`,
-                borderWidth: sel ? 2 : 1,
-                borderRadius: 12, padding: 20, textAlign: 'center', cursor: 'pointer',
-                transition: 'background 0.2s, border-color 0.2s'
-              }}>
-                <div style={{ fontSize: '28px', marginBottom: '8px' }}>{opt.icon}</div>
-                <div style={{ fontSize: '14px', fontWeight: 600, color: sel ? '#1B1F3B' : '#FFFFFF' }}>{opt.label}</div>
-              </motion.div>
-            )
+              <div
+                key={opt.id}
+                onClick={() => handleAreaSelect(opt.id)}
+                style={{
+                  background: isSelected ? '#E6ECE8' : 'transparent',
+                  border: `1px solid ${isSelected ? '#607A66' : 'rgba(27,31,29,0.1)'}`,
+                  borderWidth: isSelected ? '1.5px' : '1px',
+                  borderRadius: '8px',
+                  padding: '20px 24px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  color: '#1B1D1D',
+                  transition: 'all 0.15s ease',
+                  userSelect: 'none'
+                }}
+                onMouseEnter={e => {
+                  if (!isSelected) e.currentTarget.style.borderColor = '#607A66';
+                }}
+                onMouseLeave={e => {
+                  if (!isSelected) e.currentTarget.style.borderColor = 'rgba(27,31,29,0.1)';
+                }}
+              >
+                {opt.label}
+              </div>
+            );
           })}
         </div>
       </motion.div>
     );
   };
 
-  const renderScreen4 = () => (
-    <motion.div key="s4" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px' }}>
-      <h2 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 24px', maxWidth: 300 }}>What does success look like in 3 months?</h2>
-      
+  const renderStep2 = () => (
+    <motion.div key="step2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '32px', fontWeight: 700, color: '#1B1D1D', marginBottom: '8px', lineHeight: 1.25 }}>
+        If three months from now this is going well, what does it look like?
+      </h2>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '16px', color: '#5C615C', marginBottom: '24px' }}>
+        A sentence is enough. Be honest, not aspirational.
+      </p>
+
       <textarea
         autoFocus
-        placeholder="e.g. Feel less anxious, get promoted, save £1,000..."
         value={goalDescription}
         onChange={e => setGoalDescription(e.target.value)}
+        placeholder="In three months I..."
         style={{
-          background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: 16,
-          fontFamily: 'Inter', fontSize: 17, color: 'white', minHeight: 120, outline: 'none', resize: 'none'
+          width: '100%',
+          minHeight: '130px',
+          background: 'rgba(27,31,29,0.01)',
+          border: '1px solid rgba(27,31,29,0.15)',
+          borderRadius: '8px',
+          padding: '16px',
+          fontSize: '16px',
+          fontFamily: "'Inter', sans-serif",
+          color: '#1B1D1D',
+          outline: 'none',
+          resize: 'none',
+          boxSizing: 'border-box',
+          transition: 'border-color 0.2s'
         }}
+        onFocus={e => e.target.style.borderColor = '#607A66'}
+        onBlur={e => e.target.style.borderColor = 'rgba(27,31,29,0.15)'}
       />
 
-      <div style={{ flex: 1 }} />
-      <motion.button 
-        className="btn-primary" 
-        onClick={() => setStep(5)}
-        disabled={goalDescription.length < 10}
-        style={{ width: '100%', padding: '14px', borderRadius: 10, opacity: goalDescription.length < 10 ? 0.4 : 1 }}
-      >
-        Continue →
-      </motion.button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '32px' }}>
+        <button 
+          onClick={() => setStep(2)} 
+          style={{ background: 'none', border: 'none', color: '#5C615C', fontSize: '15px', fontWeight: 500, cursor: 'pointer', padding: 0 }}
+        >
+          Back
+        </button>
+        <button 
+          onClick={() => setStep(4)}
+          disabled={!goalDescription.trim()}
+          style={{
+            background: goalDescription.trim() ? '#607A66' : '#C6D1C9',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 28px',
+            fontSize: '15px',
+            fontWeight: 600,
+            cursor: goalDescription.trim() ? 'pointer' : 'not-allowed',
+            transition: 'background-color 0.2s'
+          }}
+        >
+          Continue
+        </button>
+      </div>
     </motion.div>
   );
 
-  const renderScreen5 = () => {
-    const opts = [
-      { id: '5min', e: '⚡', title: 'Just 5 minutes', sub: 'Quick daily check-in only' },
-      { id: '10min', e: '🎯', title: 'About 10 minutes', sub: 'Check in + track one goal' },
-      { id: '20min', e: '🚀', title: 'Up to 20 minutes', sub: 'Full daily reflection + planning' }
-    ];
-    return (
-      <motion.div key="s5" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: 600, margin: '0 0 24px' }}>How much time can you commit to yourself each day?</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {opts.map(opt => {
-            const sel = commitment === opt.id;
-            return (
-              <motion.div key={opt.id} onClick={() => handleCommitmentSelect(opt.id)} style={{
-                background: sel ? 'var(--amber-bg)' : 'var(--bg-card)',
-                border: `1px solid ${sel ? 'var(--amber)' : 'var(--border)'}`,
-                borderRadius: 12, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '16px', cursor: 'pointer'
-              }}>
-                <div style={{ fontSize: '24px' }}>{opt.e}</div>
-                <div>
-                  <div style={{ fontSize: '15px', fontWeight: 600, color: 'white' }}>{opt.title}</div>
-                  <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{opt.sub}</div>
-                </div>
-              </motion.div>
-            )
-          })}
-        </div>
-      </motion.div>
-    );
-  };
+  const renderStep3 = () => (
+    <motion.div key="step3" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%' }}>
+      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '32px', fontWeight: 700, color: '#1B1D1D', marginBottom: '8px', lineHeight: 1.25 }}>
+        How much time can you give this each day?
+      </h2>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '16px', color: '#5C615C', marginBottom: '32px' }}>
+        Be realistic. Small and consistent beats big and abandoned.
+      </p>
 
-  const renderScreen6 = () => {
-    // Generate derived properties
-    const areaEmoji = lifeArea === 'physical_health' ? '💪' 
-          : lifeArea === 'career_finances' ? '💼' 
-          : lifeArea === 'mental_health' ? '🧠' 
-          : lifeArea === 'relationships' ? '❤️' 
-          : lifeArea === 'life_vision' ? '🧭' 
-          : lifeArea === 'personal_development' ? '🌱' 
-          : lifeArea === 'spirituality' ? '✨' 
-          : lifeArea === 'creativity' ? '🎨' 
-          : '✨';
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+        <input 
+          type="number"
+          value={commitment}
+          onChange={e => setCommitment(Math.max(1, parseInt(e.target.value) || 0))}
+          style={{
+            width: '100px',
+            height: '48px',
+            background: 'rgba(27,31,29,0.01)',
+            border: '1px solid rgba(27,31,29,0.15)',
+            borderRadius: '8px',
+            textAlign: 'center',
+            fontSize: '18px',
+            fontWeight: 600,
+            color: '#1B1D1D',
+            outline: 'none',
+            boxSizing: 'border-box'
+          }}
+          onFocus={e => e.target.style.borderColor = '#607A66'}
+          onBlur={e => e.target.style.borderColor = 'rgba(27,31,29,0.15)'}
+        />
+        <span style={{ fontSize: '16px', color: '#5C615C', fontWeight: 500 }}>
+          minutes per day
+        </span>
+      </div>
 
-    const areaNames = {
-      mental_health: 'Mental Health',
-      physical_health: 'Physical Health',
-      career_finances: 'Career & Finances',
-      life_vision: 'Life Vision',
-      personal_development: 'Personal Growth',
-      spirituality: 'Spirituality',
-      creativity: 'Creativity',
-      relationships: 'Relationships'
-    };
-    const areaName = areaNames[lifeArea] || 'Personal Growth';
-    const truncatedGoal = goalDescription.length > 40 ? goalDescription.substring(0, 40) + '...' : goalDescription;
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '48px' }}>
+        <button 
+          onClick={() => setStep(3)} 
+          style={{ background: 'none', border: 'none', color: '#5C615C', fontSize: '15px', fontWeight: 500, cursor: 'pointer', padding: 0 }}
+        >
+          Back
+        </button>
+        <button 
+          onClick={() => setStep(5)}
+          style={{
+            background: '#607A66',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 28px',
+            fontSize: '15px',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          Continue
+        </button>
+      </div>
+    </motion.div>
+  );
 
-    return (
-      <motion.div key="s6" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px' }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '24px', fontWeight: 700, margin: 0 }}>Here's your first goal.</h2>
-            <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.3 }} style={{ fontSize: '24px' }}>✨</motion.span>
-          </div>
-
-          <div className="card" style={{ padding: '20px', borderLeft: '4px solid var(--amber)', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <span style={{ fontSize: '16px' }}>{areaEmoji}</span>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--amber)', background: 'var(--amber-bg)', padding: '2px 8px', borderRadius: 999 }}>
-                {areaName}
-              </span>
-            </div>
-            <div style={{ fontSize: '17px', fontWeight: 600, color: 'white', marginBottom: '8px' }}>
-              "{truncatedGoal}"
-            </div>
-          </div>
-
-          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginBottom: '4px' }}>We've broken it into steps for you.</div>
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>You can edit everything.</div>
-        </div>
-
-        <motion.button className="btn-primary" onClick={() => setStep(7)} style={{ width: '100%', padding: '16px', borderRadius: 12, fontSize: '16px' }}>
-          Let's go →
-        </motion.button>
-      </motion.div>
-    );
-  };
-
-  const renderScreen7 = () => {
-    const canContinue = accountConsent && healthConsent;
+  const renderStep4 = () => {
+    const summary = getDynamicContent(lifeArea, commitment);
     
     return (
-      <motion.div key="s7" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px 24px', overflowY: 'auto' }}>
-        <div style={{ maxWidth: '420px', margin: '0 auto', padding: '0 24px', width: '100%' }}>
+      <motion.div key="step4" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', width: '100%', padding: '24px 0' }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: '#8C918C', textTransform: 'uppercase', marginBottom: '8px' }}>
+          YOUR FIRST GOAL
+        </div>
+        <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '32px', fontWeight: 700, color: '#1B1D1D', marginBottom: '6px', lineHeight: 1.2 }}>
+          {goalDescription}
+        </h2>
+        <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '15px', color: '#5C615C', marginBottom: '24px' }}>
+          {goalDescription}
+        </p>
 
-          <div style={{
-            fontSize: '26px', fontWeight: '700',
-            color: '#E8E0D5', marginBottom: '8px',
-            letterSpacing: '-0.02em', textAlign: 'center'
-          }}>
-            Before we begin.
+        {/* Outline summary card */}
+        <div style={{
+          border: '1px solid rgba(27,31,29,0.08)',
+          borderRadius: '8px',
+          padding: '24px',
+          background: 'rgba(27,31,29,0.01)',
+          marginBottom: '24px'
+        }}>
+          {/* Subgoals */}
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: '#8C918C', textTransform: 'uppercase', marginBottom: '12px' }}>
+            SUB-GOALS
           </div>
-          <div style={{
-            fontSize: '14px', color: 'rgba(232,224,213,0.45)',
-            marginBottom: '32px', lineHeight: '1.6', textAlign: 'center'
-          }}>
-            Chapter needs your permission to store some personal information.
-            Here's exactly what and why.
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {summary.subgoals.map((g, idx) => (
+              <li key={idx} style={{ fontSize: '15px', color: '#1B1D1D', display: 'flex', gap: '10px' }}>
+                <span style={{ color: '#8C918C' }}>—</span> {g}
+              </li>
+            ))}
+          </ul>
+
+          <div style={{ borderBottom: '1px solid rgba(27,31,29,0.06)', margin: '16px 0' }} />
+
+          {/* First tasks */}
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: '#8C918C', textTransform: 'uppercase', marginBottom: '12px' }}>
+            FIRST TASKS
           </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {summary.tasks.map((t, idx) => (
+              <li key={idx} style={{ fontSize: '15px', color: '#1B1D1D', display: 'flex', gap: '10px' }}>
+                <span style={{ color: '#8C918C' }}>—</span> {t}
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          {/* Consent item 1 — required */}
-          <ConsentItem
-            checked={accountConsent}
-            onChange={setAccountConsent}
-            required
-            title="Account data"
-            description="Your email and display name, to identify your account."
-          />
+        {/* Consent checkbox */}
+        <div style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'flex', gap: '12px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={healthConsent}
+              onChange={e => setHealthConsent(e.target.checked)}
+              style={{ marginTop: '3px', accentColor: '#607A66', width: '16px', height: '16px', flexShrink: 0 }}
+            />
+            <span style={{ fontSize: '13px', color: '#5C615C', lineHeight: '1.5', userSelect: 'none' }}>
+              I consent to Chapter storing wellness data I choose to record (mood logs, journal entries, life-balance scores). This is separate from the Terms of Service — you can use Chapter without this.
+            </span>
+          </label>
+        </div>
 
-          {/* Consent item 2 — required, health data */}
-          <ConsentItem
-            checked={healthConsent}
-            onChange={setHealthConsent}
-            required
-            highlighted
-            title="Mood and wellness data"
-            description="Your daily mood logs and Wheel of Life scores may be classified as health data under UK law. We store them securely to show you your progress. We never share or sell this data."
-          />
-
-          {/* Consent item 3 — optional */}
-          <ConsentItem
-            checked={analyticsConsent}
-            onChange={setAnalyticsConsent}
-            title="Anonymous usage analytics"
-            description="Help us improve Chapter by sharing anonymous usage data. No personal content is ever included. Optional — the app works fully without this."
-          />
-
-          <div style={{
-            fontSize: '12px', color: 'rgba(232,224,213,0.25)',
-            margin: '20px 0 24px', lineHeight: '1.6', textAlign: 'center'
-          }}>
-            You can withdraw consent and delete all your data at any time in Settings.{' '}
-            <a href="/privacy" target="_blank"
-              style={{ color: 'rgba(255,107,53,0.7)', textDecoration: 'none' }}>
-              Privacy Policy
-            </a>{' '}·{' '}
-            <a href="/terms" target="_blank"
-              style={{ color: 'rgba(255,107,53,0.7)', textDecoration: 'none' }}>
-              Terms of Service
-            </a>
-          </div>
-
-          <button
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button 
+            onClick={() => setStep(4)} 
+            style={{ background: 'none', border: 'none', color: '#5C615C', fontSize: '15px', fontWeight: 500, cursor: 'pointer', padding: 0 }}
+          >
+            Back
+          </button>
+          <button 
+            disabled={!healthConsent}
             onClick={async () => {
               if (auth.currentUser) {
                 await saveOnboardingData(auth.currentUser);
-                setStep(9);
+                setStep(7);
               } else {
-                setStep(8);
+                setStep(6);
               }
             }}
-            disabled={!canContinue}
             style={{
-              width: '100%', padding: '14px',
-              background: canContinue ? '#FF6B35' : 'rgba(255,107,53,0.2)',
-              border: 'none', borderRadius: '8px',
-              fontSize: '15px', fontWeight: '700',
-              color: canContinue ? '#1B1F3B' : 'rgba(232,224,213,0.2)',
-              cursor: canContinue ? 'pointer' : 'not-allowed',
-              boxShadow: canContinue ? '0 3px 0 #C94A1A' : 'none',
-              transition: 'all 0.2s ease'
+              background: healthConsent ? '#607A66' : '#C6D1C9',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 28px',
+              fontSize: '15px',
+              fontWeight: 600,
+              cursor: healthConsent ? 'pointer' : 'not-allowed',
+              transition: 'background-color 0.2s'
             }}
           >
-            I agree — continue →
+            Continue
           </button>
         </div>
       </motion.div>
     );
   };
 
-  const renderScreen8 = () => (
-    <motion.div key="s8" variants={fadeUp} initial="hidden" animate="visible" exit="exit" style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', padding: '64px 24px 24px' }}>
-      <h2 style={{ fontSize: '24px', fontWeight: 700, margin: '0 0 8px', textAlign: 'center' }}>Save your progress.</h2>
-      <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', textAlign: 'center', margin: '0 0 32px' }}>
+  const renderSignup = () => (
+    <motion.div key="signup" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '360px', width: '100%', margin: '0 auto', padding: '24px 0' }}>
+      <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '28px', fontWeight: 700, color: '#1B1D1D', marginBottom: '8px', textAlign: 'center' }}>
+        Save your progress.
+      </h2>
+      <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '14px', color: '#5C615C', textAlign: 'center', marginBottom: '32px' }}>
         Create a free account to keep everything you just set up.
       </p>
 
-      {authError && <div style={{ color: '#ef4444', fontSize: '13px', marginBottom: '16px', textAlign: 'center' }}>{authError}</div>}
+      {authError && (
+        <div style={{ fontSize: '13px', color: '#C4596A', padding: '10px 12px', background: 'rgba(196,89,106,0.06)', borderRadius: '6px', border: '1px solid rgba(196,89,106,0.15)', marginBottom: '16px', textAlign: 'center' }}>
+          {authError}
+        </div>
+      )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: 320, width: '100%', margin: '0 auto' }}>
-        <button onClick={handleGoogleAuth} style={{ width: '100%', background: 'white', color: '#1a1a1a', border: 'none', borderRadius: 10, padding: 14, fontSize: '15px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 3px 0 rgba(0,0,0,0.3)' }}>
-          <span style={{ fontWeight: 800 }}>G</span> Continue with Google
-        </button>
+      {/* Google Signin */}
+      <button 
+        onClick={handleGoogleAuth}
+        disabled={isLoggingIn}
+        style={{
+          width: '100%', background: '#FAF9F6', border: '1px solid rgba(27,31,29,0.12)', borderRadius: '8px', padding: '12px', fontSize: '15px', fontWeight: 600, color: '#1B1D1D', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', cursor: 'pointer', transition: 'all 0.15s ease', boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+        }}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '8px 0' }}>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)' }}>or</div>
-          <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '20px 0' }}>
+        <div style={{ flex: 1, height: '1px', background: 'rgba(27,31,29,0.06)' }} />
+        <span style={{ fontSize: '12px', color: '#8C918C' }}>or</span>
+        <div style={{ flex: 1, height: '1px', background: 'rgba(27,31,29,0.06)' }} />
+      </div>
+
+      <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <input
+          type="email"
+          placeholder="Email address"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+          style={{ width: '100%', padding: '12px 14px', background: 'rgba(27,31,29,0.01)', border: '1px solid rgba(27,31,29,0.12)', borderRadius: '8px', fontSize: '15px', color: '#1B1D1D', outline: 'none', boxSizing: 'border-box' }}
+          onFocus={e => e.target.style.borderColor = '#607A66'}
+          onBlur={e => e.target.style.borderColor = 'rgba(27,31,29,0.12)'}
+        />
+
+        <div style={{ position: 'relative' }}>
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+            minLength={8}
+            style={{ width: '100%', padding: '12px 40px 12px 14px', background: 'rgba(27,31,29,0.01)', border: '1px solid rgba(27,31,29,0.12)', borderRadius: '8px', fontSize: '15px', color: '#1B1D1D', outline: 'none', boxSizing: 'border-box' }}
+            onFocus={e => e.target.style.borderColor = '#607A66'}
+            onBlur={e => e.target.style.borderColor = 'rgba(27,31,29,0.12)'}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#8C918C', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0, outline: 'none' }}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
         </div>
 
-        <form onSubmit={handleEmailAuth} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <input type="email" placeholder="Email address" value={email} onChange={e => setEmail(e.target.value)} style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: 14, borderRadius: 10, color: 'white', outline: 'none' }} required />
-          <div style={{ position: 'relative' }}>
-            <input 
-              type={showPassword ? "text" : "password"} 
-              placeholder="Password" 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-              style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 44px 14px 14px', borderRadius: 10, color: 'white', outline: 'none', boxSizing: 'border-box' }} 
-              required 
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{
-                position: 'absolute',
-                right: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                color: 'rgba(255,255,255,0.4)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                padding: 0,
-                outline: 'none'
-              }}
-              onMouseEnter={e => e.currentTarget.style.color = 'white'}
-              onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.4)'}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-          
-          <div style={{ marginBottom: '16px', marginTop: '8px' }}>
-            <label style={{ display: 'flex', gap: '10px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                required
-                style={{ marginTop: '2px', accentColor: '#FF6B35' }}
-              />
-              <span style={{
-                fontSize: '13px', color: 'rgba(232,224,213,0.45)',
-                lineHeight: '1.5', textAlign: 'left'
-              }}>
+        {!isLogin && (
+          <div style={{ margin: '4px 0 12px' }}>
+            <label style={{ display: 'flex', gap: '8px', cursor: 'pointer' }}>
+              <input type="checkbox" required style={{ marginTop: '3px', accentColor: '#607A66' }} />
+              <span style={{ fontSize: '13px', color: '#5C615C', lineHeight: '1.4' }}>
                 I confirm I meet the minimum age requirement for my country
               </span>
             </label>
           </div>
-
-          <button type="submit" className="btn-primary" style={{ padding: 14, borderRadius: 10, marginTop: '8px' }}>
-            {isLogin ? 'Sign in →' : 'Create account →'}
-          </button>
-        </form>
-
-        <div style={{ textAlign: 'center', marginTop: '12px' }}>
-          <span 
-            onClick={() => setIsLogin(!isLogin)}
-            style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', textDecoration: 'underline' }}
-          >
-            {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
-          </span>
-        </div>
-      </div>
-
-      <div style={{ flex: 1 }} />
-      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', textAlign: 'center' }}>
-        🔒 Your data is private and encrypted. We never sell it.
-      </div>
-    </motion.div>
-  );
-
-  const renderScreen9 = () => (
-    <motion.div key="s9" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: 'var(--bg-app)' }}>
-      <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
-        <h2 style={{ fontSize: '28px', fontWeight: 700, margin: '0 0 16px' }}>Welcome to Chapter.</h2>
-      </motion.div>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
-        <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '32px' }}>Chapter 1: The Beginning</div>
-      </motion.div>
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.9, bounce: 0.5 }}>
-        <div style={{ fontSize: '64px', marginBottom: '32px' }}>🌱</div>
-      </motion.div>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
-        <div style={{ fontSize: '16px', color: 'rgba(255,255,255,0.6)', fontStyle: 'italic' }}>Your story starts now.</div>
-      </motion.div>
-      {/* Fake Confetti */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }} style={{ position: 'absolute', inset: 0, pointerEvents: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '32px', gap: '40px' }}>
-        <motion.div animate={{ y: -200, x: -100, rotate: -45, opacity: 0 }} transition={{ duration: 1 }}>🎉</motion.div>
-        <motion.div animate={{ y: -250, x: 0, rotate: 0, opacity: 0 }} transition={{ duration: 1.2 }}>⭐</motion.div>
-        <motion.div animate={{ y: -180, x: 100, rotate: 45, opacity: 0 }} transition={{ duration: 0.9 }}>✨</motion.div>
-      </motion.div>
-    </motion.div>
-  );
-
-  return (
-    <div style={{ background: 'var(--bg-app)', color: 'var(--text-primary)', position: 'relative', overflowX: 'hidden' }}>
-      {renderProgressBar()}
-      {renderHeader()}
-      <AnimatePresence mode="wait">
-        {step === 1 && renderScreen1()}
-        {step === 2 && renderScreen2()}
-        {step === 3 && renderScreen3()}
-        {step === 4 && renderScreen4()}
-        {step === 5 && renderScreen5()}
-        {step === 6 && renderScreen6()}
-        {step === 7 && renderScreen7()}
-        {step === 8 && renderScreen8()}
-        {step === 9 && renderScreen9()}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function ConsentItem({
-  checked, onChange, required, highlighted, title, description
-}) {
-  return (
-    <div
-      onClick={() => onChange(!checked)}
-      style={{
-        display: 'flex', gap: '14px', alignItems: 'flex-start',
-        padding: '14px 16px', marginBottom: '10px',
-        background: highlighted
-          ? 'rgba(255,107,53,0.06)'
-          : 'rgba(232,224,213,0.03)',
-        border: `1px solid ${checked
-          ? highlighted ? 'rgba(255,107,53,0.3)' : 'rgba(74,155,142,0.3)'
-          : 'rgba(232,224,213,0.08)'}`,
-        borderRadius: '8px', cursor: 'pointer',
-        transition: 'all 0.15s ease'
-      }}
-    >
-      {/* Checkbox */}
-      <div style={{
-        width: '20px', height: '20px', flexShrink: 0,
-        borderRadius: '5px', marginTop: '1px',
-        border: `2px solid ${checked
-          ? highlighted ? '#FF6B35' : '#4A9B8E'
-          : 'rgba(232,224,213,0.2)'}`,
-        background: checked
-          ? highlighted ? '#FF6B35' : '#4A9B8E'
-          : 'transparent',
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'center', transition: 'all 0.15s ease'
-      }}>
-        {checked && (
-          <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-            <path d="M1 4L4 7L10 1"
-              stroke="#1B1F3B" strokeWidth="2"
-              strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
         )}
+
+        <button
+          type="submit"
+          disabled={isLoggingIn}
+          style={{ width: '100%', background: '#607A66', color: '#FFFFFF', border: 'none', borderRadius: '8px', padding: '13px', fontSize: '15px', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s', marginTop: '8px' }}
+        >
+          {isLoggingIn ? 'Processing...' : (isLogin ? 'Sign in →' : 'Create account →')}
+        </button>
+      </form>
+
+      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+        <span 
+          onClick={() => setIsLogin(!isLogin)}
+          style={{ fontSize: '13px', color: '#5C615C', cursor: 'pointer', textDecoration: 'underline' }}
+        >
+          {isLogin ? "Need an account? Sign up" : "Already have an account? Sign in"}
+        </span>
+      </div>
+    </motion.div>
+  );
+
+  const renderWelcome = () => (
+    <motion.div key="welcome" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', width: '100vw', background: '#FAF9F6' }}>
+      <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+        <h2 style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '32px', fontWeight: 700, color: '#1B1D1D', margin: '0 0 16px' }}>
+          Welcome to Chapter.
+        </h2>
+      </motion.div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '11px', fontWeight: 600, letterSpacing: '0.12em', color: '#8C918C', textTransform: 'uppercase', marginBottom: '32px' }}>
+          Chapter 1: The Beginning
+        </div>
+      </motion.div>
+      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.8, bounce: 0.4 }} style={{ fontSize: '64px', marginBottom: '32px' }}>
+        🌱
+      </motion.div>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.1 }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '15px', color: '#5C615C', fontStyle: 'italic' }}>
+          Your story starts now.
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+
+  return (
+    <div style={{ background: '#FAF9F6', minHeight: '100vh', width: '100vw', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '32px 40px', overflowX: 'hidden' }}>
+      
+      {/* Header bar only rendered on step 2, 3, 4, 5 (Steps 1 to 4 of Onboarding) */}
+      {step >= 2 && step <= 5 && renderProgressHeader(step - 1)}
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', maxWidth: '640px', margin: '0 auto', width: '100%' }}>
+        <AnimatePresence mode="wait">
+          {step === 1 && renderSplash()}
+          {step === 2 && renderStep1()}
+          {step === 3 && renderStep2()}
+          {step === 4 && renderStep3()}
+          {step === 5 && renderStep4()}
+          {step === 6 && renderSignup()}
+          {step === 7 && renderWelcome()}
+        </AnimatePresence>
       </div>
 
-      {/* Text */}
-      <div>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '8px',
-          marginBottom: '4px'
-        }}>
-          <span style={{
-            fontSize: '14px', fontWeight: '600',
-            color: '#E8E0D5'
-          }}>
-            {title}
-          </span>
-          {required && (
-            <span style={{
-              fontSize: '10px', fontWeight: '600',
-              color: highlighted ? '#FF6B35' : 'rgba(232,224,213,0.35)',
-              textTransform: 'uppercase', letterSpacing: '0.06em'
-            }}>
-              Required
-            </span>
-          )}
-        </div>
-        <div style={{
-          fontSize: '13px', color: 'rgba(232,224,213,0.45)',
-          lineHeight: '1.6'
-        }}>
-          {description}
-        </div>
-      </div>
+      {/* Render matching copyright footer only on non-splash views */}
+      {step >= 2 && step <= 6 && (
+        <footer style={{ width: '100%', maxWidth: '640px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0 0', borderTop: '1px solid rgba(27,31,29,0.04)' }}>
+          <div style={{ fontSize: '13px', color: '#8C918C' }}>
+            © Chapter
+          </div>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <a href="/privacy" target="_blank" style={{ fontSize: '13px', color: '#8C918C', textDecoration: 'none' }}>Privacy</a>
+            <a href="/terms" target="_blank" style={{ fontSize: '13px', color: '#8C918C', textDecoration: 'none' }}>Terms</a>
+          </div>
+        </footer>
+      )}
     </div>
-  )
+  );
 }

@@ -236,16 +236,16 @@ export default function GoalsView({ user }) {
     <div className="content-wrap" style={{ paddingBottom: '80px' }}>
       <div className="hud-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <h1 className="page-title" style={{ fontSize: '32px', fontWeight: 700, color: 'white', margin: 0 }}>Goals Map.</h1>
+          <h1 className="page-title" style={{ fontSize: '32px', fontWeight: 700, fontFamily: "'Playfair Display', Georgia, serif", color: '#1B1D1D', margin: 0 }}>Goals Map.</h1>
           <div className="text-meta" style={{ marginTop: '4px', color: 'var(--text-secondary)', fontSize: '13px' }}>Chapter 1 — Foundation</div>
         </div>
         <button className="btn-primary" onClick={() => setIsAddingGoal(true)} style={{ padding: '10px 18px', borderRadius: '8px', fontSize: '14px', fontWeight: 600, border: 'none', cursor: 'pointer' }}>+ Add Goal</button>
       </div>
 
       {goals.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '16px', marginTop: '20px' }}>
+        <div style={{ textAlign: 'center', padding: '64px 0', border: '1px dashed rgba(27,31,29,0.15)', borderRadius: '16px', marginTop: '20px' }}>
           <div style={{ fontSize: '32px', marginBottom: '16px', opacity: 0.5 }}>🎯</div>
-          <div style={{ fontSize: '16px', fontWeight: 500, color: 'white' }}>No active goals found</div>
+          <div style={{ fontSize: '16px', fontWeight: 600, color: '#1B1D1D' }}>No active goals found</div>
           <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px', marginBottom: '24px' }}>Write down your first target goal.</div>
           <button className="btn-primary" onClick={() => setIsAddingGoal(true)} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600 }}>
             Create your first goal
@@ -259,13 +259,13 @@ export default function GoalsView({ user }) {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               style={{
-                background: 'var(--bg-card)',
+                background: '#FFFFFF',
                 border: '1px solid var(--border)',
                 borderRadius: '16px',
                 padding: '24px'
               }}
             >
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#C9A84C', marginBottom: '16px', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--amber)', marginBottom: '16px', letterSpacing: '-0.01em', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span>◎</span> {catName}
               </h3>
               
@@ -287,8 +287,8 @@ export default function GoalsView({ user }) {
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setExpandedGoalId(goal.id)}
                       style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.06)',
+                        background: 'rgba(27,31,29,0.02)',
+                        border: '1px solid rgba(27,31,29,0.06)',
                         borderRadius: '12px',
                         padding: '16px',
                         cursor: 'pointer',
@@ -309,7 +309,7 @@ export default function GoalsView({ user }) {
                         {goal.icon}
                       </div>
                       <div>
-                        <h4 style={{ fontSize: '15px', fontWeight: 600, color: 'white', margin: '0 0 4px' }}>{goal.title}</h4>
+                        <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#1B1D1D', margin: '0 0 4px' }}>{goal.title}</h4>
                         <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{blurb}</div>
                       </div>
                     </motion.div>
@@ -332,7 +332,7 @@ export default function GoalsView({ user }) {
                 setExpandedGoalId(null);
                 setIsAddingSubgoal(false);
               }}
-              style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)', zIndex:499 }}
+              style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.4)', backdropFilter:'blur(4px)', zIndex:499 }}
             />
             {(() => {
               const areaKey = activeGoal.lifeArea ? activeGoal.lifeArea.toLowerCase().replace(/ & /g, '_').replace(/ /g, '_') : 'default';
@@ -346,12 +346,13 @@ export default function GoalsView({ user }) {
                     bottom:0, 
                     left: isMobile ? 0 : '240px', 
                     right:0, 
-                    background:'#13131f', 
+                    background:'#FFFFFF', 
                     borderRadius:'24px 24px 0 0', 
                     zIndex:500, 
                     padding:'32px', 
                     maxHeight:'75vh', 
                     overflowY:'auto', 
+                    boxShadow: '0 -8px 24px rgba(27,31,29,0.06)',
                     borderTop: `3px solid ${catStyle.color}` 
                   }}
                 >
@@ -367,7 +368,7 @@ export default function GoalsView({ user }) {
                         {activeGoal.icon}
                       </div>
                       <div>
-                        <h2 className="page-title" style={{ margin: 0, fontSize: '22px', color: 'white' }}>{activeGoal.title}</h2>
+                        <h2 className="page-title" style={{ margin: 0, fontSize: '22px', color: '#1B1D1D', fontFamily: "'Playfair Display', Georgia, serif" }}>{activeGoal.title}</h2>
                         {activeGoal.description && (
                           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '4px 0 0', fontStyle: 'italic' }}>
                             "{activeGoal.description}"
@@ -380,7 +381,7 @@ export default function GoalsView({ user }) {
                         setExpandedGoalId(null);
                         setIsAddingSubgoal(false);
                       }}
-                      style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: '24px' }}
+                      style={{ background: 'transparent', border: 'none', color: 'rgba(27,31,29,0.4)', cursor: 'pointer', fontSize: '24px' }}
                     >
                       &times;
                     </button>
@@ -420,7 +421,7 @@ export default function GoalsView({ user }) {
                         placeholder="Enter step name... (e.g. Draft outline)"
                         value={newSubgoalTitle}
                         onChange={e => setNewSubgoalTitle(e.target.value)}
-                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', fontSize: '14px' }}
+                        style={{ flex: 1, background: 'rgba(27,31,29,0.01)', border: '1px solid rgba(27,31,29,0.12)', color: '#1B1D1D', padding: '12px', borderRadius: '8px', outline: 'none', fontSize: '14px' }}
                         required
                       />
                       <button type="submit" className="btn-primary" style={{ padding: '0 16px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Save</button>
@@ -447,15 +448,15 @@ export default function GoalsView({ user }) {
       {/* Add Goal Modal */}
       <AnimatePresence>
         {isAddingGoal && (
-          <div style={{ position:'fixed', inset:0, zIndex:599, display: 'flex', alignItems: 'center', justifyContent: 'center', background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)', padding: '24px' }}>
+          <div style={{ position:'fixed', inset:0, zIndex:599, display: 'flex', alignItems: 'center', justifyContent: 'center', background:'rgba(0,0,0,0.4)', backdropFilter:'blur(4px)', padding: '24px' }}>
             <div style={{ position: 'absolute', inset: 0, zIndex: -1 }} onClick={() => setIsAddingGoal(false)} />
             <motion.div
               variants={slideUp}
               initial="hidden" animate="visible" exit="exit"
-              className="card card-default modal"
-              style={{ width: '90%', maxWidth: '420px', padding:'32px', position: 'relative', opacity: 1, y: 0 }}
+              className="card modal"
+              style={{ width: '90%', maxWidth: '420px', padding:'32px', background: '#FFFFFF', border: '1px solid rgba(27,31,29,0.08)', position: 'relative', opacity: 1, y: 0 }}
             >
-              <h2 className="card-title" style={{ marginBottom: '20px', fontSize: '20px', color: 'white', fontWeight: 700 }}>Create New Goal</h2>
+              <h2 className="card-title" style={{ marginBottom: '20px', fontSize: '20px', color: '#1B1D1D', fontWeight: 700 }}>Create New Goal</h2>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 <div>
@@ -465,7 +466,7 @@ export default function GoalsView({ user }) {
                     placeholder="e.g. Run 10K without stopping"
                     value={newGoal.title}
                     onChange={e => setNewGoal({...newGoal, title: e.target.value})}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', background: 'rgba(27,31,29,0.01)', border: '1px solid rgba(27,31,29,0.12)', color: '#1B1D1D', padding: '12px', borderRadius: '8px', outline: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
                 
@@ -483,9 +484,9 @@ export default function GoalsView({ user }) {
                           cursor: 'pointer', 
                           border: '1px solid', 
                           textAlign: 'center',
-                          borderColor: newGoal.area === area ? '#FF6B35' : 'rgba(255,255,255,0.1)', 
-                          background: newGoal.area === area ? 'rgba(255,107,53,0.1)' : 'rgba(255,255,255,0.02)', 
-                          color: newGoal.area === area ? '#FF6B35' : 'white',
+                          borderColor: newGoal.area === area ? 'var(--amber)' : 'rgba(27,31,29,0.1)', 
+                          background: newGoal.area === area ? '#E6ECE8' : 'rgba(27,31,29,0.02)', 
+                          color: newGoal.area === area ? 'var(--amber)' : '#1B1D1D',
                           transition: 'all 0.15s ease',
                           fontWeight: newGoal.area === area ? 600 : 400
                         }}
@@ -503,7 +504,7 @@ export default function GoalsView({ user }) {
                     placeholder="Why is this goal important to you?"
                     value={newGoal.description}
                     onChange={e => setNewGoal({...newGoal, description: e.target.value})}
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '12px', borderRadius: '8px', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
+                    style={{ width: '100%', background: 'rgba(27,31,29,0.01)', border: '1px solid rgba(27,31,29,0.12)', color: '#1B1D1D', padding: '12px', borderRadius: '8px', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
                   />
                 </div>
 

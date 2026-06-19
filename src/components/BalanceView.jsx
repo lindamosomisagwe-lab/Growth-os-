@@ -64,30 +64,30 @@ export default function BalanceView() {
   }
 
   return (
-    <div className="content-wrap">
+    <div className="content-wrap" style={{ paddingBottom: '80px' }}>
       <div className="hud-bar">
         <div>
-          <h1 className="page-heading">Life Balance.</h1>
-          <div className="page-subheading">Wheel of Life Assessment</div>
+          <h1 className="page-heading" style={{ fontSize: '32px', fontWeight: 700, fontFamily: "'Playfair Display', Georgia, serif", color: '#1B1D1D', margin: 0 }}>Life Balance.</h1>
+          <div style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>Wheel of Life Assessment</div>
         </div>
       </div>
 
       <motion.div initial="hidden" animate="visible" className="dashboard-grid">
         {/* The Wheel Chart Card */}
-        <motion.div custom={0} variants={pageCard} className="card card-featured page-card col-span-2" style={{ borderLeftColor: '#5c8fa8', padding: 24 }}>
+        <motion.div custom={0} variants={pageCard} className="card col-span-2" style={{ background: '#FFFFFF', border: '1px solid rgba(27,31,29,0.08)', borderLeft: '4px solid #5c8fa8', padding: 24 }}>
           
           <div style={{ width: "100%", display: "flex", justifyContent: "center", alignItems: "center", marginBottom: "1rem" }}>
             <svg viewBox="0 0 400 400" width="100%" style={{ maxWidth: '440px', display: 'block', margin: '0 auto', overflow: 'visible' }}>
               {/* Background rings */}
               {rings.map(ring => (
-                <circle key={ring} cx={cx} cy={cy} r={(ring / 10) * maxR} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                <circle key={ring} cx={cx} cy={cy} r={(ring / 10) * maxR} fill="none" stroke="rgba(27,31,29,0.08)" strokeWidth="1" />
               ))}
 
               {/* Spoke lines */}
               {DIMENSIONS.map((_, i) => {
                 const angle = i * angleStep - Math.PI / 2;
                 return (
-                  <line key={`line-${i}`} x1={cx} y1={cy} x2={cx + maxR * Math.cos(angle)} y2={cy + maxR * Math.sin(angle)} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                  <line key={`line-${i}`} x1={cx} y1={cy} x2={cx + maxR * Math.cos(angle)} y2={cy + maxR * Math.sin(angle)} stroke="rgba(27,31,29,0.08)" strokeWidth="1" />
                 );
               })}
 
@@ -129,7 +129,7 @@ export default function BalanceView() {
                 const score = data.ratings[dim.key] ?? 5;
                 return (
                   <g key={`label-${dim.key}`}>
-                    <text x={pos.x} y={pos.y - 4} textAnchor={anchor} fontFamily="'Inter', sans-serif" fontSize="10" fontWeight="500" fill="rgba(255,255,255,0.5)">
+                    <text x={pos.x} y={pos.y - 4} textAnchor={anchor} fontFamily="'Inter', sans-serif" fontSize="10" fontWeight="600" fill="rgba(27,31,29,0.45)">
                       {dim.label.toUpperCase()}
                     </text>
                     <text x={pos.x} y={pos.y + 12} textAnchor={anchor} fontFamily="'Inter', sans-serif" fontSize="13" fontWeight="700" fill={dim.color}>
@@ -148,16 +148,18 @@ export default function BalanceView() {
             key={dim.key} 
             custom={i + 1} 
             variants={pageCard} 
-            className="card card-default page-card"
+            className="card"
             style={{ 
               padding: '20px', 
-              display: 'flex', flexDirection: 'column', gap: '12px'
+              display: 'flex', flexDirection: 'column', gap: '12px',
+              background: '#FFFFFF',
+              border: '1px solid rgba(27,31,29,0.08)'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className="card-title">{dim.label}</span>
+              <span className="card-title" style={{ color: '#1B1D1D' }}>{dim.label}</span>
               <span style={{ fontWeight: '700', color: dim.color, fontSize: '18px' }}>
-                {data.ratings[dim.key]} <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: 'normal' }}>/ 10</span>
+                {data.ratings[dim.key]} <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 'normal' }}>/ 10</span>
               </span>
             </div>
             
@@ -167,7 +169,7 @@ export default function BalanceView() {
               value={data.ratings[dim.key] ?? 5} 
               onChange={e => changeRating(dim.key, e.target.value)} 
               className="flat-slider"
-              style={{ accentColor: dim.color, width: '100%', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.1)' }}
+              style={{ accentColor: dim.color, width: '100%', height: '4px', borderRadius: '2px', background: 'rgba(27,31,29,0.08)' }}
             />
             
             <AnimatePresence>
@@ -184,10 +186,10 @@ export default function BalanceView() {
                     onChange={e => changeNote(dim.key, e.target.value)}
                     rows={2}
                     style={{ 
-                      width: '100%', marginTop: '8px', background: 'rgba(255,255,255,0.05)', 
-                      border: '1px solid rgba(255,255,255,0.1)', color: 'white', 
+                      width: '100%', marginTop: '8px', background: 'rgba(27,31,29,0.01)', 
+                      border: '1px solid rgba(27,31,29,0.12)', color: '#1B1D1D', 
                       borderRadius: '8px', padding: '10px', fontSize: '13px',
-                      resize: 'none', outline: 'none'
+                      resize: 'none', outline: 'none', boxSizing: 'border-box'
                     }}
                   />
                 </motion.div>
@@ -196,7 +198,7 @@ export default function BalanceView() {
                   onClick={() => toggleNote(dim.key)} 
                   whileHover={{ filter: 'brightness(1.2)' }}
                   whileTap={{ scale: 0.95 }}
-                  style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: '12px', cursor: 'pointer', padding: '4px 0', fontWeight: 500 }}
+                  style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: 'rgba(27,31,29,0.4)', fontSize: '12px', cursor: 'pointer', padding: '4px 0', fontWeight: 600, outline: 'none' }}
                 >
                   + Add reflection
                 </motion.button>
