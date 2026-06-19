@@ -5,9 +5,9 @@ import { Home, Scale, Target, Calendar, Lock, Settings, BookOpen } from 'lucide-
 const navItems = [
   { id: 'home',    icon: Home,      label: 'Home' },
   { id: 'balance', icon: Scale,     label: 'Balance' },
+  { id: 'library', icon: BookOpen,  label: 'Library' },
   { id: 'goals',   icon: Target,    label: 'Goals' },
   { id: 'today',   icon: Calendar,  label: 'Check-in' },
-  { id: 'library', icon: BookOpen,  label: 'Library' },
   { id: 'vault',   icon: Lock,      label: 'Vault' },
 ];
 
