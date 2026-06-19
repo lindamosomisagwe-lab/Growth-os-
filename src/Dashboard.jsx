@@ -10,6 +10,7 @@ import DailyLog from './components/DailyLog';
 import VaultView from './components/VaultView';
 import ProfileView from './components/ProfileView';
 import SettingsView from './components/SettingsView';
+import LibraryView from './components/LibraryView';
 
 export default function Dashboard({ user }) {
   const [activePage, setActivePage] = useState('home');
@@ -18,9 +19,10 @@ export default function Dashboard({ user }) {
   const renderPage = () => {
     switch (activePage) {
       case 'home':    return <HomeView user={user} setActivePage={setActivePage} />;
-      case 'balance': return <BalanceView />;
-      case 'goals':   return <GoalsView user={user} />;
+      case 'balance': return <BalanceView setActivePage={setActivePage} />;
+      case 'goals':   return <GoalsView user={user} setActivePage={setActivePage} />;
       case 'today':   return <DailyLog user={user} />;
+      case 'library': return <LibraryView />;
       case 'vault':   return <VaultView user={user} />;
       case 'profile': return <ProfileView user={user} />;
       case 'settings': return <SettingsView user={user} />;

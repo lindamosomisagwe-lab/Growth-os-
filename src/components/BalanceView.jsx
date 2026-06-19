@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { pageCard, expandCollapse } from '../lib/animations';
+import { DIMENSION_META, getTopResourcesForDimension } from '../data/resources';
 
 const DIMENSIONS = [
   { key: 'mental_health',       label: 'Mental Health',       color: '#7a5c8b' },
@@ -13,7 +14,7 @@ const DIMENSIONS = [
   { key: 'relationships',       label: 'Relationships',       color: '#a8745c' },
 ];
 
-export default function BalanceView() {
+export default function BalanceView({ setActivePage }) {
   const [data, setData] = useState(() => {
     const initRatings = {};
     const initNotes = {};
@@ -43,6 +44,17 @@ export default function BalanceView() {
   const toggleNote = (key) => {
     setExpandedNotes(prev => ({ ...prev, [key]: !prev[key] }));
   };
+
+  // Compute lowest-scoring dimension for post-assessment prompt
+  const lowestDim = useMemo(() => {
+    let lowest = DIMENSIONS[0];
+    DIMENSIONS.forEach(d => {
+      if ((data.ratings[d.key] ?? 5) < (data.ratings[lowest.key] ?? 5)) {
+        lowest = d;
+      }
+    });
+    return lowest;
+  }, [data.ratings]);
 
   // ------------------------------------------------------------ //
   // SVG Wheel calculations
@@ -207,6 +219,181 @@ export default function BalanceView() {
           </motion.div>
         ))}
       </motion.div>
+
+      {/* Post-Assessment Resource Prompt */}
+      {lowestDim && (
+        <PostAssessmentPrompt
+          dimension={lowestDim}
+          score={data.ratings[lowestDim.key]}
+          setActivePage={setActivePage}
+        />
+      )}
     </div>
   );
+}
+
+// ── Post-Assessment Resource Prompt ──────────────────────────────────────────
+
+function PostAssessmentPrompt({ dimension, score, setActivePage }) {
+  const meta = DIMENSION_META[dimension.key];
+  const resources = getTopResourcesForDimension(dimension.key, 3);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.4, duration: 0.5 }}
+      className="card col-span-2"
+      style={{
+        background: '#FFFFFF',
+        border: `1px solid rgba(27,31,29,0.08)`,
+        borderLeft: `4px solid ${meta?.color || '#5c8fa8'}`,
+        padding: '24px',
+        marginTop: '16px'
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 20 }}>
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 6 }}>
+            Where to start
+          </div>
+          <h2 style={{ margin: 0, fontFamily: "'Playfair Display', Georgia, serif", fontSize: '20px', fontWeight: 700, color: '#1B1D1D', lineHeight: 1.3 }}>
+            Your {dimension.label} could use some attention.
+          </h2>
+          <p style={{ margin: '8px 0 0', color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.6 }}>
+            You rated it {score}/10. Here are some hand-picked resources to help you grow in this area.
+          </p>
+        </div>
+        <div style={{ fontSize: '36px', flexShrink: 0 }}>{meta?.icon}</div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
+        {resources.map(resource => (
+          <MiniResourceCard key={resource.id} resource={resource} />
+        ))}
+      </div>
+
+      <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(27,31,29,0.06)' }}>
+        <button
+          onClick={() => setActivePage && setActivePage('library')}
+          style={{
+            background: 'none', border: '1px solid rgba(27,31,29,0.15)', borderRadius: '8px',
+            padding: '8px 16px', fontSize: '13px', fontWeight: 600, color: '#1B1D1D',
+            cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8,
+            transition: 'all 0.15s ease'
+          }}
+          onMouseOver={e => e.currentTarget.style.background = 'rgba(27,31,29,0.04)'}
+          onMouseOut={e => e.currentTarget.style.background = 'none'}
+        >
+          📚 Browse the full Library
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
+function MiniResourceCard({ resource }) {
+  const [playing, setPlaying] = useState(false);
+
+  if (resource.type === 'book') {
+    return (
+      <a
+        href={resource.amazonLink || resource.goodreadsLink || '#'}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px',
+          background: 'rgba(27,31,29,0.02)', border: '1px solid rgba(27,31,29,0.08)',
+          borderRadius: '10px', textDecoration: 'none', color: 'inherit',
+          transition: 'background 0.15s ease'
+        }}
+        onMouseOver={e => e.currentTarget.style.background = 'rgba(27,31,29,0.05)'}
+        onMouseOut={e => e.currentTarget.style.background = 'rgba(27,31,29,0.02)'}
+      >
+        <img
+          src={resource.coverImageUrl}
+          alt={resource.title}
+          style={{ width: 40, height: 56, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+          onError={e => { e.target.style.display = 'none'; }}
+        />
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>📚 Book</div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#1B1D1D', lineHeight: 1.3, marginTop: 2 }}>{resource.title}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 2 }}>{resource.author}</div>
+        </div>
+      </a>
+    );
+  }
+
+  if (resource.type === 'video' || resource.type === 'podcast') {
+    const thumb = `https://img.youtube.com/vi/${resource.youtubeId}/mqdefault.jpg`;
+    return (
+      <div
+        style={{
+          background: 'rgba(27,31,29,0.02)', border: '1px solid rgba(27,31,29,0.08)',
+          borderRadius: '10px', overflow: 'hidden'
+        }}
+      >
+        {playing ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${resource.youtubeId}?autoplay=1`}
+            style={{ width: '100%', height: '140px', border: 0 }}
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+            title={resource.title}
+          />
+        ) : (
+          <div
+            style={{ position: 'relative', cursor: 'pointer', height: '120px', overflow: 'hidden' }}
+            onClick={() => setPlaying(true)}
+          >
+            <img src={thumb} alt={resource.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.35)'
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="#1B1D1D"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+            </div>
+          </div>
+        )}
+        <div style={{ padding: '10px 12px 12px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+            {resource.type === 'podcast' ? '🎙 Podcast' : '▶ Video'}
+          </div>
+          <div style={{ fontSize: '13px', fontWeight: 700, color: '#1B1D1D', lineHeight: 1.3, marginTop: 2 }}>{resource.title}</div>
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 2 }}>{resource.author}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (resource.type === 'article') {
+    return (
+      <a
+        href={resource.link}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'block', padding: '12px',
+          background: 'rgba(27,31,29,0.02)', border: '1px solid rgba(27,31,29,0.08)',
+          borderRadius: '10px', textDecoration: 'none', color: 'inherit',
+          transition: 'background 0.15s ease'
+        }}
+        onMouseOver={e => e.currentTarget.style.background = 'rgba(27,31,29,0.05)'}
+        onMouseOut={e => e.currentTarget.style.background = 'rgba(27,31,29,0.02)'}
+      >
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>📄 Article</div>
+        <div style={{ fontSize: '13px', fontWeight: 700, color: '#1B1D1D', lineHeight: 1.3, marginTop: 2 }}>{resource.title}</div>
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: 2 }}>{resource.author}</div>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: 4 }}>Read →</div>
+      </a>
+    );
+  }
+
+  return null;
 }

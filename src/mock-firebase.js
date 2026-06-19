@@ -32,6 +32,19 @@ const saveMockUser = (user) => {
   }
 };
 
+const getMockUsers = () => {
+  try {
+    const data = localStorage.getItem('firebase_mock_users');
+    return data ? JSON.parse(data) : {};
+  } catch (e) {
+    return {};
+  }
+};
+
+const saveMockUsers = (users) => {
+  localStorage.setItem('firebase_mock_users', JSON.stringify(users));
+};
+
 const authListeners = new Set();
 
 const notifyAuthState = (user) => {
@@ -64,39 +77,77 @@ export const onAuthStateChanged = (authObj, callback) => {
 };
 
 export const createUserWithEmailAndPassword = async (authObj, email, password) => {
+  const normalizedEmail = email.toLowerCase().trim();
+  const users = getMockUsers();
+  
+  if (users[normalizedEmail]) {
+    const error = new Error("This email address is already in use by another account.");
+    error.code = "auth/email-already-in-use";
+    throw error;
+  }
+  
   const user = {
     uid: 'uid_' + Math.random().toString(36).substr(2, 9),
-    email,
-    displayName: email.split('@')[0],
+    email: normalizedEmail,
+    displayName: normalizedEmail.split('@')[0],
     photoURL: null,
     metadata: { creationTime: new Date().toUTCString() }
   };
+  
+  users[normalizedEmail] = {
+    ...user,
+    password
+  };
+  saveMockUsers(users);
+  
   saveMockUser(user);
   notifyAuthState(user);
   return { user };
 };
 
 export const signInWithEmailAndPassword = async (authObj, email, password) => {
-  const user = {
-    uid: 'uid_' + email.replace(/[^a-zA-Z0-9]/g, ''),
-    email,
-    displayName: email.split('@')[0],
-    photoURL: null,
-    metadata: { creationTime: new Date().toUTCString() }
-  };
+  const normalizedEmail = email.toLowerCase().trim();
+  const users = getMockUsers();
+  const registeredUser = users[normalizedEmail];
+  
+  if (!registeredUser) {
+    const error = new Error("There is no user record corresponding to this identifier. The user may have been deleted.");
+    error.code = "auth/user-not-found";
+    throw error;
+  }
+  
+  if (registeredUser.password !== password) {
+    const error = new Error("The password is invalid or the user does not have a password.");
+    error.code = "auth/wrong-password";
+    throw error;
+  }
+  
+  const { password: _, ...user } = registeredUser;
+  
   saveMockUser(user);
   notifyAuthState(user);
   return { user };
 };
 
 export const signInWithPopup = async (authObj, provider) => {
-  const user = {
-    uid: 'uid_google_mock',
-    email: 'googleuser@example.com',
-    displayName: 'Google Explorer',
-    photoURL: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
-    metadata: { creationTime: new Date().toUTCString() }
-  };
+  const email = 'googleuser@example.com';
+  const users = getMockUsers();
+  let googleUser = users[email];
+  
+  if (!googleUser) {
+    googleUser = {
+      uid: 'uid_google_mock',
+      email,
+      displayName: 'Google Explorer',
+      photoURL: 'https://lh3.googleusercontent.com/a/default-user=s96-c',
+      metadata: { creationTime: new Date().toUTCString() },
+      password: 'mock_google_password'
+    };
+    users[email] = googleUser;
+    saveMockUsers(users);
+  }
+  
+  const { password: _, ...user } = googleUser;
   saveMockUser(user);
   notifyAuthState(user);
   return { user };

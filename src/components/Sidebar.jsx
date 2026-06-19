@@ -1,13 +1,14 @@
 import React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Home, Scale, Target, Calendar, Lock, Settings } from 'lucide-react';
+import { Home, Scale, Target, Calendar, Lock, Settings, BookOpen } from 'lucide-react';
 
 const navItems = [
-  { id: 'home',    icon: Home,     label: 'Home' },
-  { id: 'balance', icon: Scale,    label: 'Balance' },
-  { id: 'goals',   icon: Target,   label: 'Goals' },
-  { id: 'today',   icon: Calendar, label: 'Check-in' },
-  { id: 'vault',   icon: Lock,     label: 'Vault' },
+  { id: 'home',    icon: Home,      label: 'Home' },
+  { id: 'balance', icon: Scale,     label: 'Balance' },
+  { id: 'goals',   icon: Target,    label: 'Goals' },
+  { id: 'today',   icon: Calendar,  label: 'Check-in' },
+  { id: 'library', icon: BookOpen,  label: 'Library' },
+  { id: 'vault',   icon: Lock,      label: 'Vault' },
 ];
 
 export default function Sidebar({ activePage, setActivePage, user }) {
